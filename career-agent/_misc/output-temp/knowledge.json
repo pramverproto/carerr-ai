@@ -1,0 +1,1057 @@
+{
+  "assessment_id": "98b4e695f7a4",
+  "candidate_name": "周启航",
+  "dimension": "knowledge",
+  "overall_score": 3.42,
+  "elapsed_ms": 214217,
+  "total_tokens": 21477,
+  "sub_dimensions": [
+    {
+      "meta": {
+        "agent": "Agent3_KnowledgeAgent",
+        "dimension": "知识储备",
+        "dimension_id": "2",
+        "onet_framework": "O*NET Knowledge (2.C) - 33 knowledge domains",
+        "onet_source": "https://www.onetonline.org",
+        "scale": "1-7",
+        "anchor_levels": [
+          1,
+          4,
+          7
+        ],
+        "anchor_note": "知识维度使用 Level 1/4/7 三点锚点（与技能维度 2/4/6 不同，这是 O*NET 知识量表标准设计）。LLM 在最近锚点 ±1 分内内插输出最终分",
+        "no_evidence_rule": "score=null, confidence=无法判断, evidence=无相关证据",
+        "primary_signal": "教育背景（专业方向、学位层级）为最强信号，其次为工作经历和项目经验"
+      },
+      "sub_dimension": {
+        "sub_dimension_id": "2.1",
+        "sub_dimension_name": "商业与管理",
+        "onet_category": "2.C.1 Business and Management",
+        "items": [
+          {
+            "item_id": "2.1.1",
+            "onet_element_id": "2.C.1.a",
+            "onet_element_name": "Administration and Management",
+            "name_zh": "行政与管理",
+            "definition": "Knowledge of business and management principles involved in strategic planning, resource allocation, human resources modeling, leadership technique, production methods, and coordination of people and resources.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Approve a reimbursement request"
+              },
+              {
+                "level": 4,
+                "description": "Monitor progress of a project to ensure timely completion"
+              },
+              {
+                "level": 7,
+                "description": "Manage a multimillion-dollar company"
+              }
+            ],
+            "result": {
+              "score": 5.5,
+              "anchor_level_hit": 4,
+              "evidence": "管理跨职能小组9人（后端3、算法2、数据分析2、产品2），承担需求优先级和里程碑管理；作为业务BP与市场、运营、财务周会沟通，负责ROI复盘、预算申请、资源协调",
+              "confidence": "中"
+            }
+          },
+          {
+            "item_id": "2.1.2",
+            "onet_element_id": "2.C.1.b",
+            "onet_element_name": "Administrative",
+            "name_zh": "行政办公",
+            "definition": "Knowledge of administrative and office procedures and systems such as word processing, managing files and records, stenography and transcription, designing forms, and workplace terminology.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Direct phone calls to the appropriate staff member"
+              },
+              {
+                "level": 4,
+                "description": "Type 30 words per minute"
+              },
+              {
+                "level": 7,
+                "description": "Organize a digital storage system for company forms"
+              }
+            ],
+            "result": {
+              "score": 4.0,
+              "anchor_level_hit": 4,
+              "evidence": "推动北极星+二级指标树治理，发布口径字典216条",
+              "confidence": "中"
+            }
+          },
+          {
+            "item_id": "2.1.3",
+            "onet_element_id": "2.C.1.c",
+            "onet_element_name": "Economics and Accounting",
+            "name_zh": "经济与会计",
+            "definition": "Knowledge of economic and accounting principles and practices, the financial markets, banking, and the analysis and reporting of financial data.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Answer billing questions from credit card customers"
+              },
+              {
+                "level": 4,
+                "description": "Develop financial investment programs for individual clients"
+              },
+              {
+                "level": 7,
+                "description": "Keep a major corporation's financial records"
+              }
+            ],
+            "result": {
+              "score": 5.0,
+              "anchor_level_hit": 4,
+              "evidence": "作为业务BP与市场、运营、财务周会沟通，负责ROI复盘、预算申请、资源协调；ROI从1.12提升到1.46，预算节省约920万元/季度",
+              "confidence": "中"
+            }
+          },
+          {
+            "item_id": "2.1.4",
+            "onet_element_id": "2.C.1.d",
+            "onet_element_name": "Sales and Marketing",
+            "name_zh": "销售与营销",
+            "definition": "Knowledge of principles and methods for showing, promoting, and selling products or services. This includes marketing strategy and tactics, product demonstration, sales techniques, and sales control systems.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Sell cakes at a bake sale"
+              },
+              {
+                "level": 4,
+                "description": "Introduce clients to a new line of products"
+              },
+              {
+                "level": 7,
+                "description": "Develop a marketing plan for a new nationwide high-speed internet system"
+              }
+            ],
+            "result": {
+              "score": 5.5,
+              "anchor_level_hit": 4,
+              "evidence": "负责用户增长中台从0到1建设，统筹埋点规范、指标体系、看板体系、实验体系；搭建分层补贴模型，区分新客首单、沉默唤醒、价格敏感型三层用户",
+              "confidence": "中"
+            }
+          },
+          {
+            "item_id": "2.1.5",
+            "onet_element_id": "2.C.1.e",
+            "onet_element_name": "Customer and Personal Service",
+            "name_zh": "客户服务",
+            "definition": "Knowledge of principles and processes for providing customer and personal services. This includes customer needs assessment, meeting quality standards for services, and evaluation of customer satisfaction.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Process a customer's dry-cleaning drop off"
+              },
+              {
+                "level": 4,
+                "description": "Be responsible for 10 children at daycare"
+              },
+              {
+                "level": 7,
+                "description": "Respond to a citizen's request for assistance after a major disaster"
+              }
+            ],
+            "result": {
+              "score": 4.0,
+              "anchor_level_hit": 4,
+              "evidence": "联合算法组建立商家健康评分与风险预警机制，输出自动化周报；商家客服投诉工单下降13%",
+              "confidence": "中"
+            }
+          },
+          {
+            "item_id": "2.1.6",
+            "onet_element_id": "2.C.1.f",
+            "onet_element_name": "Personnel and Human Resources",
+            "name_zh": "人力资源",
+            "definition": "Knowledge of principles and procedures for personnel recruitment, selection, training, compensation and benefits, labor relations and negotiation, and personnel information systems.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Fill out a medical claim form"
+              },
+              {
+                "level": 4,
+                "description": "Interview applicants for an administrative position"
+              },
+              {
+                "level": 7,
+                "description": "Design a new personnel selection and promotion system for the Army"
+              }
+            ],
+            "result": {
+              "score": 4.5,
+              "anchor_level_hit": 4,
+              "evidence": "管理跨职能小组9人（后端3、算法2、数据分析2、产品2），承担需求优先级和里程碑管理；PMP（在读）",
+              "confidence": "中"
+            }
+          }
+        ],
+        "sub_dimension_result": {
+          "score": 4.8,
+          "confidence": "中"
+        }
+      },
+      "_meta": {
+        "agent_key": "knowledge",
+        "sub_dimension_id": "2.1",
+        "elapsed_ms": 19395,
+        "tokens": {
+          "prompt_tokens": 2833,
+          "completion_tokens": 1731,
+          "total_tokens": 4564
+        }
+      }
+    },
+    {
+      "meta": {
+        "agent": "Agent3_KnowledgeAgent",
+        "dimension": "知识储备",
+        "dimension_id": "2",
+        "onet_framework": "O*NET Knowledge (2.C) - 33 knowledge domains",
+        "onet_source": "https://www.onetonline.org",
+        "scale": "1-7",
+        "anchor_levels": [
+          1,
+          4,
+          7
+        ],
+        "anchor_note": "知识维度使用 Level 1/4/7 三点锚点（与技能维度 2/4/6 不同，这是 O*NET 知识量表标准设计）。LLM 在最近锚点 ±1 分内内插输出最终分",
+        "no_evidence_rule": "score=null, confidence=无法判断, evidence=无相关证据",
+        "primary_signal": "教育背景（专业方向、学位层级）为最强信号，其次为工作经历和项目经验"
+      },
+      "sub_dimension": {
+        "sub_dimension_id": "2.2",
+        "sub_dimension_name": "技术与工程",
+        "onet_category": "2.C.3 Engineering and Technology + 2.C.4.a/b/c/d Mathematics and Science",
+        "items": [
+          {
+            "item_id": "2.2.1",
+            "onet_element_id": "2.C.3.a",
+            "onet_element_name": "Computers and Electronics",
+            "name_zh": "计算机与电子",
+            "definition": "Knowledge of circuit boards, processors, chips, electronic equipment, and computer hardware and software, including applications and programming.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Operate a media player to watch a training video"
+              },
+              {
+                "level": 4,
+                "description": "Use a computer to format a document"
+              },
+              {
+                "level": 7,
+                "description": "Create a program to scan a computer for viruses"
+              }
+            ],
+            "result": {
+              "score": 5.5,
+              "anchor_level_hit": 4,
+              "evidence": "计算机科学与技术本科专业，具备Python、Java编程技能，有后端工程师工作经验，负责日志处理与报表服务，完成核心接口重构",
+              "confidence": "高"
+            }
+          },
+          {
+            "item_id": "2.2.2",
+            "onet_element_id": "2.C.3.b",
+            "onet_element_name": "Engineering and Technology",
+            "name_zh": "工程与技术",
+            "definition": "Knowledge of the practical application of engineering science and technology. This includes applying principles, techniques, procedures, and equipment to the design and production of various goods and services.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Install a door lock"
+              },
+              {
+                "level": 4,
+                "description": "Design a custom office chair"
+              },
+              {
+                "level": 7,
+                "description": "Plan for the impact of weather in designing a bridge"
+              }
+            ],
+            "result": {
+              "score": 5.0,
+              "anchor_level_hit": 4,
+              "evidence": "作为数据产品负责人负责用户增长中台从0到1建设，统筹埋点规范、指标体系、看板体系、实验体系，具备系统化工程思维和实践经验",
+              "confidence": "高"
+            }
+          },
+          {
+            "item_id": "2.2.3",
+            "onet_element_id": "2.C.3.c",
+            "onet_element_name": "Design",
+            "name_zh": "设计",
+            "definition": "Knowledge of design techniques, tools, and principles involved in production of precision technical plans, blueprints, drawings, and models.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Draw a straight line 4 3/16 inches long"
+              },
+              {
+                "level": 4,
+                "description": "Design plans for remodeling a kitchen"
+              },
+              {
+                "level": 7,
+                "description": "Develop detailed plans for a high-rise office building"
+              }
+            ],
+            "result": {
+              "score": 5.0,
+              "anchor_level_hit": 4,
+              "evidence": "作为数据产品负责人负责指标统一治理，推动北极星+二级指标树治理，发布口径字典216条，具备系统化设计能力",
+              "confidence": "高"
+            }
+          },
+          {
+            "item_id": "2.2.4",
+            "onet_element_id": "2.C.3.d",
+            "onet_element_name": "Building and Construction",
+            "name_zh": "建筑与建造",
+            "definition": "Knowledge of materials, methods, and the tools involved in the construction or repair of houses, buildings, or other structures such as highways and roads.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Choose the proper type of wood for adding a deck onto a house"
+              },
+              {
+                "level": 4,
+                "description": "Fix a plumbing leak in the ceiling"
+              },
+              {
+                "level": 7,
+                "description": "Build a high-rise office tower"
+              }
+            ],
+            "result": {
+              "score": null,
+              "anchor_level_hit": null,
+              "evidence": "无相关证据",
+              "confidence": "无法判断"
+            }
+          },
+          {
+            "item_id": "2.2.5",
+            "onet_element_id": "2.C.3.e",
+            "onet_element_name": "Mechanical",
+            "name_zh": "机械",
+            "definition": "Knowledge of machines and tools, including their designs, uses, repair, and maintenance.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Replace the filters in a furnace"
+              },
+              {
+                "level": 4,
+                "description": "Replace a valve on a steam pipe"
+              },
+              {
+                "level": 7,
+                "description": "Overhaul an airplane jet engine"
+              }
+            ],
+            "result": {
+              "score": null,
+              "anchor_level_hit": null,
+              "evidence": "无相关证据",
+              "confidence": "无法判断"
+            }
+          },
+          {
+            "item_id": "2.2.6",
+            "onet_element_id": "2.C.4.a",
+            "onet_element_name": "Mathematics",
+            "name_zh": "数学",
+            "definition": "Knowledge of arithmetic, algebra, geometry, calculus, statistics, and their applications.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Add two numbers"
+              },
+              {
+                "level": 4,
+                "description": "Analyze data to determine areas with the highest sales"
+              },
+              {
+                "level": 7,
+                "description": "Derive a complex mathematical equation"
+              }
+            ],
+            "result": {
+              "score": 5.5,
+              "anchor_level_hit": 4,
+              "evidence": "应用统计专业硕士学位，具备LTV建模、RFM分层、漏斗分析等数学应用能力，搭建分层补贴模型区分不同用户群体",
+              "confidence": "高"
+            }
+          },
+          {
+            "item_id": "2.2.7",
+            "onet_element_id": "2.C.4.b",
+            "onet_element_name": "Physics",
+            "name_zh": "物理",
+            "definition": "Knowledge and prediction of physical principles, laws, their interrelationships, and applications to understanding fluid, material, and atmospheric dynamics, and mechanical, electrical, atomic and sub-atomic structures and processes.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Use a crowbar to pry open a box"
+              },
+              {
+                "level": 4,
+                "description": "Calculate the speed of a falling object"
+              },
+              {
+                "level": 7,
+                "description": "Design a cleaner burning gasoline engine"
+              }
+            ],
+            "result": {
+              "score": 1.0,
+              "anchor_level_hit": 1,
+              "evidence": "无直接物理相关经验或教育背景",
+              "confidence": "中"
+            }
+          },
+          {
+            "item_id": "2.2.8",
+            "onet_element_id": "2.C.4.c",
+            "onet_element_name": "Chemistry",
+            "name_zh": "化学",
+            "definition": "Knowledge of the chemical composition, structure, and properties of substances and of the chemical processes and transformations that they undergo.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Use a common household bug spray"
+              },
+              {
+                "level": 4,
+                "description": "Use the proper concentration of chlorine to purify a water source"
+              },
+              {
+                "level": 7,
+                "description": "Develop a safe commercial cleaner"
+              }
+            ],
+            "result": {
+              "score": 1.0,
+              "anchor_level_hit": 1,
+              "evidence": "无直接化学相关经验或教育背景",
+              "confidence": "中"
+            }
+          },
+          {
+            "item_id": "2.2.9",
+            "onet_element_id": "2.C.4.d",
+            "onet_element_name": "Biology",
+            "name_zh": "生物学",
+            "definition": "Knowledge of plant and animal organisms, their tissues, cells, functions, interdependencies, and interactions with each other and the environment.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Feed domestic animals"
+              },
+              {
+                "level": 4,
+                "description": "Investigate the effects of pollution on marine plants and animals"
+              },
+              {
+                "level": 7,
+                "description": "Isolate and identify a new virus"
+              }
+            ],
+            "result": {
+              "score": 1.0,
+              "anchor_level_hit": 1,
+              "evidence": "无直接生物学相关经验或教育背景",
+              "confidence": "中"
+            }
+          }
+        ],
+        "sub_dimension_result": {
+          "score": 4.0,
+          "confidence": "高"
+        }
+      },
+      "_meta": {
+        "agent_key": "knowledge",
+        "sub_dimension_id": "2.2",
+        "elapsed_ms": 49186,
+        "tokens": {
+          "prompt_tokens": 3520,
+          "completion_tokens": 2240,
+          "total_tokens": 5760
+        }
+      }
+    },
+    {
+      "meta": {
+        "agent": "Agent3_KnowledgeAgent",
+        "dimension": "知识储备",
+        "dimension_id": "2",
+        "onet_framework": "O*NET Knowledge (2.C) - 33 knowledge domains",
+        "onet_source": "https://www.onetonline.org",
+        "scale": "1-7",
+        "anchor_levels": [
+          1,
+          4,
+          7
+        ],
+        "anchor_note": "知识维度使用 Level 1/4/7 三点锚点（与技能维度 2/4/6 不同，这是 O*NET 知识量表标准设计）。LLM 在最近锚点 ±1 分内内插输出最终分",
+        "no_evidence_rule": "score=null, confidence=无法判断, evidence=无相关证据",
+        "primary_signal": "教育背景（专业方向、学位层级）为最强信号，其次为工作经历和项目经验"
+      },
+      "sub_dimension": {
+        "sub_dimension_id": "2.3",
+        "sub_dimension_name": "人文与社会",
+        "onet_category": "2.C.4.e/f/g + 2.C.7 Arts and Humanities + 2.C.8 Law and Public Safety",
+        "items": [
+          {
+            "item_id": "2.3.1",
+            "onet_element_id": "2.C.4.e",
+            "onet_element_name": "Psychology",
+            "name_zh": "心理学",
+            "definition": "Knowledge of human behavior and performance; individual differences in ability, personality, and interests; learning and motivation; psychological research methods; and the assessment and treatment of behavioral and affective disorders.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Monitor several children on a playground"
+              },
+              {
+                "level": 4,
+                "description": "Understand the impact of alcohol on human responses"
+              },
+              {
+                "level": 7,
+                "description": "Treat a person with a severe mental illness"
+              }
+            ],
+            "result": {
+              "score": null,
+              "anchor_level_hit": null,
+              "evidence": null,
+              "confidence": null
+            }
+          },
+          {
+            "item_id": "2.3.2",
+            "onet_element_id": "2.C.4.f",
+            "onet_element_name": "Sociology and Anthropology",
+            "name_zh": "社会学与人类学",
+            "definition": "Knowledge of group behavior and dynamics, societal trends and influences, human migrations, ethnicity, cultures, and their history and origins.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Identify two cultures in a story as being different"
+              },
+              {
+                "level": 4,
+                "description": "Write an article about cultural differences"
+              },
+              {
+                "level": 7,
+                "description": "Create a new theory about the development of civilizations"
+              }
+            ],
+            "result": {
+              "score": null,
+              "anchor_level_hit": null,
+              "evidence": null,
+              "confidence": null
+            }
+          },
+          {
+            "item_id": "2.3.3",
+            "onet_element_id": "2.C.4.g",
+            "onet_element_name": "Geography",
+            "name_zh": "地理学",
+            "definition": "Knowledge of principles and methods for describing the features of land, sea, and air masses, including their physical characteristics, locations, interrelationships, and distribution of plant, animal, and human life.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Know the capital of the United States"
+              },
+              {
+                "level": 4,
+                "description": "Find a specific country on a world map"
+              },
+              {
+                "level": 7,
+                "description": "Develop a map of the world showing mountains, deserts, and rivers"
+              }
+            ],
+            "result": {
+              "score": null,
+              "anchor_level_hit": null,
+              "evidence": null,
+              "confidence": null
+            }
+          },
+          {
+            "item_id": "2.3.4",
+            "onet_element_id": "2.C.7.a",
+            "onet_element_name": "English Language",
+            "name_zh": "英语语言",
+            "definition": "Knowledge of the structure and content of the English language including the meaning and spelling of words, and rules of composition and grammar.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Write a thank you note"
+              },
+              {
+                "level": 4,
+                "description": "Edit an article for a news website"
+              },
+              {
+                "level": 7,
+                "description": "Teach a college English class"
+              }
+            ],
+            "result": {
+              "score": 4.0,
+              "anchor_level_hit": 4,
+              "evidence": "作为数据产品负责人，需要撰写产品文档、需求文档，以及与国内外团队沟通，具备良好的英语应用能力",
+              "confidence": "中"
+            }
+          },
+          {
+            "item_id": "2.3.5",
+            "onet_element_id": "2.C.7.b",
+            "onet_element_name": "Foreign Language",
+            "name_zh": "外语",
+            "definition": "Knowledge of the structure and content of a foreign (non-English) language including the meaning and spelling of words, rules of composition and grammar, and pronunciation.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Say \"please\" and \"thank you\" in a foreign language"
+              },
+              {
+                "level": 4,
+                "description": "Ask directions in a foreign city"
+              },
+              {
+                "level": 7,
+                "description": "Write an English language review of a book written in a foreign language"
+              }
+            ],
+            "result": {
+              "score": 1.0,
+              "anchor_level_hit": 1,
+              "evidence": "候选人简历中未提及外语能力，仅能推断其具备基础英语能力（如阅读技术文档）",
+              "confidence": "中"
+            }
+          },
+          {
+            "item_id": "2.3.6",
+            "onet_element_id": "2.C.7.c",
+            "onet_element_name": "Fine Arts",
+            "name_zh": "美术",
+            "definition": "Knowledge of the theory and techniques required to compose, produce, and perform works of music, dance, visual arts, drama, and sculpture.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Attend a popular music concert"
+              },
+              {
+                "level": 4,
+                "description": "Play a minor part in a local theater play"
+              },
+              {
+                "level": 7,
+                "description": "Design an exhibit for a major art show"
+              }
+            ],
+            "result": {
+              "score": null,
+              "anchor_level_hit": null,
+              "evidence": null,
+              "confidence": null
+            }
+          },
+          {
+            "item_id": "2.3.7",
+            "onet_element_id": "2.C.7.d",
+            "onet_element_name": "History and Archeology",
+            "name_zh": "历史与考古",
+            "definition": "Knowledge of historical events and their causes, indicators, and effects on civilizations and cultures.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Take a class in US history"
+              },
+              {
+                "level": 4,
+                "description": "Teach local history to school children"
+              },
+              {
+                "level": 7,
+                "description": "Determine the age of bones for placing them in fossil history"
+              }
+            ],
+            "result": {
+              "score": null,
+              "anchor_level_hit": null,
+              "evidence": null,
+              "confidence": null
+            }
+          },
+          {
+            "item_id": "2.3.8",
+            "onet_element_id": "2.C.7.e",
+            "onet_element_name": "Philosophy and Theology",
+            "name_zh": "哲学与神学",
+            "definition": "Knowledge of different philosophical systems and religions. This includes their basic principles, values, ethics, ways of thinking, customs, practices, and their impact on human culture.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Watch a TV show on family values"
+              },
+              {
+                "level": 4,
+                "description": "Understand another culture's religious practices"
+              },
+              {
+                "level": 7,
+                "description": "Compare the teachings of major philosophers"
+              }
+            ],
+            "result": {
+              "score": null,
+              "anchor_level_hit": null,
+              "evidence": null,
+              "confidence": null
+            }
+          },
+          {
+            "item_id": "2.3.9",
+            "onet_element_id": "2.C.8.a",
+            "onet_element_name": "Public Safety and Security",
+            "name_zh": "公共安全与安保",
+            "definition": "Knowledge of relevant equipment, policies, procedures, and strategies to promote effective local, state, or national security operations for the protection of people, data, property, and institutions.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Use a seatbelt"
+              },
+              {
+                "level": 4,
+                "description": "Inspect a building site for safety violations"
+              },
+              {
+                "level": 7,
+                "description": "Command a military operation"
+              }
+            ],
+            "result": {
+              "score": 1.0,
+              "anchor_level_hit": 1,
+              "evidence": "作为数据产品负责人，需要考虑数据安全和系统安全，但无直接公共安全管理经验",
+              "confidence": "中"
+            }
+          },
+          {
+            "item_id": "2.3.10",
+            "onet_element_id": "2.C.8.b",
+            "onet_element_name": "Law and Government",
+            "name_zh": "法律与政府",
+            "definition": "Knowledge of laws, legal codes, court procedures, precedents, government regulations, executive orders, agency rules, and the democratic political process.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Describe the length of a U.S. presidential term"
+              },
+              {
+                "level": 4,
+                "description": "Prepare documents and title papers for the purchase of a new house"
+              },
+              {
+                "level": 7,
+                "description": "Serve as a judge in a federal court"
+              }
+            ],
+            "result": {
+              "score": 1.0,
+              "anchor_level_hit": 1,
+              "evidence": "作为数据产品负责人，需要了解数据隐私相关法规，但无深入法律或政府体系知识",
+              "confidence": "中"
+            }
+          }
+        ],
+        "sub_dimension_result": {
+          "score": null,
+          "confidence": null
+        }
+      },
+      "_meta": {
+        "agent_key": "knowledge",
+        "sub_dimension_id": "2.3",
+        "elapsed_ms": 120922,
+        "tokens": {
+          "prompt_tokens": 3626,
+          "completion_tokens": 2424,
+          "total_tokens": 6050
+        }
+      }
+    },
+    {
+      "meta": {
+        "agent": "Agent3_KnowledgeAgent",
+        "dimension": "知识储备",
+        "dimension_id": "2",
+        "onet_framework": "O*NET Knowledge (2.C) - 33 knowledge domains",
+        "onet_source": "https://www.onetonline.org",
+        "scale": "1-7",
+        "anchor_levels": [
+          1,
+          4,
+          7
+        ],
+        "anchor_note": "知识维度使用 Level 1/4/7 三点锚点（与技能维度 2/4/6 不同，这是 O*NET 知识量表标准设计）。LLM 在最近锚点 ±1 分内内插输出最终分",
+        "no_evidence_rule": "score=null, confidence=无法判断, evidence=无相关证据",
+        "primary_signal": "教育背景（专业方向、学位层级）为最强信号，其次为工作经历和项目经验"
+      },
+      "sub_dimension": {
+        "sub_dimension_id": "2.4",
+        "sub_dimension_name": "应用与服务",
+        "onet_category": "2.C.2 Manufacturing + 2.C.5 Health Services + 2.C.6 Education + 2.C.9 Communications + 2.C.10 Transportation",
+        "items": [
+          {
+            "item_id": "2.4.1",
+            "onet_element_id": "2.C.2.a",
+            "onet_element_name": "Production and Processing",
+            "name_zh": "生产与加工",
+            "definition": "Knowledge of raw materials, production processes, quality control, costs, and other techniques for maximizing the effective manufacture and distribution of goods.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Put a computer back into its packing materials"
+              },
+              {
+                "level": 4,
+                "description": "Supervise an appliance assembly line"
+              },
+              {
+                "level": 7,
+                "description": "Manage an international shipping company distribution center"
+              }
+            ],
+            "result": {
+              "score": null,
+              "anchor_level_hit": null,
+              "evidence": "无相关证据",
+              "confidence": "无法判断"
+            }
+          },
+          {
+            "item_id": "2.4.2",
+            "onet_element_id": "2.C.2.b",
+            "onet_element_name": "Food Production",
+            "name_zh": "食品生产",
+            "definition": "Knowledge of techniques and equipment for planting, growing, and harvesting food products (both plant and animal) for consumption, including storage/handling techniques.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Grow herbs in the kitchen"
+              },
+              {
+                "level": 4,
+                "description": "Operate a commercial fishing boat"
+              },
+              {
+                "level": 7,
+                "description": "Run a large production farm"
+              }
+            ],
+            "result": {
+              "score": null,
+              "anchor_level_hit": null,
+              "evidence": "无相关证据",
+              "confidence": "无法判断"
+            }
+          },
+          {
+            "item_id": "2.4.3",
+            "onet_element_id": "2.C.5.a",
+            "onet_element_name": "Medicine and Dentistry",
+            "name_zh": "医学与牙科",
+            "definition": "Knowledge of the information and techniques needed to diagnose and treat human injuries, diseases, and deformities. This includes symptoms, treatment alternatives, drug properties and interactions, and preventive health-care measures.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Use a band-aid"
+              },
+              {
+                "level": 4,
+                "description": "Fill a tooth cavity"
+              },
+              {
+                "level": 7,
+                "description": "Perform open heart surgery"
+              }
+            ],
+            "result": {
+              "score": null,
+              "anchor_level_hit": null,
+              "evidence": "无相关证据",
+              "confidence": "无法判断"
+            }
+          },
+          {
+            "item_id": "2.4.4",
+            "onet_element_id": "2.C.5.b",
+            "onet_element_name": "Therapy and Counseling",
+            "name_zh": "治疗与咨询",
+            "definition": "Knowledge of principles, methods, and procedures for diagnosis, treatment, and rehabilitation of physical and mental dysfunctions, and for career counseling and guidance.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Put ice on a sprained ankle"
+              },
+              {
+                "level": 4,
+                "description": "Provide job counseling to the unemployed"
+              },
+              {
+                "level": 7,
+                "description": "Counsel an abused child"
+              }
+            ],
+            "result": {
+              "score": null,
+              "anchor_level_hit": null,
+              "evidence": "无相关证据",
+              "confidence": "无法判断"
+            }
+          },
+          {
+            "item_id": "2.4.5",
+            "onet_element_id": "2.C.6",
+            "onet_element_name": "Education and Training",
+            "name_zh": "教育与培训",
+            "definition": "Knowledge of principles and methods for curriculum and training design, teaching and instruction for individuals and groups, and the measurement of training effects.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Show someone how to bowl"
+              },
+              {
+                "level": 4,
+                "description": "Lead a quality improvement seminar"
+              },
+              {
+                "level": 7,
+                "description": "Design a training program for new employees"
+              }
+            ],
+            "result": {
+              "score": 4.0,
+              "anchor_level_hit": 4,
+              "evidence": "作为业务BP与市场、运营、财务周会沟通，负责ROI复盘、预算申请、资源协调",
+              "confidence": "中"
+            }
+          },
+          {
+            "item_id": "2.4.6",
+            "onet_element_id": "2.C.9.a",
+            "onet_element_name": "Telecommunications",
+            "name_zh": "电信",
+            "definition": "Knowledge of transmission, broadcasting, switching, control, and operation of telecommunications systems.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Send an email"
+              },
+              {
+                "level": 4,
+                "description": "Install a wireless internet router"
+              },
+              {
+                "level": 7,
+                "description": "Develop a new, world-wide telecommunications network"
+              }
+            ],
+            "result": {
+              "score": 1.0,
+              "anchor_level_hit": 1,
+              "evidence": "负责用户增长中台从0到1建设，统筹埋点规范、指标体系、看板体系、实验体系",
+              "confidence": "中"
+            }
+          },
+          {
+            "item_id": "2.4.7",
+            "onet_element_id": "2.C.9.b",
+            "onet_element_name": "Communications and Media",
+            "name_zh": "传播与媒体",
+            "definition": "Knowledge of media production, communication, and dissemination techniques and methods. This includes alternative ways to inform and entertain via written, oral, and visual media.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Write a thank you note"
+              },
+              {
+                "level": 4,
+                "description": "Host a music radio show"
+              },
+              {
+                "level": 7,
+                "description": "Write a novel"
+              }
+            ],
+            "result": {
+              "score": 4.0,
+              "anchor_level_hit": 4,
+              "evidence": "输出行业报告8篇，其中2篇用于品牌公关白皮书",
+              "confidence": "中"
+            }
+          },
+          {
+            "item_id": "2.4.8",
+            "onet_element_id": "2.C.10",
+            "onet_element_name": "Transportation",
+            "name_zh": "交通运输",
+            "definition": "Knowledge of principles and methods for moving people or goods by air, rail, sea, or road, including the relative costs and benefits.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Ride a train to work"
+              },
+              {
+                "level": 4,
+                "description": "Drive a semi-truck through a busy city"
+              },
+              {
+                "level": 7,
+                "description": "Control air traffic at a busy airport"
+              }
+            ],
+            "result": {
+              "score": null,
+              "anchor_level_hit": null,
+              "evidence": "无相关证据",
+              "confidence": "无法判断"
+            }
+          }
+        ],
+        "sub_dimension_result": {
+          "score": null,
+          "confidence": null
+        }
+      },
+      "_meta": {
+        "agent_key": "knowledge",
+        "sub_dimension_id": "2.4",
+        "elapsed_ms": 24714,
+        "tokens": {
+          "prompt_tokens": 3154,
+          "completion_tokens": 1949,
+          "total_tokens": 5103
+        }
+      }
+    }
+  ]
+}

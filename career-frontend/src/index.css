@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #1F2937;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+
+.card {
+  @apply bg-white rounded-xl shadow-sm border border-gray-200;
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  @apply shadow-md;
+}
+
+.stat-card {
+  @apply bg-white rounded-xl p-6 shadow-sm border border-gray-200;
+  transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+  @apply shadow-md;
+  transform: translateY(-2px);
+}
+
+.status-badge {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+}
+
+.status-badge-success {
+  @apply bg-green-100 text-green-700;
+}
+
+.status-badge-danger {
+  @apply bg-red-100 text-red-700;
+}
+
+.status-badge-warning {
+  @apply bg-yellow-100 text-yellow-700;
+}
+
+.status-badge-info {
+  @apply bg-blue-100 text-blue-700;
+}
+
+.btn-primary {
+  @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors;
+}
+
+.btn-secondary {
+  @apply bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}

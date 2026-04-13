@@ -1,0 +1,312 @@
+{
+  "agent": "Agent 7 - WorkValuesAgent",
+  "description": "O*NET Work Values (1.B.2) - 6 dimensions with all corresponding needs",
+  "main_dimensions": {
+    "1.B.2.a": {
+      "dimension_id": "1.B.2.a",
+      "dimension_name": "Achievement",
+      "description": "Occupations that satisfy this work value are results oriented and allow employees to use their strongest abilities, giving them a feeling of accomplishment. Corresponding needs are Ability Utilization and Achievement.",
+      "corresponding_needs": {
+        "1.B.2.a.1": {
+          "element_id": "1.B.2.a.1",
+          "need_name": "Ability Utilization",
+          "description": "Workers on this job make use of their individual abilities."
+        },
+        "1.B.2.a.2": {
+          "element_id": "1.B.2.a.2",
+          "need_name": "Achievement",
+          "description": "Workers on this job get a feeling of accomplishment."
+        }
+      }
+    },
+    "1.B.2.b": {
+      "dimension_id": "1.B.2.b",
+      "dimension_name": "Working Conditions",
+      "description": "Occupations that satisfy this work value offer job security and good working conditions. Corresponding needs are Activity, Compensation, Independence, Security, Variety and Working Conditions.",
+      "corresponding_needs": {
+        "1.B.2.b.1": {
+          "element_id": "1.B.2.b.1",
+          "need_name": "Activity",
+          "description": "Workers on this job are busy all the time."
+        },
+        "1.B.2.b.2": {
+          "element_id": "1.B.2.b.2",
+          "need_name": "Independence",
+          "description": "Workers on this job do their work alone."
+        },
+        "1.B.2.b.3": {
+          "element_id": "1.B.2.b.3",
+          "need_name": "Variety",
+          "description": "Workers on this job have something different to do every day."
+        },
+        "1.B.2.b.4": {
+          "element_id": "1.B.2.b.4",
+          "need_name": "Compensation",
+          "description": "Workers on this job are paid well in comparison with other workers."
+        },
+        "1.B.2.b.5": {
+          "element_id": "1.B.2.b.5",
+          "need_name": "Security",
+          "description": "Workers on this job have steady employment."
+        },
+        "1.B.2.b.6": {
+          "element_id": "1.B.2.b.6",
+          "need_name": "Working Conditions",
+          "description": "Workers on this job have good working conditions."
+        }
+      }
+    },
+    "1.B.2.c": {
+      "dimension_id": "1.B.2.c",
+      "dimension_name": "Recognition",
+      "description": "Occupations that satisfy this work value offer advancement, potential for leadership, and are often considered prestigious. Corresponding needs are Advancement, Authority, Recognition and Social Status.",
+      "corresponding_needs": {
+        "1.B.2.c.1": {
+          "element_id": "1.B.2.c.1",
+          "need_name": "Advancement",
+          "description": "Workers on this job have opportunities for advancement."
+        },
+        "1.B.2.c.2": {
+          "element_id": "1.B.2.c.2",
+          "need_name": "Recognition",
+          "description": "Workers on this job receive recognition for the work they do."
+        },
+        "1.B.2.c.3": {
+          "element_id": "1.B.2.c.3",
+          "need_name": "Authority",
+          "description": "Workers on this job give directions and instructions to others."
+        },
+        "1.B.2.c.4": {
+          "element_id": "1.B.2.c.4",
+          "need_name": "Social Status",
+          "description": "Workers on this job are looked up to by others in their company and their community."
+        }
+      }
+    },
+    "1.B.2.d": {
+      "dimension_id": "1.B.2.d",
+      "dimension_name": "Relationships",
+      "description": "Occupations that satisfy this work value allow employees to provide service to others and work with co-workers in a friendly non-competitive environment. Corresponding needs are Co-workers, Moral Values and Social Service.",
+      "corresponding_needs": {
+        "1.B.2.d.1": {
+          "element_id": "1.B.2.d.1",
+          "need_name": "Co-workers",
+          "description": "Workers on this job have co-workers who are easy to get along with."
+        },
+        "1.B.2.d.2": {
+          "element_id": "1.B.2.d.2",
+          "need_name": "Social Service",
+          "description": "Workers on this job have work where they do things for other people."
+        },
+        "1.B.2.d.3": {
+          "element_id": "1.B.2.d.3",
+          "need_name": "Moral Values",
+          "description": "Workers on this job are never pressured to do things that go against their sense of right and wrong."
+        }
+      }
+    },
+    "1.B.2.e": {
+      "dimension_id": "1.B.2.e",
+      "dimension_name": "Support",
+      "description": "Occupations that satisfy this work value offer supportive management that stands behind employees. Corresponding needs are Company Policies, Supervision: Human Relations and Supervision: Technical.",
+      "corresponding_needs": {
+        "1.B.2.e.1": {
+          "element_id": "1.B.2.e.1",
+          "need_name": "Company Policies and Practices",
+          "description": "Workers on this job are treated fairly by the company."
+        },
+        "1.B.2.e.2": {
+          "element_id": "1.B.2.e.2",
+          "need_name": "Supervision, Human Relations",
+          "description": "Workers on this job have supervisors who back up their workers with management."
+        },
+        "1.B.2.e.3": {
+          "element_id": "1.B.2.e.3",
+          "need_name": "Supervision, Technical",
+          "description": "Workers on this job have supervisors who train their workers well."
+        }
+      }
+    },
+    "1.B.2.f": {
+      "dimension_id": "1.B.2.f",
+      "dimension_name": "Independence",
+      "description": "Occupations that satisfy this work value allow employees to work on their own and make decisions. Corresponding needs are Creativity, Responsibility and Autonomy.",
+      "corresponding_needs": {
+        "1.B.2.f.1": {
+          "element_id": "1.B.2.f.1",
+          "need_name": "Creativity",
+          "description": "Workers on this job try out their own ideas."
+        },
+        "1.B.2.f.2": {
+          "element_id": "1.B.2.f.2",
+          "need_name": "Responsibility",
+          "description": "Workers on this job make decisions on their own."
+        },
+        "1.B.2.f.3": {
+          "element_id": "1.B.2.f.3",
+          "need_name": "Autonomy",
+          "description": "Workers on this job plan their work with little supervision."
+        }
+      }
+    }
+  },
+  "all_elements": {
+    "1.B.2": {
+      "element_id": "1.B.2",
+      "name": "Work Values",
+      "description": "Occupational Reinforcer Patterns (ORPs) indicate which work values and needs are likely to be reinforced or satisfied by a particular O*NET-SOC occupation. The use of work values to describe occupations is based on the Theory of Work Adjustment (TWA) developed during the Work Adjustment Project at the University of Minnesota under Research Grants from the U.S. Department of Health, Education and Welfare (Dawis, R.V., England, G.W., & Lofquist, L.H., 1964; Dawis, R.V., & Lofquist, L.H., 1984). This theory proposes that job satisfaction is directly related to the degree to which a person's values and corresponding needs are satisfied by his or her work environment. The TWA identifies six work values each with a corresponding set of needs."
+    },
+    "1.B.2.a": {
+      "element_id": "1.B.2.a",
+      "name": "Achievement",
+      "description": "Occupations that satisfy this work value are results oriented and allow employees to use their strongest abilities, giving them a feeling of accomplishment. Corresponding needs are Ability Utilization and Achievement."
+    },
+    "1.B.2.a.1": {
+      "element_id": "1.B.2.a.1",
+      "name": "Ability Utilization",
+      "description": "Workers on this job make use of their individual abilities."
+    },
+    "1.B.2.a.2": {
+      "element_id": "1.B.2.a.2",
+      "name": "Achievement",
+      "description": "Workers on this job get a feeling of accomplishment."
+    },
+    "1.B.2.b": {
+      "element_id": "1.B.2.b",
+      "name": "Working Conditions",
+      "description": "Occupations that satisfy this work value offer job security and good working conditions. Corresponding needs are Activity, Compensation, Independence, Security, Variety and Working Conditions."
+    },
+    "1.B.2.b.1": {
+      "element_id": "1.B.2.b.1",
+      "name": "Activity",
+      "description": "Workers on this job are busy all the time."
+    },
+    "1.B.2.b.2": {
+      "element_id": "1.B.2.b.2",
+      "name": "Independence",
+      "description": "Workers on this job do their work alone."
+    },
+    "1.B.2.b.3": {
+      "element_id": "1.B.2.b.3",
+      "name": "Variety",
+      "description": "Workers on this job have something different to do every day."
+    },
+    "1.B.2.b.4": {
+      "element_id": "1.B.2.b.4",
+      "name": "Compensation",
+      "description": "Workers on this job are paid well in comparison with other workers."
+    },
+    "1.B.2.b.5": {
+      "element_id": "1.B.2.b.5",
+      "name": "Security",
+      "description": "Workers on this job have steady employment."
+    },
+    "1.B.2.b.6": {
+      "element_id": "1.B.2.b.6",
+      "name": "Working Conditions",
+      "description": "Workers on this job have good working conditions."
+    },
+    "1.B.2.c": {
+      "element_id": "1.B.2.c",
+      "name": "Recognition",
+      "description": "Occupations that satisfy this work value offer advancement, potential for leadership, and are often considered prestigious. Corresponding needs are Advancement, Authority, Recognition and Social Status."
+    },
+    "1.B.2.c.1": {
+      "element_id": "1.B.2.c.1",
+      "name": "Advancement",
+      "description": "Workers on this job have opportunities for advancement."
+    },
+    "1.B.2.c.2": {
+      "element_id": "1.B.2.c.2",
+      "name": "Recognition",
+      "description": "Workers on this job receive recognition for the work they do."
+    },
+    "1.B.2.c.3": {
+      "element_id": "1.B.2.c.3",
+      "name": "Authority",
+      "description": "Workers on this job give directions and instructions to others."
+    },
+    "1.B.2.c.4": {
+      "element_id": "1.B.2.c.4",
+      "name": "Social Status",
+      "description": "Workers on this job are looked up to by others in their company and their community."
+    },
+    "1.B.2.d": {
+      "element_id": "1.B.2.d",
+      "name": "Relationships",
+      "description": "Occupations that satisfy this work value allow employees to provide service to others and work with co-workers in a friendly non-competitive environment. Corresponding needs are Co-workers, Moral Values and Social Service."
+    },
+    "1.B.2.d.1": {
+      "element_id": "1.B.2.d.1",
+      "name": "Co-workers",
+      "description": "Workers on this job have co-workers who are easy to get along with."
+    },
+    "1.B.2.d.2": {
+      "element_id": "1.B.2.d.2",
+      "name": "Social Service",
+      "description": "Workers on this job have work where they do things for other people."
+    },
+    "1.B.2.d.3": {
+      "element_id": "1.B.2.d.3",
+      "name": "Moral Values",
+      "description": "Workers on this job are never pressured to do things that go against their sense of right and wrong."
+    },
+    "1.B.2.e": {
+      "element_id": "1.B.2.e",
+      "name": "Support",
+      "description": "Occupations that satisfy this work value offer supportive management that stands behind employees. Corresponding needs are Company Policies, Supervision: Human Relations and Supervision: Technical."
+    },
+    "1.B.2.e.1": {
+      "element_id": "1.B.2.e.1",
+      "name": "Company Policies and Practices",
+      "description": "Workers on this job are treated fairly by the company."
+    },
+    "1.B.2.e.2": {
+      "element_id": "1.B.2.e.2",
+      "name": "Supervision, Human Relations",
+      "description": "Workers on this job have supervisors who back up their workers with management."
+    },
+    "1.B.2.e.3": {
+      "element_id": "1.B.2.e.3",
+      "name": "Supervision, Technical",
+      "description": "Workers on this job have supervisors who train their workers well."
+    },
+    "1.B.2.f": {
+      "element_id": "1.B.2.f",
+      "name": "Independence",
+      "description": "Occupations that satisfy this work value allow employees to work on their own and make decisions. Corresponding needs are Creativity, Responsibility and Autonomy."
+    },
+    "1.B.2.f.1": {
+      "element_id": "1.B.2.f.1",
+      "name": "Creativity",
+      "description": "Workers on this job try out their own ideas."
+    },
+    "1.B.2.f.2": {
+      "element_id": "1.B.2.f.2",
+      "name": "Responsibility",
+      "description": "Workers on this job make decisions on their own."
+    },
+    "1.B.2.f.3": {
+      "element_id": "1.B.2.f.3",
+      "name": "Autonomy",
+      "description": "Workers on this job plan their work with little supervision."
+    },
+    "1.B.2.g": {
+      "element_id": "1.B.2.g",
+      "name": "First Work Value High-Point",
+      "description": "Primary-Rank Descriptiveness"
+    },
+    "1.B.2.h": {
+      "element_id": "1.B.2.h",
+      "name": "Second Work Value High-Point",
+      "description": "Secondary-Cutoff/Rank Descriptiveness"
+    },
+    "1.B.2.i": {
+      "element_id": "1.B.2.i",
+      "name": "Third Work Value High-Point",
+      "description": "Tertiary-Cutoff/Rank Descriptiveness"
+    }
+  },
+  "total_dimensions": 6,
+  "total_needs": 9
+}

@@ -1,0 +1,319 @@
+{
+  "meta": {
+    "agent": "Agent4_AbilitiesAgent",
+    "dimension": "认知能力",
+    "dimension_id": "3",
+    "onet_framework": "O*NET Cognitive Abilities (1.A.1.a/b/c)",
+    "onet_source": "https://www.onetonline.org",
+    "scale": "1-7",
+    "anchor_levels": [2, 4, 6],
+    "anchor_note": "O*NET Level Scale 主要提供 Level 2/4/6 锚点，个别项有 Level 1/3/5。LLM 在最近锚点 ±1 分内内插输出最终分",
+    "mode_a": {
+      "condition": "有认知能力测试数据（quiz_abilities）",
+      "score_formula": "score_7 = round(quiz_score_100 / 100 * 6 + 1, 1)",
+      "confidence": "高",
+      "status": "done"
+    },
+    "mode_b": {
+      "condition": "无认知能力测试数据",
+      "output": "score_range: [min, max]，score=null",
+      "confidence": "低",
+      "status": "locked"
+    },
+    "no_evidence_rule": "score=null, confidence=无法判断, evidence=无相关证据"
+  },
+  "sub_dimensions": [
+    {
+      "sub_dimension_id": "3.1",
+      "sub_dimension_name": "言语能力",
+      "onet_category": "1.A.1.a Verbal Abilities",
+      "items": [
+        {
+          "item_id": "3.1.1",
+          "onet_element_id": "1.A.1.a.1",
+          "onet_element_name": "Oral Comprehension",
+          "name_zh": "口头理解",
+          "definition": "The ability to listen to and understand information and ideas presented through spoken words and sentences.",
+          "anchors": [
+            { "level": 2, "description": "Understand a television commercial" },
+            { "level": 4, "description": "Understand a coach's oral instructions for a sport" },
+            { "level": 6, "description": "Understand a lecture on advanced physics" }
+          ],
+          "result": {
+            "score": null,
+            "score_range": null,
+            "anchor_level_hit": null,
+            "evidence": null,
+            "confidence": null
+          }
+        },
+        {
+          "item_id": "3.1.2",
+          "onet_element_id": "1.A.1.a.2",
+          "onet_element_name": "Written Comprehension",
+          "name_zh": "书面理解",
+          "definition": "The ability to read and understand information and ideas presented in writing.",
+          "anchors": [
+            { "level": 2, "description": "Understand signs on the highway" },
+            { "level": 4, "description": "Understand an apartment lease" },
+            { "level": 6, "description": "Understand an instruction book on repairing Artificial Intelligence systems" }
+          ],
+          "result": {
+            "score": null,
+            "score_range": null,
+            "anchor_level_hit": null,
+            "evidence": null,
+            "confidence": null
+          }
+        },
+        {
+          "item_id": "3.1.3",
+          "onet_element_id": "1.A.1.a.3",
+          "onet_element_name": "Oral Expression",
+          "name_zh": "口头表达",
+          "definition": "The ability to communicate information and ideas in speaking so others will understand.",
+          "anchors": [
+            { "level": 2, "description": "Place an order at a restaurant drive-thru" },
+            { "level": 4, "description": "Give instructions to a lost motorist" },
+            { "level": 6, "description": "Explain advanced principles of genetics to college freshmen" }
+          ],
+          "result": {
+            "score": null,
+            "score_range": null,
+            "anchor_level_hit": null,
+            "evidence": null,
+            "confidence": null
+          }
+        },
+        {
+          "item_id": "3.1.4",
+          "onet_element_id": "1.A.1.a.4",
+          "onet_element_name": "Written Expression",
+          "name_zh": "书面表达",
+          "definition": "The ability to communicate information and ideas in writing so others will understand.",
+          "anchors": [
+            { "level": 1, "description": "Write a note to remind someone to take food out of the freezer" },
+            { "level": 4, "description": "Write a job recommendation for a subordinate" },
+            { "level": 6, "description": "Write an advanced economics textbook" }
+          ],
+          "result": {
+            "score": null,
+            "score_range": null,
+            "anchor_level_hit": null,
+            "evidence": null,
+            "confidence": null
+          }
+        }
+      ],
+      "sub_dimension_result": {
+        "score": null,
+        "score_range": null,
+        "confidence": null,
+        "status": null
+      }
+    },
+    {
+      "sub_dimension_id": "3.2",
+      "sub_dimension_name": "推理能力",
+      "onet_category": "1.A.1.b Idea Generation and Reasoning Abilities",
+      "items": [
+        {
+          "item_id": "3.2.1",
+          "onet_element_id": "1.A.1.b.1",
+          "onet_element_name": "Fluency of Ideas",
+          "name_zh": "思维流畅性",
+          "definition": "The ability to come up with a number of ideas about a topic (the number of ideas is important, not their quality, correctness, or creativity).",
+          "anchors": [
+            { "level": 2, "description": "Name four different uses for a screwdriver" },
+            { "level": 4, "description": "Think of as many ideas as possible for the name of a new company" },
+            { "level": 6, "description": "Identify as many strategies as possible for a company acquisition and merger" }
+          ],
+          "result": {
+            "score": null,
+            "score_range": null,
+            "anchor_level_hit": null,
+            "evidence": null,
+            "confidence": null
+          }
+        },
+        {
+          "item_id": "3.2.2",
+          "onet_element_id": "1.A.1.b.2",
+          "onet_element_name": "Originality",
+          "name_zh": "思维独创性",
+          "definition": "The ability to come up with unusual or clever ideas about a given topic or situation, or to develop creative ways to solve a problem.",
+          "anchors": [
+            { "level": 2, "description": "Use a credit card to open a locked door" },
+            { "level": 4, "description": "Redesign job tasks to be interesting for employees" },
+            { "level": 6, "description": "Invent a new type of man-made fiber" }
+          ],
+          "result": {
+            "score": null,
+            "score_range": null,
+            "anchor_level_hit": null,
+            "evidence": null,
+            "confidence": null
+          }
+        },
+        {
+          "item_id": "3.2.3",
+          "onet_element_id": "1.A.1.b.3",
+          "onet_element_name": "Problem Sensitivity",
+          "name_zh": "问题敏感性",
+          "definition": "The ability to tell when something is wrong or is likely to go wrong. It does not involve solving the problem, only recognizing that there is a problem.",
+          "anchors": [
+            { "level": 2, "description": "Recognize that an unplugged lamp won't work" },
+            { "level": 4, "description": "Notice from a subtle difference in a client's mood that something is bothering them" },
+            { "level": 6, "description": "Recognize an illness at an early stage of a disease when there are only a few symptoms" }
+          ],
+          "result": {
+            "score": null,
+            "score_range": null,
+            "anchor_level_hit": null,
+            "evidence": null,
+            "confidence": null
+          }
+        },
+        {
+          "item_id": "3.2.4",
+          "onet_element_id": "1.A.1.b.4",
+          "onet_element_name": "Deductive Reasoning",
+          "name_zh": "演绎推理",
+          "definition": "The ability to apply general rules to specific problems to produce answers that make sense.",
+          "anchors": [
+            { "level": 2, "description": "Know that a stalled car can coast downhill" },
+            { "level": 5, "description": "Decide what factors to consider in selecting stocks" },
+            { "level": 6, "description": "Design an aircraft wing using principles of aerodynamics" }
+          ],
+          "result": {
+            "score": null,
+            "score_range": null,
+            "anchor_level_hit": null,
+            "evidence": null,
+            "confidence": null
+          }
+        },
+        {
+          "item_id": "3.2.5",
+          "onet_element_id": "1.A.1.b.5",
+          "onet_element_name": "Inductive Reasoning",
+          "name_zh": "归纳推理",
+          "definition": "The ability to combine pieces of information to form general rules or conclusions (includes finding a relationship among seemingly unrelated events).",
+          "anchors": [
+            { "level": 2, "description": "Decide what to wear based on the weather report" },
+            { "level": 4, "description": "Determine the prime suspect based on crime scene evidence" },
+            { "level": 6, "description": "Diagnose a disease using results of many different lab tests" }
+          ],
+          "result": {
+            "score": null,
+            "score_range": null,
+            "anchor_level_hit": null,
+            "evidence": null,
+            "confidence": null
+          }
+        },
+        {
+          "item_id": "3.2.6",
+          "onet_element_id": "1.A.1.b.6",
+          "onet_element_name": "Information Ordering",
+          "name_zh": "信息排序",
+          "definition": "The ability to arrange things or actions in a certain order or pattern according to a specific rule or set of rules (e.g., patterns of numbers, letters, words, pictures, mathematical operations).",
+          "anchors": [
+            { "level": 2, "description": "Follow the correct steps to make change" },
+            { "level": 6, "description": "Assemble a wind turbine" }
+          ],
+          "result": {
+            "score": null,
+            "score_range": null,
+            "anchor_level_hit": null,
+            "evidence": null,
+            "confidence": null
+          }
+        },
+        {
+          "item_id": "3.2.7",
+          "onet_element_id": "1.A.1.b.7",
+          "onet_element_name": "Category Flexibility",
+          "name_zh": "类别灵活性",
+          "definition": "The ability to generate or use different sets of rules for combining or grouping things in different ways.",
+          "anchors": [
+            { "level": 2, "description": "Sort paintbrushes based on length" },
+            { "level": 3, "description": "Classify flowers according to size, color, and smell" },
+            { "level": 6, "description": "Classify man-made fibers in terms of their characteristics, like strength or cost" }
+          ],
+          "result": {
+            "score": null,
+            "score_range": null,
+            "anchor_level_hit": null,
+            "evidence": null,
+            "confidence": null
+          }
+        }
+      ],
+      "sub_dimension_result": {
+        "score": null,
+        "score_range": null,
+        "confidence": null,
+        "status": null
+      }
+    },
+    {
+      "sub_dimension_id": "3.3",
+      "sub_dimension_name": "定量能力",
+      "onet_category": "1.A.1.c Quantitative Abilities",
+      "items": [
+        {
+          "item_id": "3.3.1",
+          "onet_element_id": "1.A.1.c.1",
+          "onet_element_name": "Mathematical Reasoning",
+          "name_zh": "数学推理",
+          "definition": "The ability to choose the right mathematical methods or formulas to solve a problem.",
+          "anchors": [
+            { "level": 1, "description": "Determine how much 20 oranges will cost when they are priced at 5 for 4 dollars" },
+            { "level": 4, "description": "Decide how to calculate profits to determine the amounts of yearly bonuses" },
+            { "level": 6, "description": "Determine the mathematics required to simulate a space craft landing on the moon" }
+          ],
+          "result": {
+            "score": null,
+            "score_range": null,
+            "anchor_level_hit": null,
+            "evidence": null,
+            "confidence": null
+          }
+        },
+        {
+          "item_id": "3.3.2",
+          "onet_element_id": "1.A.1.c.2",
+          "onet_element_name": "Number Facility",
+          "name_zh": "数字运算",
+          "definition": "The ability to add, subtract, multiply, or divide quickly and correctly.",
+          "anchors": [
+            { "level": 1, "description": "Add 2 and 7" },
+            { "level": 3, "description": "Calculate a discounted price" },
+            { "level": 5, "description": "Compute the interest payment that should be generated from an investment" }
+          ],
+          "result": {
+            "score": null,
+            "score_range": null,
+            "anchor_level_hit": null,
+            "evidence": null,
+            "confidence": null
+          }
+        }
+      ],
+      "sub_dimension_result": {
+        "score": null,
+        "score_range": null,
+        "confidence": null,
+        "status": null
+      }
+    }
+  ],
+  "dimension_result": {
+    "score": null,
+    "confidence": null,
+    "status": null,
+    "highlights": [],
+    "focus_areas": []
+  }
+}

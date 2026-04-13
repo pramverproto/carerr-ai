@@ -1,0 +1,437 @@
+════════════════════════════════════════════════════════
+  个人能力评估系统 — Agent 分工设计（输入 / 输出 / 写库）
+════════════════════════════════════════════════════════
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+总览：Agent 列表与执行顺序
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 1  InputParser          解析所有原始输入，输出结构化 payload
+Step 2  6 个 Sub-Agents      并发执行，各自评分 + 生成解读文本 + 写 DB
+Step 3  SummaryAgent         读 DB 做跨维度合成，写叙事摘要 + 行动清单
+前端渲染：直接读 DB，不经过任何 LLM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Agent 0 — Orchestrator（调度器，无 LLM 调用）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+职责
+  · 接收用户提交，调用 InputParser
+  · 并发启动 6 个 Sub-Agents
+  · 轮询 / 监听所有 Sub-Agent status = done
+  · 全部完成后触发 SummaryAgent
+  · 向前端推送进度状态
+输入
+  · 用户原始提交（简历文件 + 可选量表结果 + assessment_id）
+输出
+  · 无内容输出，只做调度
+写库
+  · assessment_jobs 表（记录整体任务状态 pending/running/done/failed）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Agent 1 — InputParser
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+职责
+  · 将所有原始输入转成下游 Sub-Agent 可直接消费的结构化 JSON
+输入（原始）
+  · resume_text         简历文本（PDF 转文本后传入）
+  · supplement_text     个人补充信息文本（必选）
+  · ipip_neo_raw        大五人格量表原始分（可选，5 个维度）
+  · riasec_raw          Holland 量表原始分（可选，6 个类型）
+  · quiz_results        做题记录（可选，含题目ID + 答对/错）
+LLM 调用内容
+  · 用 LLM 从简历 + 补充信息中提取结构化字段
+    → 教育背景（学历 / 专业 / 学校）
+    → 工作经历（公司 / 岗位 / 时间 / 职责描述原文）
+    → 项目经历（名称 / 描述 / 技术栈）
+    → 技能词列表（原文提取，不做推断）
+    → 行为动词句子（"带领xx人"、"独立完成xx"、"说服xx" 等）
+输出 JSON（传给所有 Sub-Agents 的 payload）
+  {
+    "assessment_id": "...",
+    "resume": {
+      "education": [...],
+      "experiences": [...],           // 每条含 raw_bullets 原文
+      "projects": [...],
+      "skills_raw": [...],            // 原文技能词，不推断
+      "behavior_bullets": [...]       // 带行为动词的原句列表
+    },
+    "bigfive": {                      // 可选，无则 null
+      "O": 4.2, "C": 5.1, "E": 4.5, "A": 4.8, "N": 4.3
+    },
+    "riasec": {                       // 可选，无则 null
+      "R": 3.1, "I": 5.4, "A": 2.8, "S": 4.0, "E": 5.6, "C": 3.9
+    },
+    "quiz": {                         // 可选，无则 null
+      "knowledge_coverage": {...},    // 知识点覆盖情况
+      "accuracy_by_domain": {...}     // 各领域正确率
+    },
+    "data_flags": {
+      "has_bigfive": true/false,
+      "has_riasec": true/false,
+      "has_quiz": true/false
+    }
+  }
+
+写库
+  · 无（payload 直接内存传递给 Sub-Agents）
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Agent 2 — SkillsAgent（维度一：技能画像）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+职责
+  · 评估 1.1 认知基础技能 / 1.2 社交技能 / 1.3 技术技能 / 1.4 管理技能
+  · 生成每个小维度的行为证据 + 解读文本
+  · 生成维度总述段落
+
+System Prompt 注入（启动前从 DB 查好注入，不让 Agent 自己查）
+  · O*NET skills 表：element_id / element_name / description（4个小维度对应条目）
+  · level_scale_anchors 表：各条目的低/中/高行为描述（评分 Rubric）
+  · technology_skills 表：当前热门技术列表（hot_technology / in_demand 标签）
+
+输入（来自 InputParser payload）
+  · resume.behavior_bullets
+  · resume.skills_raw
+  · resume.experiences
+  · resume.projects
+
+LLM 生成内容
+  · 4 个小维度各自：
+    - score          1-7 浮点数（对照锚点判定）
+    - confidence     高 / 中（有量表/做题=高；纯简历推断=中）
+    - evidence       从简历摘录的原文 bullets（1-3 条）
+    - meaning        「这意味着什么」解读段落（2-4 句）
+  · dimension_summary  维度总述段落（2-3 句，概括整体水平和 T 型结构）
+  · tech_gap           市场高需求但用户未体现的技术列表（对比 technology_skills）
+
+写库（assessment_dimensions 表）
+  {
+    "assessment_id": "...",
+    "dimension": "skills",
+    "overall_score": 5.2,            // 小维度加权平均，代码计算
+    "confidence": "高/中",
+    "dimension_summary": "...",      // LLM 生成
+    "sub_dimensions": [
+      {
+        "id": "1.1",
+        "name": "认知基础技能",
+        "score": 5.0,
+        "confidence": "中",
+        "evidence": ["简历原文1", "简历原文2"],
+        "meaning": "..."             // LLM 生成
+      },
+      ...
+    ],
+    "highlights": ["1.3", "1.2"],   // 得分 ≥ 5.5，代码规则
+    "focus_areas": ["1.4"],         // 得分 ≤ 4.5，代码规则
+    "tech_gap": ["Docker", "K8s"],  // LLM 对比生成
+    "status": "done"
+  }
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Agent 3 — KnowledgeAgent（维度二：知识储备）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+职责
+  · 评估 2.1 商业与管理 / 2.2 技术与工程 / 2.3 人文与社会 / 2.4 应用与服务
+
+System Prompt 注入
+  · O*NET knowledge 表：对应 33 个知识领域条目
+  · level_scale_anchors 表：对应锚点
+  · （有 quiz_results 时）用户做题结果中的知识点覆盖情况
+
+输入
+  · resume.education
+  · resume.experiences
+  · resume.behavior_bullets
+  · quiz.accuracy_by_domain（可选）
+
+LLM 生成内容
+  · 4 个小维度各自：score / confidence / evidence / meaning
+  · dimension_summary  维度总述（T 型知识结构描述）
+  · 置信度规则：有 quiz_results → 高；仅简历 → 中
+
+写库（同 assessment_dimensions 表，dimension = "knowledge"）
+  · 结构同 SkillsAgent，无 tech_gap 字段
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Agent 4 — AbilitiesAgent（维度三：认知能力）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+职责
+  · 评估 3.1 言语能力 / 3.2 推理能力 / 3.3 定量能力
+  · 无做题数据时：只做间接推断，标记 status = locked，不计入正式评分
+
+System Prompt 注入
+  · O*NET abilities 表：认知类子集条目
+  · level_scale_anchors 表：对应锚点
+
+输入
+  · resume.behavior_bullets
+  · resume.experiences
+  · quiz.accuracy_by_domain（可选，有则置信度=高）
+
+逻辑分支
+  · 有做题数据 → 正式评分，confidence = 高，status = done
+  · 无做题数据 → 仅推断，confidence = 低，status = locked
+                   score 仅存 estimate_range（如 "5-6"），不存精确分
+
+LLM 生成内容
+  · 有数据时：3 个小维度的 score / confidence / evidence / meaning
+  · 无数据时：3 个小维度的 estimate_range + indirect_signals（简历里的间接线索）
+  · dimension_summary（locked 时写引导文案，说明为何需要完成测试）
+
+写库（dimension = "abilities"）
+  {
+    ...,
+    "status": "done" 或 "locked",
+    "sub_dimensions": [
+      {
+        "id": "3.1",
+        "score": null,               // locked 时为 null
+        "estimate_range": "4-5",     // locked 时有值
+        "indirect_signals": ["..."]  // 简历间接线索
+      }
+    ]
+  }
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Agent 5 — WorkStylesAgent（维度四：工作特质）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+职责
+  · 评估 4.1 主动进取 / 4.2 人际导向 / 4.3 尽责守则 / 4.4 情绪韧性
+
+System Prompt 注入
+  · O*NET work_styles 表：各条目描述
+  · level_scale_anchors 表：对应锚点
+  · Big Five → Work Styles 映射表（硬编码规则，见评估体系设计文档）
+
+输入
+  · resume.behavior_bullets
+  · resume.experiences
+  · bigfive（可选：O/C/E/A/N 5个分数）
+
+LLM 生成内容（含 Big Five 融合）
+  · 有 bigfive：
+    - 先按映射规则将 Big Five 分数转换为 Work Styles 各子项初始分
+    - 再用简历行为证据修正（量表 × 0.6 + 行为推断 × 0.4）
+    - confidence = 高
+  · 无 bigfive：
+    - 纯简历行为推断
+    - confidence = 中
+  · 4 个小维度各自：score / confidence / evidence / meaning
+  · 子项拆解（如 4.1 下的：成就导向 / 主动性 / 创新力 等）
+  · 注意事项文本（如"成就导向过高容易对慢节奏同事失去耐心"）
+  · dimension_summary
+
+写库（dimension = "work_styles"）
+  {
+    ...,
+    "sub_dimensions": [
+      {
+        "id": "4.1",
+        "score": 5.8,
+        "sub_items": {               // 子项拆解
+          "成就导向": 6.0,
+          "主动性": 6.0,
+          "创新力": 5.5,
+          ...
+        },
+        "meaning": "...",
+        "caution": "..."             // 注意事项（可选）
+      }
+    ],
+    "bigfive_raw": {                 // 存原始 Big Five 分（供前端展示）
+      "O": 4.2, "C": 5.1, ...
+    }
+  }
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Agent 6 — InterestsAgent（维度五：职业兴趣）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+职责
+  · 评估 R/I/A/S/E/C 六个 Holland 类型
+  · 无 RIASEC 量表时：关键词匹配推断 + 标记 locked
+
+System Prompt 注入
+  · O*NET interests 表：六类描述
+  · level_scale_anchors 表：对应锚点（有 RIASEC 原始分时用于校准推断分）
+  · riasec_keywords 表：各类型的关键词列表（用于简历匹配）
+
+输入
+  · resume.behavior_bullets
+  · resume.experiences
+  · riasec（可选：R/I/A/S/E/C 6个分数）
+
+逻辑分支
+  · 有 riasec → 正式评分，confidence = 高，status = done
+  · 无 riasec → 关键词匹配推断，confidence = 低，status = locked
+
+LLM 生成内容
+  · 有数据：6个类型得分 + 推导出 Holland 代码（3位，如 EIS）
+            + 每类型的简要解读
+  · 无数据：关键词命中情况 + 初步推断 Holland 代码（2位，如 EI）
+            + 引导文案（说明量表的价值）
+  · 适合岗位类型提示（基于 Holland 代码）
+
+写库（dimension = "interests"）
+  {
+    ...,
+    "status": "done" 或 "locked",
+    "holland_code": "EIS" 或 "EI（推断）",
+    "sub_dimensions": [
+      { "type": "E", "score": 5.6 或 null, "keywords_matched": [...] }
+    ],
+    "suitable_roles": ["技术管理", "产品经理", "技术咨询"]
+  }
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Agent 7 — WorkValuesAgent（维度六：工作价值观）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+职责
+  · 评估 6.1 成就感 / 6.2 独立性 / 6.3 认可度 / 6.4 人际关系 / 6.5 支持感 / 6.6 工作条件
+
+System Prompt 注入
+  · O*NET work_values 表：各条目描述
+  · level_scale_anchors 表：对应锚点
+
+输入
+  · resume.behavior_bullets
+  · resume.experiences（求职意向 / 偏好描述）
+  · supplement_text（用户补充信息，含求职偏好）
+
+LLM 生成内容
+  · 6 个小维度各自：score / confidence / evidence / meaning
+  · 每项的职业选择建议（"这对你的职业选择意味着..."）
+  · 整体价值观画像标签（如「成就驱动 + 自主偏好」型）
+  · dimension_summary
+
+写库（dimension = "work_values"）
+  · 结构同 SkillsAgent，无特殊字段
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Agent 8 — SummaryAgent（跨维度合成）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+触发时机
+  · 所有 Sub-Agents status = done 或 locked 后触发
+
+职责
+  · 跨维度横向对比，生成报告中需要整体视角的三块内容
+  · 不复述各维度详情（那些已在 DB 里，前端直接读）
+
+输入（从 DB 读取，只取摘要字段）
+  SELECT dimension, overall_score, confidence,
+         highlights, focus_areas, dimension_summary,
+         holland_code, bigfive_raw
+  FROM assessment_dimensions
+  WHERE assessment_id = ?
+
+LLM 生成内容
+
+  ① 个性化叙事摘要（报告第一部分）
+     · 整体画像标签（如「技术驱动型实干者」）
+     · 2-4 句整体概括（结合 6 个维度的 highlights + 整体分布）
+     · 最突出的 3 张牌（跨维度最高分项）
+     · 下一阶段成长方向一句话点题
+
+  ② 核心优势 TOP3（报告第三部分）
+     · 横向比较，选出得分最高且置信度最高的 3 个小维度
+     · 每项生成：
+       - 职场意义（"这意味着什么" — 站在职业发展视角，不是重复分析）
+       - 如何放大（具体的 1-2 个行动建议）
+
+  ③ 提升方向 TOP3 + 分月行动清单（报告第三部分）
+     · 横向比较，从所有 focus_areas 中选出杠杆效应最大的 3 个
+     · 每项生成：
+       - 当前状态一句话
+       - 目标状态一句话
+       - 分月行动清单（第1个月 / 第2-3个月 / 第4-6个月）
+       - 预期效果
+
+  ④ 能力画像关键词（5-6 个）
+     · 提炼整体特质标签，用于第三部分开头
+
+不生成的内容（Sub-Agent 已做）
+  · 各维度总述段落
+  · 小维度的行为证据和「这意味着什么」解读
+  · 技术 Gap 列表
+  · 子项拆解数据
+
+写库（assessment_summary 表）
+  {
+    "assessment_id": "...",
+    "persona_label": "技术驱动型实干者",
+    "narrative_intro": "...",          // 叙事摘要段落
+    "top_cards": ["技术执行力", "靠谱交付", "自驱进取"],
+    "next_direction": "...",           // 成长方向一句话
+    "keywords": ["技术驱动", "靠谱闭环", "自驱进取", "成就导向", "任务型协作者"],
+    "top3_strengths": [
+      {
+        "ref_dimension": "skills",
+        "ref_sub_id": "1.3",
+        "title": "技术技能突出（5.8/7）",
+        "career_meaning": "...",
+        "how_to_amplify": "..."
+      }
+    ],
+    "top3_improvements": [
+      {
+        "ref_dimension": "skills",
+        "ref_sub_id": "1.4",
+        "title": "管理技能（4.5/7）",
+        "current_state": "...",
+        "target_state": "...",
+        "action_plan": {
+          "month_1": "...",
+          "month_2_3": "...",
+          "month_4_6": "..."
+        },
+        "expected_outcome": "..."
+      }
+    ],
+    "status": "done"
+  }
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+前端渲染分工（无 LLM，直接读 DB）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+报告第一部分（总览）
+  · 叙事摘要            ← assessment_summary.narrative_intro
+  · 六维雷达图          ← assessment_dimensions 各行 overall_score + confidence
+  · 数据来源标记        ← assessment_jobs.data_flags
+
+报告第二部分（能力画像，6个维度）
+  · 维度总述            ← assessment_dimensions.dimension_summary
+  · 小维度得分表        ← sub_dimensions[].score + 规则计算星级/标记
+  · 亮点展开            ← sub_dimensions[highlights].evidence + meaning
+  · 关注项展开          ← sub_dimensions[focus_areas].evidence + meaning
+  · 中间项概览          ← 其余 sub_dimensions 的简要展示
+  · 技术匹配            ← assessment_dimensions.tech_gap（仅Skills）
+  · 🔒 待解锁           ← status = locked 时显示占位符
+
+报告第三部分（综合分析）
+  · 能力关键词          ← assessment_summary.keywords
+  · 核心优势 TOP3       ← assessment_summary.top3_strengths
+  · 提升方向 TOP3       ← assessment_summary.top3_improvements
+
+报告第四部分（方法说明）
+  · 全静态内容，硬编码在前端
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+数据库表汇总
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+assessment_jobs         Orchestrator 写，整体任务状态
+assessment_dimensions   6 个 Sub-Agents 各写一行，dimension 字段区分
+assessment_summary      SummaryAgent 写，跨维度合成结果

@@ -1,0 +1,1365 @@
+{
+  "agent": "Agent 4 - AbilitiesAgent (Complete)",
+  "description": "All O*NET Abilities (1.A.*) including Cognitive, Psychomotor, Physical, Sensory",
+  "element_hierarchy": {
+    "1.A": {
+      "element_id": "1.A",
+      "name": "Abilities",
+      "description": "Enduring attributes of the individual that influence performance"
+    },
+    "1.A.1": {
+      "element_id": "1.A.1",
+      "name": "Cognitive Abilities",
+      "description": "Abilities that influence the acquisition and application of knowledge in problem solving"
+    },
+    "1.A.1.a": {
+      "element_id": "1.A.1.a",
+      "name": "Verbal Abilities",
+      "description": "Abilities that influence the acquisition and application of verbal information in problem solving"
+    },
+    "1.A.1.a.1": {
+      "element_id": "1.A.1.a.1",
+      "name": "Oral Comprehension",
+      "description": "The ability to listen to and understand information and ideas presented through spoken words and sentences."
+    },
+    "1.A.1.a.2": {
+      "element_id": "1.A.1.a.2",
+      "name": "Written Comprehension",
+      "description": "The ability to read and understand information and ideas presented in writing."
+    },
+    "1.A.1.a.3": {
+      "element_id": "1.A.1.a.3",
+      "name": "Oral Expression",
+      "description": "The ability to communicate information and ideas in speaking so others will understand."
+    },
+    "1.A.1.a.4": {
+      "element_id": "1.A.1.a.4",
+      "name": "Written Expression",
+      "description": "The ability to communicate information and ideas in writing so others will understand."
+    },
+    "1.A.1.b": {
+      "element_id": "1.A.1.b",
+      "name": "Idea Generation and Reasoning Abilities",
+      "description": "Abilities that influence the application and manipulation of information in problem solving"
+    },
+    "1.A.1.b.1": {
+      "element_id": "1.A.1.b.1",
+      "name": "Fluency of Ideas",
+      "description": "The ability to come up with a number of ideas about a topic (the number of ideas is important, not their quality, correctness, or creativity)."
+    },
+    "1.A.1.b.2": {
+      "element_id": "1.A.1.b.2",
+      "name": "Originality",
+      "description": "The ability to come up with unusual or clever ideas about a given topic or situation, or to develop creative ways to solve a problem."
+    },
+    "1.A.1.b.3": {
+      "element_id": "1.A.1.b.3",
+      "name": "Problem Sensitivity",
+      "description": "The ability to tell when something is wrong or is likely to go wrong. It does not involve solving the problem, only recognizing that there is a problem."
+    },
+    "1.A.1.b.4": {
+      "element_id": "1.A.1.b.4",
+      "name": "Deductive Reasoning",
+      "description": "The ability to apply general rules to specific problems to produce answers that make sense."
+    },
+    "1.A.1.b.5": {
+      "element_id": "1.A.1.b.5",
+      "name": "Inductive Reasoning",
+      "description": "The ability to combine pieces of information to form general rules or conclusions (includes finding a relationship among seemingly unrelated events)."
+    },
+    "1.A.1.b.6": {
+      "element_id": "1.A.1.b.6",
+      "name": "Information Ordering",
+      "description": "The ability to arrange things or actions in a certain order or pattern according to a specific rule or set of rules (e.g., patterns of numbers, letters, words, pictures, mathematical operations)."
+    },
+    "1.A.1.b.7": {
+      "element_id": "1.A.1.b.7",
+      "name": "Category Flexibility",
+      "description": "The ability to generate or use different sets of rules for combining or grouping things in different ways."
+    },
+    "1.A.1.c": {
+      "element_id": "1.A.1.c",
+      "name": "Quantitative Abilities",
+      "description": "Abilities that influence the solution of problems involving mathematical relationships"
+    },
+    "1.A.1.c.1": {
+      "element_id": "1.A.1.c.1",
+      "name": "Mathematical Reasoning",
+      "description": "The ability to choose the right mathematical methods or formulas to solve a problem."
+    },
+    "1.A.1.c.2": {
+      "element_id": "1.A.1.c.2",
+      "name": "Number Facility",
+      "description": "The ability to add, subtract, multiply, or divide quickly and correctly."
+    },
+    "1.A.1.d": {
+      "element_id": "1.A.1.d",
+      "name": "Memory",
+      "description": "Abilities related to the recall of available information"
+    },
+    "1.A.1.d.1": {
+      "element_id": "1.A.1.d.1",
+      "name": "Memorization",
+      "description": "The ability to remember information such as words, numbers, pictures, and procedures."
+    },
+    "1.A.1.e": {
+      "element_id": "1.A.1.e",
+      "name": "Perceptual Abilities",
+      "description": "Abilities related to the acquisition and organization of visual information"
+    },
+    "1.A.1.e.1": {
+      "element_id": "1.A.1.e.1",
+      "name": "Speed of Closure",
+      "description": "The ability to quickly make sense of, combine, and organize information into meaningful patterns."
+    },
+    "1.A.1.e.2": {
+      "element_id": "1.A.1.e.2",
+      "name": "Flexibility of Closure",
+      "description": "The ability to identify or detect a known pattern (a figure, object, word, or sound) that is hidden in other distracting material."
+    },
+    "1.A.1.e.3": {
+      "element_id": "1.A.1.e.3",
+      "name": "Perceptual Speed",
+      "description": "The ability to quickly and accurately compare similarities and differences among sets of letters, numbers, objects, pictures, or patterns. The things to be compared may be presented at the same time or one after the other. This ability also includes comparing a presented object with a remembered object."
+    },
+    "1.A.1.f": {
+      "element_id": "1.A.1.f",
+      "name": "Spatial Abilities",
+      "description": "Abilities related to the manipulation and organization of spatial information"
+    },
+    "1.A.1.f.1": {
+      "element_id": "1.A.1.f.1",
+      "name": "Spatial Orientation",
+      "description": "The ability to know your location in relation to the environment or to know where other objects are in relation to you."
+    },
+    "1.A.1.f.2": {
+      "element_id": "1.A.1.f.2",
+      "name": "Visualization",
+      "description": "The ability to imagine how something will look after it is moved around or when its parts are moved or rearranged."
+    },
+    "1.A.1.g": {
+      "element_id": "1.A.1.g",
+      "name": "Attentiveness",
+      "description": "Abilities related to application of attention"
+    },
+    "1.A.1.g.1": {
+      "element_id": "1.A.1.g.1",
+      "name": "Selective Attention",
+      "description": "The ability to concentrate on a task over a period of time without being distracted."
+    },
+    "1.A.1.g.2": {
+      "element_id": "1.A.1.g.2",
+      "name": "Time Sharing",
+      "description": "The ability to shift back and forth between two or more activities or sources of information (such as speech, sounds, touch, or other sources)."
+    },
+    "1.A.2": {
+      "element_id": "1.A.2",
+      "name": "Psychomotor Abilities",
+      "description": "Abilities that influence the capacity to manipulate and control objects"
+    },
+    "1.A.2.a": {
+      "element_id": "1.A.2.a",
+      "name": "Fine Manipulative Abilities",
+      "description": "Abilities related to the manipulation of objects"
+    },
+    "1.A.2.a.1": {
+      "element_id": "1.A.2.a.1",
+      "name": "Arm-Hand Steadiness",
+      "description": "The ability to keep your hand and arm steady while moving your arm or while holding your arm and hand in one position."
+    },
+    "1.A.2.a.2": {
+      "element_id": "1.A.2.a.2",
+      "name": "Manual Dexterity",
+      "description": "The ability to quickly move your hand, your hand together with your arm, or your two hands to grasp, manipulate, or assemble objects."
+    },
+    "1.A.2.a.3": {
+      "element_id": "1.A.2.a.3",
+      "name": "Finger Dexterity",
+      "description": "The ability to make precisely coordinated movements of the fingers of one or both hands to grasp, manipulate, or assemble very small objects."
+    },
+    "1.A.2.b": {
+      "element_id": "1.A.2.b",
+      "name": "Control Movement Abilities",
+      "description": "Abilities related to the control and manipulation of objects in time and space"
+    },
+    "1.A.2.b.1": {
+      "element_id": "1.A.2.b.1",
+      "name": "Control Precision",
+      "description": "The ability to quickly and repeatedly adjust the controls of a machine or a vehicle to exact positions."
+    },
+    "1.A.2.b.2": {
+      "element_id": "1.A.2.b.2",
+      "name": "Multilimb Coordination",
+      "description": "The ability to coordinate two or more limbs (for example, two arms, two legs, or one leg and one arm) while sitting, standing, or lying down. It does not involve performing the activities while the whole body is in motion."
+    },
+    "1.A.2.b.3": {
+      "element_id": "1.A.2.b.3",
+      "name": "Response Orientation",
+      "description": "The ability to choose quickly between two or more movements in response to two or more different signals (lights, sounds, pictures). It includes the speed with which the correct response is started with the hand, foot, or other body part."
+    },
+    "1.A.2.b.4": {
+      "element_id": "1.A.2.b.4",
+      "name": "Rate Control",
+      "description": "The ability to time your movements or the movement of a piece of equipment in anticipation of changes in the speed and/or direction of a moving object or scene."
+    },
+    "1.A.2.c": {
+      "element_id": "1.A.2.c",
+      "name": "Reaction Time and Speed Abilities",
+      "description": "Abilities related to speed of manipulation of objects"
+    },
+    "1.A.2.c.1": {
+      "element_id": "1.A.2.c.1",
+      "name": "Reaction Time",
+      "description": "The ability to quickly respond (with the hand, finger, or foot) to a signal (sound, light, picture) when it appears."
+    },
+    "1.A.2.c.2": {
+      "element_id": "1.A.2.c.2",
+      "name": "Wrist-Finger Speed",
+      "description": "The ability to make fast, simple, repeated movements of the fingers, hands, and wrists."
+    },
+    "1.A.2.c.3": {
+      "element_id": "1.A.2.c.3",
+      "name": "Speed of Limb Movement",
+      "description": "The ability to quickly move the arms and legs."
+    },
+    "1.A.3": {
+      "element_id": "1.A.3",
+      "name": "Physical Abilities",
+      "description": "Abilities that influence strength, endurance, flexibility, balance and coordination"
+    },
+    "1.A.3.a": {
+      "element_id": "1.A.3.a",
+      "name": "Physical Strength Abilities",
+      "description": "Abilities related to the capacity to exert force"
+    },
+    "1.A.3.a.1": {
+      "element_id": "1.A.3.a.1",
+      "name": "Static Strength",
+      "description": "The ability to exert maximum muscle force to lift, push, pull, or carry objects."
+    },
+    "1.A.3.a.2": {
+      "element_id": "1.A.3.a.2",
+      "name": "Explosive Strength",
+      "description": "The ability to use short bursts of muscle force to propel oneself (as in jumping or sprinting), or to throw an object."
+    },
+    "1.A.3.a.3": {
+      "element_id": "1.A.3.a.3",
+      "name": "Dynamic Strength",
+      "description": "The ability to exert muscle force repeatedly or continuously over time. This involves muscular endurance and resistance to muscle fatigue."
+    },
+    "1.A.3.a.4": {
+      "element_id": "1.A.3.a.4",
+      "name": "Trunk Strength",
+      "description": "The ability to use your abdominal and lower back muscles to support part of the body repeatedly or continuously over time without \"giving out\" or fatiguing."
+    },
+    "1.A.3.b": {
+      "element_id": "1.A.3.b",
+      "name": "Endurance",
+      "description": "The ability to exert oneself physically over long periods without getting out of breath"
+    },
+    "1.A.3.b.1": {
+      "element_id": "1.A.3.b.1",
+      "name": "Stamina",
+      "description": "The ability to exert yourself physically over long periods of time without getting winded or out of breath."
+    },
+    "1.A.3.c": {
+      "element_id": "1.A.3.c",
+      "name": "Flexibility, Balance, and Coordination",
+      "description": "Abilities related to the control of gross body movements"
+    },
+    "1.A.3.c.1": {
+      "element_id": "1.A.3.c.1",
+      "name": "Extent Flexibility",
+      "description": "The ability to bend, stretch, twist, or reach with your body, arms, and/or legs."
+    },
+    "1.A.3.c.2": {
+      "element_id": "1.A.3.c.2",
+      "name": "Dynamic Flexibility",
+      "description": "The ability to quickly and repeatedly bend, stretch, twist, or reach out with your body, arms, and/or legs."
+    },
+    "1.A.3.c.3": {
+      "element_id": "1.A.3.c.3",
+      "name": "Gross Body Coordination",
+      "description": "The ability to coordinate the movement of your arms, legs, and torso together when the whole body is in motion."
+    },
+    "1.A.3.c.4": {
+      "element_id": "1.A.3.c.4",
+      "name": "Gross Body Equilibrium",
+      "description": "The ability to keep or regain your body balance or stay upright when in an unstable position."
+    },
+    "1.A.4": {
+      "element_id": "1.A.4",
+      "name": "Sensory Abilities",
+      "description": "Abilities that influence visual, auditory and speech perception"
+    },
+    "1.A.4.a": {
+      "element_id": "1.A.4.a",
+      "name": "Visual Abilities",
+      "description": "Abilities related to visual sensory input"
+    },
+    "1.A.4.a.1": {
+      "element_id": "1.A.4.a.1",
+      "name": "Near Vision",
+      "description": "The ability to see details at close range (within a few feet of the observer)."
+    },
+    "1.A.4.a.2": {
+      "element_id": "1.A.4.a.2",
+      "name": "Far Vision",
+      "description": "The ability to see details at a distance."
+    },
+    "1.A.4.a.3": {
+      "element_id": "1.A.4.a.3",
+      "name": "Visual Color Discrimination",
+      "description": "The ability to match or detect differences between colors, including shades of color and brightness."
+    },
+    "1.A.4.a.4": {
+      "element_id": "1.A.4.a.4",
+      "name": "Night Vision",
+      "description": "The ability to see under low-light conditions."
+    },
+    "1.A.4.a.5": {
+      "element_id": "1.A.4.a.5",
+      "name": "Peripheral Vision",
+      "description": "The ability to see objects or movement of objects to one's side when the eyes are looking ahead."
+    },
+    "1.A.4.a.6": {
+      "element_id": "1.A.4.a.6",
+      "name": "Depth Perception",
+      "description": "The ability to judge which of several objects is closer or farther away from you, or to judge the distance between you and an object."
+    },
+    "1.A.4.a.7": {
+      "element_id": "1.A.4.a.7",
+      "name": "Glare Sensitivity",
+      "description": "The ability to see objects in the presence of a glare or bright lighting."
+    },
+    "1.A.4.b": {
+      "element_id": "1.A.4.b",
+      "name": "Auditory and Speech Abilities",
+      "description": "Abilities related to auditory and oral input"
+    },
+    "1.A.4.b.1": {
+      "element_id": "1.A.4.b.1",
+      "name": "Hearing Sensitivity",
+      "description": "The ability to detect or tell the differences between sounds that vary in pitch and loudness."
+    },
+    "1.A.4.b.2": {
+      "element_id": "1.A.4.b.2",
+      "name": "Auditory Attention",
+      "description": "The ability to focus on a single source of sound in the presence of other distracting sounds."
+    },
+    "1.A.4.b.3": {
+      "element_id": "1.A.4.b.3",
+      "name": "Sound Localization",
+      "description": "The ability to tell the direction from which a sound originated."
+    },
+    "1.A.4.b.4": {
+      "element_id": "1.A.4.b.4",
+      "name": "Speech Recognition",
+      "description": "The ability to identify and understand the speech of another person."
+    },
+    "1.A.4.b.5": {
+      "element_id": "1.A.4.b.5",
+      "name": "Speech Clarity",
+      "description": "The ability to speak clearly so others can understand you."
+    }
+  },
+  "abilities_by_major_group": {
+    "Cognitive Abilities": {
+      "1.A.1.a.1": {
+        "element_id": "1.A.1.a.1",
+        "name": "Oral Comprehension",
+        "description": "The ability to listen to and understand information and ideas presented through spoken words and sentences.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Understand a television commercial"
+          },
+          {
+            "level": 4,
+            "description": "Understand a coach's oral instructions for a sport"
+          },
+          {
+            "level": 6,
+            "description": "Understand a lecture on advanced physics"
+          }
+        ]
+      },
+      "1.A.1.a.2": {
+        "element_id": "1.A.1.a.2",
+        "name": "Written Comprehension",
+        "description": "The ability to read and understand information and ideas presented in writing.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Understand signs on the highway"
+          },
+          {
+            "level": 4,
+            "description": "Understand an apartment lease"
+          },
+          {
+            "level": 6,
+            "description": "Understand an instruction book on repairing Artificial Intelligence systems"
+          }
+        ]
+      },
+      "1.A.1.a.3": {
+        "element_id": "1.A.1.a.3",
+        "name": "Oral Expression",
+        "description": "The ability to communicate information and ideas in speaking so others will understand.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Place an order at a restaurant drive-thru"
+          },
+          {
+            "level": 4,
+            "description": "Give instructions to a lost motorist"
+          },
+          {
+            "level": 6,
+            "description": "Explain advanced principles of genetics to college freshmen"
+          }
+        ]
+      },
+      "1.A.1.a.4": {
+        "element_id": "1.A.1.a.4",
+        "name": "Written Expression",
+        "description": "The ability to communicate information and ideas in writing so others will understand.",
+        "anchors": [
+          {
+            "level": 1,
+            "description": "Write a note to remind someone to take food out of the freezer"
+          },
+          {
+            "level": 4,
+            "description": "Write a job recommendation for a subordinate"
+          },
+          {
+            "level": 6,
+            "description": "Write an advanced economics textbook"
+          }
+        ]
+      },
+      "1.A.1.b.1": {
+        "element_id": "1.A.1.b.1",
+        "name": "Fluency of Ideas",
+        "description": "The ability to come up with a number of ideas about a topic (the number of ideas is important, not their quality, correctness, or creativity).",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Name four different uses for a screwdriver"
+          },
+          {
+            "level": 4,
+            "description": "Think of as many ideas as possible for the name of a new company"
+          },
+          {
+            "level": 6,
+            "description": "Identify as many strategies as possible for a company acquisition and merger"
+          }
+        ]
+      },
+      "1.A.1.b.2": {
+        "element_id": "1.A.1.b.2",
+        "name": "Originality",
+        "description": "The ability to come up with unusual or clever ideas about a given topic or situation, or to develop creative ways to solve a problem.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Use a credit card to open a locked door"
+          },
+          {
+            "level": 4,
+            "description": "Redesign job tasks to be interesting for employees"
+          },
+          {
+            "level": 6,
+            "description": "Invent a new type of man-made fiber"
+          }
+        ]
+      },
+      "1.A.1.b.3": {
+        "element_id": "1.A.1.b.3",
+        "name": "Problem Sensitivity",
+        "description": "The ability to tell when something is wrong or is likely to go wrong. It does not involve solving the problem, only recognizing that there is a problem.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Recognize that an unplugged lamp won't work"
+          },
+          {
+            "level": 4,
+            "description": "Notice from a subtle difference in a client's mood that something is bothering them"
+          },
+          {
+            "level": 6,
+            "description": "Recognize an illness at an early stage of a disease when there are only a few symptoms"
+          }
+        ]
+      },
+      "1.A.1.b.4": {
+        "element_id": "1.A.1.b.4",
+        "name": "Deductive Reasoning",
+        "description": "The ability to apply general rules to specific problems to produce answers that make sense.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Know that a stalled car can coast downhill"
+          },
+          {
+            "level": 5,
+            "description": "Decide what factors to consider in selecting stocks"
+          },
+          {
+            "level": 6,
+            "description": "Design an aircraft wing using principles of aerodynamics"
+          }
+        ]
+      },
+      "1.A.1.b.5": {
+        "element_id": "1.A.1.b.5",
+        "name": "Inductive Reasoning",
+        "description": "The ability to combine pieces of information to form general rules or conclusions (includes finding a relationship among seemingly unrelated events).",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Decide what to wear based on the weather report"
+          },
+          {
+            "level": 4,
+            "description": "Determine the prime suspect based on crime scene evidence"
+          },
+          {
+            "level": 6,
+            "description": "Diagnose a disease using results of many different lab tests"
+          }
+        ]
+      },
+      "1.A.1.b.6": {
+        "element_id": "1.A.1.b.6",
+        "name": "Information Ordering",
+        "description": "The ability to arrange things or actions in a certain order or pattern according to a specific rule or set of rules (e.g., patterns of numbers, letters, words, pictures, mathematical operations).",
+        "anchors": [
+          {
+            "level": 1,
+            "description": "Put things in numerical order"
+          },
+          {
+            "level": 2,
+            "description": "Follow the correct steps to make change"
+          },
+          {
+            "level": 6,
+            "description": "Assemble a wind turbine"
+          }
+        ]
+      },
+      "1.A.1.b.7": {
+        "element_id": "1.A.1.b.7",
+        "name": "Category Flexibility",
+        "description": "The ability to generate or use different sets of rules for combining or grouping things in different ways.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Sort paintbrushes based on length"
+          },
+          {
+            "level": 3,
+            "description": "Classify flowers according to size, color, and smell"
+          },
+          {
+            "level": 6,
+            "description": "Classify man-made fibers in terms of their characteristics, like strength or cost"
+          }
+        ]
+      },
+      "1.A.1.c.1": {
+        "element_id": "1.A.1.c.1",
+        "name": "Mathematical Reasoning",
+        "description": "The ability to choose the right mathematical methods or formulas to solve a problem.",
+        "anchors": [
+          {
+            "level": 1,
+            "description": "Determine how much 20 oranges will cost when they are priced at 5 for 4 dollars"
+          },
+          {
+            "level": 4,
+            "description": "Decide how to calculate profits to determine the amounts of yearly bonuses"
+          },
+          {
+            "level": 6,
+            "description": "Determine the mathematics required to simulate a space craft landing on the moon"
+          }
+        ]
+      },
+      "1.A.1.c.2": {
+        "element_id": "1.A.1.c.2",
+        "name": "Number Facility",
+        "description": "The ability to add, subtract, multiply, or divide quickly and correctly.",
+        "anchors": [
+          {
+            "level": 1,
+            "description": "Add 2 and 7"
+          },
+          {
+            "level": 3,
+            "description": "Calculate a discounted price"
+          },
+          {
+            "level": 5,
+            "description": "Compute the interest payment that should be generated from an investment"
+          }
+        ]
+      },
+      "1.A.1.d.1": {
+        "element_id": "1.A.1.d.1",
+        "name": "Memorization",
+        "description": "The ability to remember information such as words, numbers, pictures, and procedures.",
+        "anchors": [
+          {
+            "level": 1,
+            "description": "Remember the number on your bus to be sure you get back on the right one"
+          },
+          {
+            "level": 4,
+            "description": "Recite the first names of the five people you just met"
+          },
+          {
+            "level": 6,
+            "description": "Recite a 300-word speech after studying it for 15 minutes"
+          }
+        ]
+      },
+      "1.A.1.e.1": {
+        "element_id": "1.A.1.e.1",
+        "name": "Speed of Closure",
+        "description": "The ability to quickly make sense of, combine, and organize information into meaningful patterns.",
+        "anchors": [
+          {
+            "level": 3,
+            "description": "Recognize a song after hearing only the first few notes"
+          },
+          {
+            "level": 4,
+            "description": "Make sense of messy handwriting"
+          },
+          {
+            "level": 5,
+            "description": "Interpret patterns on weather radar to decide if the weather is changing"
+          }
+        ]
+      },
+      "1.A.1.e.2": {
+        "element_id": "1.A.1.e.2",
+        "name": "Flexibility of Closure",
+        "description": "The ability to identify or detect a known pattern (a figure, object, word, or sound) that is hidden in other distracting material.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Detect that your phone is ringing while at a concert"
+          },
+          {
+            "level": 4,
+            "description": "Look for a golf ball in tall grass"
+          },
+          {
+            "level": 6,
+            "description": "Identify camouflaged animals from a moving vehicle while on a safari"
+          }
+        ]
+      },
+      "1.A.1.e.3": {
+        "element_id": "1.A.1.e.3",
+        "name": "Perceptual Speed",
+        "description": "The ability to quickly and accurately compare similarities and differences among sets of letters, numbers, objects, pictures, or patterns. The things to be compared may be presented at the same time or one after the other. This ability also includes comparing a presented object with a remembered object.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Sort mail according to ZIP codes with no time pressure"
+          },
+          {
+            "level": 4,
+            "description": "Read five pressure indicators in 10 seconds to make sure each is within safe limits"
+          },
+          {
+            "level": 6,
+            "description": "Inspect electrical parts for defects as they pass on a fast-moving assembly line"
+          }
+        ]
+      },
+      "1.A.1.f.1": {
+        "element_id": "1.A.1.f.1",
+        "name": "Spatial Orientation",
+        "description": "The ability to know your location in relation to the environment or to know where other objects are in relation to you.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Use the floor plan to locate a store in a mall"
+          },
+          {
+            "level": 3,
+            "description": "Find your way through a dark room without hitting anything"
+          },
+          {
+            "level": 6,
+            "description": "Navigate an ocean voyage using a compass and landmarks"
+          }
+        ]
+      },
+      "1.A.1.f.2": {
+        "element_id": "1.A.1.f.2",
+        "name": "Visualization",
+        "description": "The ability to imagine how something will look after it is moved around or when its parts are moved or rearranged.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Imagine how to place paper in a printer so that the letterhead comes out on top"
+          },
+          {
+            "level": 4,
+            "description": "Follow a diagram to assemble a metal storage cabinet"
+          },
+          {
+            "level": 6,
+            "description": "Anticipate future moves in a chess game"
+          }
+        ]
+      },
+      "1.A.1.g.1": {
+        "element_id": "1.A.1.g.1",
+        "name": "Selective Attention",
+        "description": "The ability to concentrate on a task over a period of time without being distracted.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Answer a business call with coworkers talking nearby"
+          },
+          {
+            "level": 4,
+            "description": "Watch security monitors for intruders throughout the night shift"
+          },
+          {
+            "level": 6,
+            "description": "Study a technical manual while listening to loud construction sounds"
+          }
+        ]
+      },
+      "1.A.1.g.2": {
+        "element_id": "1.A.1.g.2",
+        "name": "Time Sharing",
+        "description": "The ability to shift back and forth between two or more activities or sources of information (such as speech, sounds, touch, or other sources).",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Listen to music while entering numbers into a spreadsheet"
+          },
+          {
+            "level": 3,
+            "description": "Watch street signs while driving at 30 miles an hour"
+          },
+          {
+            "level": 6,
+            "description": "Monitor radar and radio transmissions to keep track of heavy aircraft traffic"
+          }
+        ]
+      }
+    },
+    "Psychomotor Abilities": {
+      "1.A.2.a.1": {
+        "element_id": "1.A.2.a.1",
+        "name": "Arm-Hand Steadiness",
+        "description": "The ability to keep your hand and arm steady while moving your arm or while holding your arm and hand in one position.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Light a candle"
+          },
+          {
+            "level": 4,
+            "description": "Thread a needle"
+          },
+          {
+            "level": 6,
+            "description": "Cut facets in a diamond"
+          }
+        ]
+      },
+      "1.A.2.a.2": {
+        "element_id": "1.A.2.a.2",
+        "name": "Manual Dexterity",
+        "description": "The ability to quickly move your hand, your hand together with your arm, or your two hands to grasp, manipulate, or assemble objects.",
+        "anchors": [
+          {
+            "level": 1,
+            "description": "Screw a light bulb into a light socket"
+          },
+          {
+            "level": 4,
+            "description": "Pack oranges in crates as quickly as possible"
+          },
+          {
+            "level": 7,
+            "description": "Perform open heart surgery with surgical instruments"
+          }
+        ]
+      },
+      "1.A.2.a.3": {
+        "element_id": "1.A.2.a.3",
+        "name": "Finger Dexterity",
+        "description": "The ability to make precisely coordinated movements of the fingers of one or both hands to grasp, manipulate, or assemble very small objects.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Put coins in a parking meter"
+          },
+          {
+            "level": 4,
+            "description": "Attach small dials to audio equipment on an assembly line"
+          },
+          {
+            "level": 6,
+            "description": "Put together the inner workings of a small wrist watch"
+          }
+        ]
+      },
+      "1.A.2.b.1": {
+        "element_id": "1.A.2.b.1",
+        "name": "Control Precision",
+        "description": "The ability to quickly and repeatedly adjust the controls of a machine or a vehicle to exact positions.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Adjust a room light with a dimmer switch"
+          },
+          {
+            "level": 4,
+            "description": "Adjust farm tractor controls"
+          },
+          {
+            "level": 6,
+            "description": "Drill a tooth"
+          }
+        ]
+      },
+      "1.A.2.b.2": {
+        "element_id": "1.A.2.b.2",
+        "name": "Multilimb Coordination",
+        "description": "The ability to coordinate two or more limbs (for example, two arms, two legs, or one leg and one arm) while sitting, standing, or lying down. It does not involve performing the activities while the whole body is in motion.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Row a boat"
+          },
+          {
+            "level": 4,
+            "description": "Operate a forklift truck in a warehouse"
+          },
+          {
+            "level": 6,
+            "description": "Play the drum set in a jazz band"
+          }
+        ]
+      },
+      "1.A.2.b.3": {
+        "element_id": "1.A.2.b.3",
+        "name": "Response Orientation",
+        "description": "The ability to choose quickly between two or more movements in response to two or more different signals (lights, sounds, pictures). It includes the speed with which the correct response is started with the hand, foot, or other body part.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "When a doorbell and phone ring at the same time, quickly select which to answer first"
+          },
+          {
+            "level": 4,
+            "description": "Use either the brake or gas pedal when your vehicle is skidding"
+          },
+          {
+            "level": 7,
+            "description": "In an out-of-control commercial aircraft, react quickly to restore control"
+          }
+        ]
+      },
+      "1.A.2.b.4": {
+        "element_id": "1.A.2.b.4",
+        "name": "Rate Control",
+        "description": "The ability to time your movements or the movement of a piece of equipment in anticipation of changes in the speed and/or direction of a moving object or scene.",
+        "anchors": [
+          {
+            "level": 1,
+            "description": "Ride a bicycle alongside a jogger"
+          },
+          {
+            "level": 4,
+            "description": "Keep up with a car that changes speed"
+          },
+          {
+            "level": 5,
+            "description": "Shoot a duck in flight"
+          }
+        ]
+      },
+      "1.A.2.c.1": {
+        "element_id": "1.A.2.c.1",
+        "name": "Reaction Time",
+        "description": "The ability to quickly respond (with the hand, finger, or foot) to a signal (sound, light, picture) when it appears.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Start to slow down the car when a traffic light turns yellow"
+          },
+          {
+            "level": 4,
+            "description": "Press a button to stop operation when a warning light goes off"
+          },
+          {
+            "level": 6,
+            "description": "Hit the brake when a pedestrian steps in front of your car"
+          }
+        ]
+      },
+      "1.A.2.c.2": {
+        "element_id": "1.A.2.c.2",
+        "name": "Wrist-Finger Speed",
+        "description": "The ability to make fast, simple, repeated movements of the fingers, hands, and wrists.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Use a screwdriver to twist in a screw"
+          },
+          {
+            "level": 3,
+            "description": "Carve roast beef in a cafeteria"
+          },
+          {
+            "level": 6,
+            "description": "Type 90 words per minute"
+          }
+        ]
+      },
+      "1.A.2.c.3": {
+        "element_id": "1.A.2.c.3",
+        "name": "Speed of Limb Movement",
+        "description": "The ability to quickly move the arms and legs.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Saw through a thin piece of wood"
+          },
+          {
+            "level": 4,
+            "description": "Swat a fly with a fly swatter"
+          },
+          {
+            "level": 6,
+            "description": "Throw punches in a boxing match"
+          }
+        ]
+      }
+    },
+    "Physical Abilities": {
+      "1.A.3.a.1": {
+        "element_id": "1.A.3.a.1",
+        "name": "Static Strength",
+        "description": "The ability to exert maximum muscle force to lift, push, pull, or carry objects.",
+        "anchors": [
+          {
+            "level": 1,
+            "description": "Push an empty shopping cart"
+          },
+          {
+            "level": 4,
+            "description": "Pull a 40-pound sack of fertilizer across the lawn"
+          },
+          {
+            "level": 6,
+            "description": "Lift 75-pound bags of cement onto a truck"
+          }
+        ]
+      },
+      "1.A.3.a.2": {
+        "element_id": "1.A.3.a.2",
+        "name": "Explosive Strength",
+        "description": "The ability to use short bursts of muscle force to propel oneself (as in jumping or sprinting), or to throw an object.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Hit a nail with a hammer"
+          },
+          {
+            "level": 4,
+            "description": "Jump onto a 3-foot high platform"
+          },
+          {
+            "level": 7,
+            "description": "Throw a shot-put in a track meet"
+          }
+        ]
+      },
+      "1.A.3.a.3": {
+        "element_id": "1.A.3.a.3",
+        "name": "Dynamic Strength",
+        "description": "The ability to exert muscle force repeatedly or continuously over time. This involves muscular endurance and resistance to muscle fatigue.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Use pruning shears to trim a bush"
+          },
+          {
+            "level": 5,
+            "description": "Climb a 48-foot long ladder"
+          },
+          {
+            "level": 6,
+            "description": "Perform a gymnastics routine using the rings"
+          }
+        ]
+      },
+      "1.A.3.a.4": {
+        "element_id": "1.A.3.a.4",
+        "name": "Trunk Strength",
+        "description": "The ability to use your abdominal and lower back muscles to support part of the body repeatedly or continuously over time without \"giving out\" or fatiguing.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Sit up in an office chair"
+          },
+          {
+            "level": 4,
+            "description": "Shovel snow for half an hour"
+          },
+          {
+            "level": 6,
+            "description": "Do 100 sit-ups"
+          }
+        ]
+      },
+      "1.A.3.b.1": {
+        "element_id": "1.A.3.b.1",
+        "name": "Stamina",
+        "description": "The ability to exert yourself physically over long periods of time without getting winded or out of breath.",
+        "anchors": [
+          {
+            "level": 1,
+            "description": "Walk 1/4 mile"
+          },
+          {
+            "level": 4,
+            "description": "Climb 6 flights of stairs"
+          },
+          {
+            "level": 6,
+            "description": "Run 10 miles"
+          }
+        ]
+      },
+      "1.A.3.c.1": {
+        "element_id": "1.A.3.c.1",
+        "name": "Extent Flexibility",
+        "description": "The ability to bend, stretch, twist, or reach with your body, arms, and/or legs.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Reach to adjust the radio in a car"
+          },
+          {
+            "level": 4,
+            "description": "Reach for a box on a high warehouse shelf"
+          },
+          {
+            "level": 6,
+            "description": "Work under the dashboard of a car"
+          }
+        ]
+      },
+      "1.A.3.c.2": {
+        "element_id": "1.A.3.c.2",
+        "name": "Dynamic Flexibility",
+        "description": "The ability to quickly and repeatedly bend, stretch, twist, or reach out with your body, arms, and/or legs.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Hand pick a bushel of apples from a tree"
+          },
+          {
+            "level": 5,
+            "description": "Perform a dance routine as part of a cheerleading squad"
+          },
+          {
+            "level": 6,
+            "description": "Maneuver a kayak through swift rapids"
+          }
+        ]
+      },
+      "1.A.3.c.3": {
+        "element_id": "1.A.3.c.3",
+        "name": "Gross Body Coordination",
+        "description": "The ability to coordinate the movement of your arms, legs, and torso together when the whole body is in motion.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Get in and out of a truck"
+          },
+          {
+            "level": 4,
+            "description": "Swim the length of a pool"
+          },
+          {
+            "level": 6,
+            "description": "Perform a ballet dance"
+          }
+        ]
+      },
+      "1.A.3.c.4": {
+        "element_id": "1.A.3.c.4",
+        "name": "Gross Body Equilibrium",
+        "description": "The ability to keep or regain your body balance or stay upright when in an unstable position.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Stand on a ladder"
+          },
+          {
+            "level": 4,
+            "description": "Walk on ice across a pond"
+          },
+          {
+            "level": 6,
+            "description": "Walk on narrow beams in high-rise construction"
+          }
+        ]
+      }
+    },
+    "Sensory Abilities": {
+      "1.A.4.a.1": {
+        "element_id": "1.A.4.a.1",
+        "name": "Near Vision",
+        "description": "The ability to see details at close range (within a few feet of the observer).",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Read indicators on the dashboard of a car"
+          },
+          {
+            "level": 5,
+            "description": "Read the fine print of a legal document"
+          },
+          {
+            "level": 6,
+            "description": "Detect minor defects in a diamond"
+          }
+        ]
+      },
+      "1.A.4.a.2": {
+        "element_id": "1.A.4.a.2",
+        "name": "Far Vision",
+        "description": "The ability to see details at a distance.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Read a roadside billboard"
+          },
+          {
+            "level": 4,
+            "description": "Read the slides on a presentation from across a room"
+          },
+          {
+            "level": 7,
+            "description": "Detect differences in ships on the horizon"
+          }
+        ]
+      },
+      "1.A.4.a.3": {
+        "element_id": "1.A.4.a.3",
+        "name": "Visual Color Discrimination",
+        "description": "The ability to match or detect differences between colors, including shades of color and brightness.",
+        "anchors": [
+          {
+            "level": 1,
+            "description": "Separate laundry into colors and whites"
+          },
+          {
+            "level": 4,
+            "description": "Trace electrical circuits marked by various colored wires"
+          },
+          {
+            "level": 6,
+            "description": "Paint a color portrait of a person"
+          }
+        ]
+      },
+      "1.A.4.a.4": {
+        "element_id": "1.A.4.a.4",
+        "name": "Night Vision",
+        "description": "The ability to see under low-light conditions.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Read street signs at dusk (just after sunset)"
+          },
+          {
+            "level": 4,
+            "description": "Read a book in a dimly lit setting"
+          },
+          {
+            "level": 6,
+            "description": "Find your way through the woods on a moonless night"
+          }
+        ]
+      },
+      "1.A.4.a.5": {
+        "element_id": "1.A.4.a.5",
+        "name": "Peripheral Vision",
+        "description": "The ability to see objects or movement of objects to one's side when the eyes are looking ahead.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Keep in step while marching in a band"
+          },
+          {
+            "level": 4,
+            "description": "Be aware of the location of your teammates while dribbling a basketball"
+          },
+          {
+            "level": 6,
+            "description": "Distinguish a teammate from a competitor passing by in a car race"
+          }
+        ]
+      },
+      "1.A.4.a.6": {
+        "element_id": "1.A.4.a.6",
+        "name": "Depth Perception",
+        "description": "The ability to judge which of several objects is closer or farther away from you, or to judge the distance between you and an object.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Merge a car into traffic on a city street"
+          },
+          {
+            "level": 4,
+            "description": "Operate a crane to move materials from a truck bed to the ground"
+          },
+          {
+            "level": 6,
+            "description": "Throw a long pass to a closely guarded teammate"
+          }
+        ]
+      },
+      "1.A.4.a.7": {
+        "element_id": "1.A.4.a.7",
+        "name": "Glare Sensitivity",
+        "description": "The ability to see objects in the presence of a glare or bright lighting.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Drive on a familiar road on a cloudy day"
+          },
+          {
+            "level": 5,
+            "description": "See boats on the horizon when sailing"
+          },
+          {
+            "level": 6,
+            "description": "Snow ski in bright sunlight"
+          }
+        ]
+      },
+      "1.A.4.b.1": {
+        "element_id": "1.A.4.b.1",
+        "name": "Hearing Sensitivity",
+        "description": "The ability to detect or tell the differences between sounds that vary in pitch and loudness.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Notice a doorbell ringing"
+          },
+          {
+            "level": 4,
+            "description": "Diagnose what's wrong with a car engine from its sound"
+          },
+          {
+            "level": 6,
+            "description": "Tune an orchestra"
+          }
+        ]
+      },
+      "1.A.4.b.2": {
+        "element_id": "1.A.4.b.2",
+        "name": "Auditory Attention",
+        "description": "The ability to focus on a single source of sound in the presence of other distracting sounds.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Listen to a lecture while people nearby are talking"
+          },
+          {
+            "level": 4,
+            "description": "Listen for your flight announcement at a busy airport"
+          },
+          {
+            "level": 6,
+            "description": "Listen to instructions from a coworker in a noisy saw mill"
+          }
+        ]
+      },
+      "1.A.4.b.3": {
+        "element_id": "1.A.4.b.3",
+        "name": "Sound Localization",
+        "description": "The ability to tell the direction from which a sound originated.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Listen to a sound system to determine which speaker is working"
+          },
+          {
+            "level": 4,
+            "description": "Find a ringing phone in an unfamiliar apartment"
+          },
+          {
+            "level": 6,
+            "description": "Determining the direction of an emergency vehicle from the sound of the siren"
+          }
+        ]
+      },
+      "1.A.4.b.4": {
+        "element_id": "1.A.4.b.4",
+        "name": "Speech Recognition",
+        "description": "The ability to identify and understand the speech of another person.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Recognize the voice of a coworker"
+          },
+          {
+            "level": 4,
+            "description": "Identify a former customer's voice over the phone"
+          },
+          {
+            "level": 6,
+            "description": "Understand a speech presented by someone with an unfamiliar accent"
+          }
+        ]
+      },
+      "1.A.4.b.5": {
+        "element_id": "1.A.4.b.5",
+        "name": "Speech Clarity",
+        "description": "The ability to speak clearly so others can understand you.",
+        "anchors": [
+          {
+            "level": 1,
+            "description": "Call numbers in a bingo game"
+          },
+          {
+            "level": 4,
+            "description": "Make stadium-wide announcements during a sporting event"
+          },
+          {
+            "level": 6,
+            "description": "Give a lecture to a large audience"
+          }
+        ]
+      }
+    }
+  },
+  "total_anchor_records": 156
+}

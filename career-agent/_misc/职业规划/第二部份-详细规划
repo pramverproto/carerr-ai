@@ -1,0 +1,396 @@
+第二步：详细职业规划（已确定目标岗位）
+核心逻辑：模板驱动生成 —— 代码层计算所有数值，LLM 只负责填写文字解读
+设计原则：结构固定、依据透明、LLM 不决定结构只填内容
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+输入
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  assessment_id   —— 来自能力评估
+  onetsoc_code    —— 来自用户从职业推荐结果中选定的目标职业
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Field 类型说明
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  computed        代码直接计算，不调用 LLM
+  llm_fill        数值由代码提供，LLM 只写文字解读，有字数上限
+  structured_llm  LLM 只能填固定格式的指定字段，不能决定结构
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Gap 判定标准（全局统一，代码层执行）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  gap = onet_required - candidate_score（正值=不足，负值=超出）
+  gap <= 0        →  达标（候选人满足或超出要求）
+  0 < gap <= 1.0  →  接近达标（可在 3 个月内补足）
+  gap > 1.0       →  明显 Gap（需要 6 个月以上持续投入）
+
+  依据：参考 O*NET Level Scale Anchors 相邻锚点间距约 2 分，
+        1.0 分约对应"半个锚点"，即一个可短期弥补的能力层级差距。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+优先级计算（用于 action_plan 排序）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  priority_score = gap × ZONE_WEIGHT[dimension]
+
+  维度权重（基于 O*NET Job Zone 培训时长分布规律）：
+    skills      0.30   最直接体现岗位执行能力
+    knowledge   0.25   决定能做什么类型的工作
+    abilities   0.20   底层决定学习速度上限
+    work_styles 0.15   影响岗位适配度和持续满意度
+    work_values 0.10   影响长期留存动力
+
+  priority_score 越高 → 越优先补强
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+生成流程
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Step 1  代码层计算所有 computed 字段，组装 5 个 Block 的"半成品模板"
+  Step 2  5 个 Block 并发发给 LLM，各自只填 llm_fill / structured_llm 字段
+  Step 3  合并 5 个 Block 结果，写入 DB career_plan_blocks 表
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Block 1：gap_overview —— 岗位匹配总览
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+字段定义：
+
+  occupation_title        computed   onet_occupations.title
+  onetsoc_code            computed   用户选定值
+  overall_match_score     computed   加权平均 (1 - max(gap,0)/7) × 100，取整
+  dim_comparison[]
+    .dimension            computed   维度英文 key
+    .label                computed   维度中文名
+    .candidate_score      computed   assessment_dimensions.overall_score，保留1位小数
+    .onet_required        computed   onet_occupations.dim_* 字段，保留1位小数
+    .gap                  computed   onet_required - candidate_score，保留1位小数
+    .status               computed   按 Gap 判定标准
+    .interpretation       llm_fill   传入 dimension/gap/status/candidate_evidence
+                                     约束：1句话，≤50字，说明"这个差距在实际工作中意味着什么"
+  summary_prose           llm_fill   传入全部 dim_comparison
+                                     约束：2-3句，≤150字，点出核心优势和主要短板
+
+输出模板（JSON）：
+{
+  "block_id": "gap_overview",
+  "occupation_title": "...",
+  "onetsoc_code": "...",
+  "overall_match_score": 82,
+  "dim_comparison": [
+    {
+      "dimension": "abilities",
+      "label": "认知能力",
+      "candidate_score": 5.85,
+      "onet_required": 4.20,
+      "gap": -1.65,
+      "status": "达标",
+      "interpretation": "【llm_fill】认知能力显著超出岗位要求，可快速消化新领域知识，是核心竞争优势"
+    },
+    {
+      "dimension": "knowledge",
+      "label": "知识储备",
+      "candidate_score": 3.19,
+      "onet_required": 5.10,
+      "gap": 1.91,
+      "status": "明显Gap",
+      "interpretation": "【llm_fill】商业与金融知识储备不足，将直接影响分析报告质量和与业务方的沟通深度"
+    }
+  ],
+  "summary_prose": "【llm_fill】..."
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Block 2：gap_detail —— 子维度精细 Gap 分析
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+子维度对照表（代码层固定映射）：
+
+  abilities:
+    ability_verbal       → 候选人 3.1 言语能力
+    ability_reasoning    → 候选人 3.2 推理能力
+    ability_quantitative → 候选人 3.3 定量能力
+
+  skills:
+    skill_basic          → 候选人 1.1 认知基础技能
+    skill_social         → 候选人 1.2 社交技能
+    skill_technical      → 候选人 1.3 技术技能
+    skill_management     → 候选人 1.4 管理技能
+
+  knowledge:
+    knowledge_business   → 候选人 2.1 商业与管理
+    knowledge_tech       → 候选人 2.2 技术与工程
+    knowledge_humanities → 候选人 2.3 人文与社会
+    knowledge_applied    → 候选人 2.4 应用与服务
+
+  work_styles:
+    work_style_proactive     → 候选人 4.1 主动进取（均值）
+    work_style_interpersonal → 候选人 4.2 人际导向（均值）
+    work_style_conscientious → 候选人 4.3 尽责守则（均值）
+    work_style_resilient     → 候选人 4.4 情绪韧性（均值）
+
+  work_values:
+    work_value_achievement → 候选人 6.1 成就感
+    work_value_independence → 候选人 6.2 独立性
+    （其余维度参考）
+
+字段定义：
+
+  sub_dim_gaps[]
+    .name               computed   子维度名称（中文）
+    .dimension          computed   所属大维度
+    .candidate_score    computed   从 assessment_dimensions.sub_dimensions 提取
+    .onet_required      computed   onet_occupations 对应子维度字段
+    .gap                computed   计算值
+    .status             computed   按 Gap 判定标准
+    .priority_score     computed   gap × ZONE_WEIGHT，保留2位小数（排序用，不展示）
+    .candidate_evidence computed   直接取 assessment_dimensions 中该子维度的 evidence 原文
+    .meaning            llm_fill   传入 name/gap/status/onet_required/candidate_evidence/occupation_title
+                                   约束：2句，≤100字
+                                   第1句：gap 在实际工作场景中的具体影响
+                                   第2句：为何这个维度对目标岗位重要（或不重要）
+
+  top3_priority_gaps    computed   priority_score 最高的3个子维度，传给 Block 4
+
+输出模板（JSON）：
+{
+  "block_id": "gap_detail",
+  "sub_dim_gaps": [
+    {
+      "name": "商业与管理知识",
+      "dimension": "knowledge",
+      "candidate_score": 3.50,
+      "onet_required": 5.20,
+      "gap": 1.70,
+      "status": "明显Gap",
+      "priority_score": 0.43,
+      "candidate_evidence": ["负责数据分析和报告输出", "主导指标体系建设"],
+      "meaning": "【llm_fill】..."
+    }
+  ],
+  "top3_priority_gaps": [
+    { "name": "商业与管理知识", "dimension": "knowledge", "gap": 1.70, "priority_score": 0.43 }
+  ]
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Block 3：jd_supplement —— JD 市场补充
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+数据来源：
+  Qdrant jobs collection，用职业标题 embed 后检索 Top 10 条 JD
+  候选人技能词：candidates.resume_raw.skills 字段
+
+字段定义：
+
+  jd_sample_count         computed   实际检索到的 JD 数量
+  high_freq_skills[]
+    .skill                computed   JD payload 关键词词频统计，出现在 ≥30% JD 中
+    .freq_pct             computed   词频百分比，整数
+    .in_candidate         computed   与候选人 skills 字段做字符串匹配，true/false
+    .gap_type             computed   规则判定：
+                                       工具 Gap —— 具体软件/平台名（Tableau/Spark 等）
+                                       方法 Gap —— 分析方法名（A/B Testing/回归分析等）
+                                       经验 Gap —— 经历类描述（大厂背景/管理经验等）
+  soft_requirements       llm_fill   传入 JD 原文片段（非结构化部分）
+                                     约束：3-5 条，每条 ≤30字，提取"非技能类"软性要求
+  salary_range            computed   JD payload 薪资字段统计 min/max/median（元/月）
+                                     若无薪资数据则为 null
+  experience_requirement  computed   JD payload 工作年限字段众数（如"5-10年"）
+  keyword_coverage_pct    computed   候选人 skills ∩ JD high_freq_skills / JD high_freq_skills 总数
+                                     整数，0-100
+
+输出模板（JSON）：
+{
+  "block_id": "jd_supplement",
+  "jd_sample_count": 8,
+  "high_freq_skills": [
+    { "skill": "SQL",         "freq_pct": 87, "in_candidate": true,  "gap_type": null },
+    { "skill": "Python",      "freq_pct": 75, "in_candidate": true,  "gap_type": null },
+    { "skill": "Tableau",     "freq_pct": 62, "in_candidate": false, "gap_type": "工具Gap" },
+    { "skill": "A/B Testing", "freq_pct": 50, "in_candidate": false, "gap_type": "方法Gap" }
+  ],
+  "soft_requirements": ["【llm_fill】大厂数据分析背景优先", "【llm_fill】需跨部门项目主导经验"],
+  "salary_range": { "min": 30000, "max": 50000, "median": 40000, "unit": "元/月" },
+  "experience_requirement": "5-10年",
+  "keyword_coverage_pct": 68
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Block 4：action_plan —— 分阶段行动计划（Agent 动态规划）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+设计原则：
+  此 Block 不走模板填充，改由独立 Action Plan Agent 动态规划。
+  原因：学习资源需动态推荐、计划需根据 Gap 组合编排、后期可动态调整。
+  Agent 有内容自由度，但输出格式由代码强制校验，保证可解析入库。
+
+输入（由代码层从 Block 2/3 提取后传入 Agent）：
+  - occupation_title          目标职业名称
+  - candidate_years_of_experience
+  - priority_gaps[]           来自 Block 2 sub_dim_gaps，按 priority_score 降序
+      .name / .dimension / .gap / .gap_status / .priority_score / .candidate_evidence
+  - jd_tool_gaps[]            来自 Block 3 high_freq_skills，in_candidate=false 且 gap_type 为 工具Gap/方法Gap
+      .skill / .freq_pct / .gap_type
+  - current_keyword_coverage  来自 Block 3 keyword_coverage_pct
+
+Agent 工作规则：
+  1. 按阶段划分依据编排 3 个阶段（不允许增减阶段数）
+  2. 每个 action 必须包含 item/gap_value/action/deliverable/resource 所有字段
+  3. resource 必须给出具体课程名/书名/工具名，不能泛泛而谈
+  4. 最终输出严格遵循下方 JSON Schema，不得增删字段
+  5. 只输出 JSON，不输出任何解释文字
+
+阶段划分依据（参考 O*NET Job Zone 培训时长定义）：
+  phase_1（0-3个月）  补明显 Gap（gap > 1.0）中 priority_score 最高的 2-3 项
+  phase_2（3-6个月）  补接近达标项（0 < gap ≤ 1.0）+ JD 工具Gap/方法Gap
+  phase_3（6-12个月） 简历包装 + 关键词覆盖率提升（固定任务，不由 Agent 决定内容）
+
+输出 JSON Schema（代码强制校验）：
+{
+  "block_id": "action_plan",           // 固定值，不得修改
+  "phases": [
+    {
+      "phase_id": "phase_1",           // 固定值
+      "label": "0-3个月：补核心短板",   // 固定值
+      "focus": "...",                  // Agent 填，≤30字，说明本阶段重点
+      "actions": [
+        {
+          "item": "...",               // Gap 名称，来自输入，Agent 不得自创
+          "gap_value": 1.70,           // 数值，来自输入，Agent 不得修改
+          "action": "...",             // Agent 填，≤80字，必须含动词+具体内容
+          "deliverable": "...",        // Agent 填，≤60字，可量化或可验证的产出物
+          "resource": "..."            // Agent 填，≤80字，具体课程名/书名/工具名
+        }
+      ]
+    },
+    {
+      "phase_id": "phase_2",
+      "label": "3-6个月：积累岗位经验",
+      "focus": "...",
+      "actions": [ /* 同上格式 */ ]
+    },
+    {
+      "phase_id": "phase_3",
+      "label": "6-12个月：包装简历匹配市场语言",
+      "focus": "提升简历关键词覆盖率，匹配市场 JD 语言",  // 固定值
+      "actions": [
+        {
+          "item": "简历关键词覆盖率优化",   // 固定值
+          "gap_value": null,
+          "action": "...",                 // Agent 填，说明如何把缺失关键词写进简历
+          "deliverable": "简历关键词覆盖率从 {current_coverage}% 提升至 85% 以上",  // 代码替换变量，不走 Agent
+          "resource": "..."                // Agent 填，简历改写工具或参考
+        }
+      ]
+    }
+  ]
+}
+
+代码层校验规则（存入 DB 前执行）：
+  - phases 长度必须为 3
+  - 每个 phase 必须含 phase_id / label / focus / actions
+  - 每个 action 必须含 item / gap_value / action / deliverable / resource
+  - 所有字段均不得为 null（gap_value 除外）
+  - phase_3.actions[0].deliverable 由代码覆盖写入，不信任 Agent 输出
+
+输出示例（JSON）：
+{
+  "block_id": "action_plan",
+  "phases": [
+    {
+      "phase_id": "phase_1",
+      "label": "0-3个月：补核心短板",
+      "focus": "优先补商业知识和管理技能两项明显短板",
+      "actions": [
+        {
+          "item": "商业与管理知识",
+          "gap_value": 1.70,
+          "action": "完成《公司金融》网课，每周输出1份行业数据分析备忘录",
+          "deliverable": "3个月后能独立完成竞品财务对比分析并输出可讨论的报告",
+          "resource": "Coursera《Financial Markets》/ 得到《香帅的北大金融学课》/ 书：《金融的逻辑》"
+        }
+      ]
+    },
+    {
+      "phase_id": "phase_2",
+      "label": "3-6个月：积累岗位经验",
+      "focus": "补齐工具类和方法类市场要求",
+      "actions": [
+        {
+          "item": "Tableau",
+          "gap_value": null,
+          "action": "跟随 Tableau Public 官方教程完成 3 个数据可视化项目并发布",
+          "deliverable": "发布3个公开 Tableau Dashboard，覆盖不同业务场景",
+          "resource": "Tableau Public 官方教程 / Udemy《Tableau 2024 A-Z》"
+        }
+      ]
+    },
+    {
+      "phase_id": "phase_3",
+      "label": "6-12个月：包装简历匹配市场语言",
+      "focus": "提升简历关键词覆盖率，匹配市场 JD 语言",
+      "actions": [
+        {
+          "item": "简历关键词覆盖率优化",
+          "gap_value": null,
+          "action": "针对 Tableau/A/B Testing/ROI 分析，将现有数据项目经历改写为含具体工具和量化结果的成果描述",
+          "deliverable": "简历关键词覆盖率从 68% 提升至 85% 以上",
+          "resource": "参考目标 JD 高频词表，使用 STAR 法则改写成果描述"
+        }
+      ]
+    }
+  ]
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Block 5：resume_advice —— 简历优化建议
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+数据来源：
+  候选人简历原文：candidates.resume_raw（经历描述 raw_bullets）
+  缺失关键词：Block 3 的 high_freq_skills（in_candidate=false）
+  Gap 项：Block 2 的 top3_priority_gaps
+
+字段定义：
+
+  overall_coverage_pct    computed   直接复用 Block 3.keyword_coverage_pct
+  missing_keywords        computed   直接复用 Block 3 中 in_candidate=false 的 skill 列表
+  rewrite_suggestions[]
+    .original             computed   从 candidates.resume_raw.experiences[].raw_bullets
+                                     中选取与缺失关键词语义最近的原文句子（代码层用关键词匹配）
+    .suggested            structured_llm  传入 original + missing_keywords + occupation_title
+                                          约束：≤120字，必须包含至少1个 missing_keyword，
+                                          保留原文核心事实，只改写表达方式
+    .reason               computed   代码生成，固定格式：
+                                     "补充关键词「{keyword}」，JD 覆盖率 +1 项"（不走 LLM）
+  experience_gap_advice   llm_fill   传入 JD experience_requirement + candidate years_of_experience
+                                     + soft_requirements
+                                     约束：1-2句，≤80字，说明经验年限匹配情况及建议包装方式
+
+输出模板（JSON）：
+{
+  "block_id": "resume_advice",
+  "overall_coverage_pct": 68,
+  "missing_keywords": ["Tableau", "A/B Testing", "ROI分析"],
+  "rewrite_suggestions": [
+    {
+      "original": "负责数据分析和报告输出",
+      "suggested": "【structured_llm】主导数据分析体系建设，通过 A/B Testing 验证商业化策略效果，推动 ROI 提升 X%",
+      "reason": "补充关键词「A/B Testing」「ROI分析」，JD 覆盖率 +2 项"
+    }
+  ],
+  "experience_gap_advice": "【llm_fill】..."
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DB 存储
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+表名：career_plan_blocks
+字段：assessment_id / onetsoc_code / block_id / block_json / generated_at
+
+每个 Block 独立一行，block_json 存完整 JSON。
+前端按 block_id 拼装完整报告。

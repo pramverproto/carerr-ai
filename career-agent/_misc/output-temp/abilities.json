@@ -1,0 +1,445 @@
+{
+  "assessment_id": "98b4e695f7a4",
+  "candidate_name": "周启航",
+  "dimension": "abilities",
+  "overall_score": 5.88,
+  "elapsed_ms": 130040,
+  "total_tokens": 11049,
+  "sub_dimensions": [
+    {
+      "sub_dimension": {
+        "sub_dimension_id": "3.1",
+        "sub_dimension_name": "言语能力",
+        "onet_category": "1.A.1.a Verbal Abilities",
+        "items": [
+          {
+            "item_id": "3.1.1",
+            "onet_element_id": "1.A.1.a.1",
+            "onet_element_name": "Oral Comprehension",
+            "name_zh": "口头理解",
+            "definition": "The ability to listen to and understand information and ideas presented through spoken words and sentences.",
+            "anchors": [
+              {
+                "level": 2,
+                "description": "Understand a television commercial"
+              },
+              {
+                "level": 4,
+                "description": "Understand a coach's oral instructions for a sport"
+              },
+              {
+                "level": 6,
+                "description": "Understand a lecture on advanced physics"
+              }
+            ],
+            "result": {
+              "score": 5.7,
+              "score_range": null,
+              "anchor_level_hit": 4,
+              "evidence": "作为业务BP与市场、运营、财务周会沟通，负责ROI复盘、预算申请、资源协调",
+              "confidence": "高"
+            }
+          },
+          {
+            "item_id": "3.1.2",
+            "onet_element_id": "1.A.1.a.2",
+            "onet_element_name": "Written Comprehension",
+            "name_zh": "书面理解",
+            "definition": "The ability to read and understand information and ideas presented in writing.",
+            "anchors": [
+              {
+                "level": 2,
+                "description": "Understand signs on the highway"
+              },
+              {
+                "level": 4,
+                "description": "Understand an apartment lease"
+              },
+              {
+                "level": 6,
+                "description": "Understand an instruction book on repairing Artificial Intelligence systems"
+              }
+            ],
+            "result": {
+              "score": 6.0,
+              "score_range": null,
+              "anchor_level_hit": 6,
+              "evidence": "搭建用户增长中台从0到1建设，统筹埋点规范、指标体系、看板体系、实验体系",
+              "confidence": "高"
+            }
+          },
+          {
+            "item_id": "3.1.3",
+            "onet_element_id": "1.A.1.a.3",
+            "onet_element_name": "Oral Expression",
+            "name_zh": "口头表达",
+            "definition": "The ability to communicate information and ideas in speaking so others will understand.",
+            "anchors": [
+              {
+                "level": 2,
+                "description": "Place an order at a restaurant drive-thru"
+              },
+              {
+                "level": 4,
+                "description": "Give instructions to a lost motorist"
+              },
+              {
+                "level": 6,
+                "description": "Explain advanced principles of genetics to college freshmen"
+              }
+            ],
+            "result": {
+              "score": 5.5,
+              "score_range": null,
+              "anchor_level_hit": 4,
+              "evidence": "管理跨职能小组9人（后端3、算法2、数据分析2、产品2），承担需求优先级和里程碑管理",
+              "confidence": "高"
+            }
+          },
+          {
+            "item_id": "3.1.4",
+            "onet_element_id": "1.A.1.a.4",
+            "onet_element_name": "Written Expression",
+            "name_zh": "书面表达",
+            "definition": "The ability to communicate information and ideas in writing so others will understand.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Write a note to remind someone to take food out of the freezer"
+              },
+              {
+                "level": 4,
+                "description": "Write a job recommendation for a subordinate"
+              },
+              {
+                "level": 6,
+                "description": "Write an advanced economics textbook"
+              }
+            ],
+            "result": {
+              "score": 5.9,
+              "score_range": null,
+              "anchor_level_hit": 4,
+              "evidence": "输出行业报告8篇，其中2篇用于品牌公关白皮书",
+              "confidence": "高"
+            }
+          }
+        ],
+        "sub_dimension_result": {
+          "score": 5.8,
+          "score_range": null,
+          "confidence": "高",
+          "status": "completed"
+        }
+      },
+      "_meta": {
+        "agent_key": "abilities",
+        "sub_dimension_id": "3.1",
+        "elapsed_ms": 49535,
+        "tokens": {
+          "prompt_tokens": 2469,
+          "completion_tokens": 982,
+          "total_tokens": 3451
+        }
+      }
+    },
+    {
+      "sub_dimension": {
+        "sub_dimension_id": "3.2",
+        "sub_dimension_name": "推理能力",
+        "onet_category": "1.A.1.b Idea Generation and Reasoning Abilities",
+        "items": [
+          {
+            "item_id": "3.2.1",
+            "onet_element_id": "1.A.1.b.1",
+            "onet_element_name": "Fluency of Ideas",
+            "name_zh": "思维流畅性",
+            "definition": "The ability to come up with a number of ideas about a topic (the number of ideas is important, not their quality, correctness, or creativity).",
+            "anchors": [
+              {
+                "level": 2,
+                "description": "Name four different uses for a screwdriver"
+              },
+              {
+                "level": 4,
+                "description": "Think of as many ideas as possible for the name of a new company"
+              },
+              {
+                "level": 6,
+                "description": "Identify as many strategies as possible for a company acquisition and merger"
+              }
+            ],
+            "result": {
+              "score": 6.2,
+              "score_range": null,
+              "anchor_level_hit": 6,
+              "evidence": "负责用户增长中台从0到1建设，统筹埋点规范、指标体系、看板体系、实验体系",
+              "confidence": "高"
+            }
+          },
+          {
+            "item_id": "3.2.2",
+            "onet_element_id": "1.A.1.b.2",
+            "onet_element_name": "Originality",
+            "name_zh": "思维独创性",
+            "definition": "The ability to come up with unusual or clever ideas about a given topic or situation, or to develop creative ways to solve a problem.",
+            "anchors": [
+              {
+                "level": 2,
+                "description": "Use a credit card to open a locked door"
+              },
+              {
+                "level": 4,
+                "description": "Redesign job tasks to be interesting for employees"
+              },
+              {
+                "level": 6,
+                "description": "Invent a new type of man-made fiber"
+              }
+            ],
+            "result": {
+              "score": 5.2,
+              "score_range": null,
+              "anchor_level_hit": 5,
+              "evidence": "搭建分层补贴模型，区分新客首单、沉默唤醒、价格敏感型三层用户",
+              "confidence": "高"
+            }
+          },
+          {
+            "item_id": "3.2.3",
+            "onet_element_id": "1.A.1.b.3",
+            "onet_element_name": "Problem Sensitivity",
+            "name_zh": "问题敏感性",
+            "definition": "The ability to tell when something is wrong or is likely to go wrong. It does not involve solving the problem, only recognizing that there is a problem.",
+            "anchors": [
+              {
+                "level": 2,
+                "description": "Recognize that an unplugged lamp won't work"
+              },
+              {
+                "level": 4,
+                "description": "Notice from a subtle difference in a client's mood that something is bothering them"
+              },
+              {
+                "level": 6,
+                "description": "Recognize an illness at an early stage of a disease when there are only a few symptoms"
+              }
+            ],
+            "result": {
+              "score": 5.2,
+              "score_range": null,
+              "anchor_level_hit": 5,
+              "evidence": "商家流失率高，运营团队缺乏可执行诊断建议",
+              "confidence": "高"
+            }
+          },
+          {
+            "item_id": "3.2.4",
+            "onet_element_id": "1.A.1.b.4",
+            "onet_element_name": "Deductive Reasoning",
+            "name_zh": "演绎推理",
+            "definition": "The ability to apply general rules to specific problems to produce answers that make sense.",
+            "anchors": [
+              {
+                "level": 2,
+                "description": "Know that a stalled car can coast downhill"
+              },
+              {
+                "level": 5,
+                "description": "Decide what factors to consider in selecting stocks"
+              },
+              {
+                "level": 6,
+                "description": "Design an aircraft wing using principles of aerodynamics"
+              }
+            ],
+            "result": {
+              "score": 6.0,
+              "score_range": null,
+              "anchor_level_hit": 6,
+              "evidence": "搭建北极星+二级指标树治理，发布口径字典216条",
+              "confidence": "高"
+            }
+          },
+          {
+            "item_id": "3.2.5",
+            "onet_element_id": "1.A.1.b.5",
+            "onet_element_name": "Inductive Reasoning",
+            "name_zh": "归纳推理",
+            "definition": "The ability to combine pieces of information to form general rules or conclusions (includes finding a relationship among seemingly unrelated events).",
+            "anchors": [
+              {
+                "level": 2,
+                "description": "Decide what to wear based on the weather report"
+              },
+              {
+                "level": 4,
+                "description": "Determine the prime suspect based on crime scene evidence"
+              },
+              {
+                "level": 6,
+                "description": "Diagnose a disease using results of many different lab tests"
+              }
+            ],
+            "result": {
+              "score": 6.3,
+              "score_range": null,
+              "anchor_level_hit": 6,
+              "evidence": "联合算法组建立商家健康评分与风险预警机制，输出自动化周报",
+              "confidence": "高"
+            }
+          },
+          {
+            "item_id": "3.2.6",
+            "onet_element_id": "1.A.1.b.6",
+            "onet_element_name": "Information Ordering",
+            "name_zh": "信息排序",
+            "definition": "The ability to arrange things or actions in a certain order or pattern according to a specific rule or set of rules (e.g., patterns of numbers, letters, words, pictures, mathematical operations).",
+            "anchors": [
+              {
+                "level": 2,
+                "description": "Follow the correct steps to make change"
+              },
+              {
+                "level": 6,
+                "description": "Assemble a wind turbine"
+              }
+            ],
+            "result": {
+              "score": 5.9,
+              "score_range": null,
+              "anchor_level_hit": 6,
+              "evidence": "从0搭建销售漏斗看板体系，支持管理层周度经营会",
+              "confidence": "高"
+            }
+          },
+          {
+            "item_id": "3.2.7",
+            "onet_element_id": "1.A.1.b.7",
+            "onet_element_name": "Category Flexibility",
+            "name_zh": "类别灵活性",
+            "definition": "The ability to generate or use different sets of rules for combining or grouping things in different ways.",
+            "anchors": [
+              {
+                "level": 2,
+                "description": "Sort paintbrushes based on length"
+              },
+              {
+                "level": 3,
+                "description": "Classify flowers according to size, color, and smell"
+              },
+              {
+                "level": 6,
+                "description": "Classify man-made fibers in terms of their characteristics, like strength or cost"
+              }
+            ],
+            "result": {
+              "score": 5.6,
+              "score_range": null,
+              "anchor_level_hit": 6,
+              "evidence": "推动北极星+二级指标树治理，发布口径字典216条",
+              "confidence": "高"
+            }
+          }
+        ],
+        "sub_dimension_result": {
+          "score": 5.9,
+          "score_range": null,
+          "confidence": "高",
+          "status": "done"
+        }
+      },
+      "_meta": {
+        "agent_key": "abilities",
+        "sub_dimension_id": "3.2",
+        "elapsed_ms": 67705,
+        "tokens": {
+          "prompt_tokens": 3171,
+          "completion_tokens": 1726,
+          "total_tokens": 4897
+        }
+      }
+    },
+    {
+      "sub_dimension": {
+        "sub_dimension_id": "3.3",
+        "sub_dimension_name": "定量能力",
+        "onet_category": "1.A.1.c Quantitative Abilities",
+        "items": [
+          {
+            "item_id": "3.3.1",
+            "onet_element_id": "1.A.1.c.1",
+            "onet_element_name": "Mathematical Reasoning",
+            "name_zh": "数学推理",
+            "definition": "The ability to choose the right mathematical methods or formulas to solve a problem.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Determine how much 20 oranges will cost when they are priced at 5 for 4 dollars"
+              },
+              {
+                "level": 4,
+                "description": "Decide how to calculate profits to determine the amounts of yearly bonuses"
+              },
+              {
+                "level": 6,
+                "description": "Determine the mathematics required to simulate a space craft landing on the moon"
+              }
+            ],
+            "result": {
+              "score": 6.5,
+              "score_range": null,
+              "anchor_level_hit": 6,
+              "evidence": "搭建分层补贴模型，区分新客首单、沉默唤醒、价格敏感型三层用户；ROI从1.12提升到1.46；预算节省约920万元/季度",
+              "confidence": "高"
+            }
+          },
+          {
+            "item_id": "3.3.2",
+            "onet_element_id": "1.A.1.c.2",
+            "onet_element_name": "Number Facility",
+            "name_zh": "数字运算",
+            "definition": "The ability to add, subtract, multiply, or divide quickly and correctly.",
+            "anchors": [
+              {
+                "level": 1,
+                "description": "Add 2 and 7"
+              },
+              {
+                "level": 3,
+                "description": "Calculate a discounted price"
+              },
+              {
+                "level": 5,
+                "description": "Compute the interest payment that should be generated from an investment"
+              }
+            ],
+            "result": {
+              "score": 6.5,
+              "score_range": null,
+              "anchor_level_hit": 5,
+              "evidence": "ROI从1.12提升到1.46；预算节省约920万元/季度；商家次月留存率提升9.4%；运营同学单次巡检时间从4小时缩短到1.5小时",
+              "confidence": "高"
+            }
+          }
+        ],
+        "sub_dimension_result": {
+          "score": null,
+          "score_range": null,
+          "confidence": null,
+          "status": null
+        }
+      },
+      "_meta": {
+        "agent_key": "abilities",
+        "sub_dimension_id": "3.3",
+        "elapsed_ms": 12800,
+        "tokens": {
+          "prompt_tokens": 2103,
+          "completion_tokens": 598,
+          "total_tokens": 2701
+        }
+      }
+    }
+  ]
+}

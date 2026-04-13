@@ -1,0 +1,709 @@
+{
+  "assessment_id": "98b4e695f7a4",
+  "candidate_name": "周启航",
+  "dimension": "work_values",
+  "overall_score": 5.52,
+  "elapsed_ms": 118434,
+  "total_tokens": 19750,
+  "sub_dimensions": [
+    {
+      "meta": {
+        "agent": "Agent7_WorkValuesAgent",
+        "dimension": "工作价值观",
+        "dimension_id": "6",
+        "onet_framework": "O*NET Work Values (1.B.2) - Theory of Work Adjustment (TWA)",
+        "onet_academic_source": "Dawis, R.V., & Lofquist, L.H. (1984). A psychological theory of work adjustment. University of Minnesota Press.",
+        "onet_source": "https://www.onetonline.org",
+        "scale": "1-7",
+        "anchor_note": "工作价值观无数值行为锚点。依据候选人语言信号（个人补充说明、职位选择行为、简历表述）推断各维度强度",
+        "data_source_priority": [
+          "1. 个人补充说明（supplement_text）— 最强信号",
+          "2. 职位/公司选择行为 — 次强信号",
+          "3. 简历中的行为描述 — 辅助信号"
+        ],
+        "confidence_cap": "中（无标准测试，全部依赖推断，最高置信度为中）",
+        "no_evidence_rule": "score=null, confidence=无法判断, evidence=无相关证据"
+      },
+      "sub_dimension": {
+        "sub_dimension_id": "6.1",
+        "sub_dimension_name": "成就感",
+        "onet_dimension_id": "1.B.2.a",
+        "onet_dimension_name": "Achievement",
+        "onet_definition": "Occupations that satisfy this work value are results oriented and allow employees to use their strongest abilities, giving them a feeling of accomplishment.",
+        "needs": [
+          {
+            "item_id": "6.1.1",
+            "onet_element_id": "1.B.2.a.1",
+            "onet_element_name": "Ability Utilization",
+            "name_zh": "能力发挥",
+            "onet_definition": "Workers on this job make use of their individual abilities.",
+            "high_signal": [
+              "希望发挥专长",
+              "追求有挑战性的工作",
+              "做有难度的事",
+              "能力得到充分使用"
+            ],
+            "low_signal": [
+              "强调稳定",
+              "不提专业发展",
+              "安稳为主",
+              "不在乎是否用到专业能力"
+            ],
+            "result": {
+              "score": 6.5,
+              "evidence": "【职业动机】希望未来3年从项目负责人升级到业务经营负责人，不只做分析支持，而是参与预算分配和经营决策。对把复杂问题拆解并落地很有成就感。【工作偏好】喜欢：目标明确、授权充分、数据驱动、跨团队协作效率高的环境。【自我反思】优势：对业务数字敏感，能快速抓异常；对交付负责；沟通结论先行，推进效率高。",
+              "confidence": "中"
+            }
+          },
+          {
+            "item_id": "6.1.2",
+            "onet_element_id": "1.B.2.a.2",
+            "onet_element_name": "Achievement",
+            "name_zh": "成就感",
+            "onet_definition": "Workers on this job get a feeling of accomplishment.",
+            "high_signal": [
+              "对成果/里程碑满足感",
+              "重视impact",
+              "追求完成感",
+              "结果导向"
+            ],
+            "low_signal": [
+              "不关注结果",
+              "只关注过程或报酬",
+              "无所谓有没有成就感"
+            ],
+            "result": {
+              "score": 6.0,
+              "evidence": "【价值观】优先：成就感、成长速度、自主决策权、结果导向文化。【典型事件】2025Q3预算评审提出缩减低效投放被质疑保守，后用3个月数据证明策略有效。跨部门冲突中先后1对1沟通关键反对方并调整里程碑，项目按时上线。【典型项目】3个月内拉新成本下降18.7%，ROI从1.12提升到1.46，预算节省约920万元/季度。",
+              "confidence": "中"
+            }
+          }
+        ],
+        "sub_dimension_result": {
+          "score": 6.25,
+          "confidence": "中"
+        }
+      },
+      "_meta": {
+        "agent_key": "work_values",
+        "sub_dimension_id": "6.1",
+        "elapsed_ms": 15345,
+        "tokens": {
+          "prompt_tokens": 2041,
+          "completion_tokens": 895,
+          "total_tokens": 2936
+        }
+      }
+    },
+    {
+      "meta": {
+        "agent": "Agent7_WorkValuesAgent",
+        "dimension": "工作价值观",
+        "dimension_id": "6",
+        "onet_framework": "O*NET Work Values (1.B.2) - Theory of Work Adjustment (TWA)",
+        "onet_academic_source": "Dawis, R.V., & Lofquist, L.H. (1984). A psychological theory of work adjustment. University of Minnesota Press.",
+        "onet_source": "https://www.onetonline.org",
+        "scale": "1-7",
+        "anchor_note": "工作价值观无数值行为锚点。依据候选人语言信号（个人补充说明、职位选择行为、简历表述）推断各维度强度",
+        "data_source_priority": [
+          "1. 个人补充说明（supplement_text）— 最强信号",
+          "2. 职位/公司选择行为 — 次强信号",
+          "3. 简历中的行为描述 — 辅助信号"
+        ],
+        "confidence_cap": "中（无标准测试，全部依赖推断，最高置信度为中）",
+        "no_evidence_rule": "score=null, confidence=无法判断, evidence=无相关证据"
+      },
+      "sub_dimension": {
+        "sub_dimension_id": "6.2",
+        "sub_dimension_name": "工作条件",
+        "onet_dimension_id": "1.B.2.b",
+        "onet_dimension_name": "Working Conditions",
+        "onet_definition": "Occupations that satisfy this work value offer job security and good working conditions.",
+        "needs": [
+          {
+            "item_id": "6.2.1",
+            "onet_element_id": "1.B.2.b.1",
+            "onet_element_name": "Activity",
+            "name_zh": "忙碌程度",
+            "onet_definition": "Workers on this job are busy all the time.",
+            "high_signal": [
+              "偏好节奏快",
+              "事情多",
+              "喜欢充实感",
+              "不喜欢闲着"
+            ],
+            "low_signal": [
+              "偏好轻松",
+              "节奏慢",
+              "工作生活平衡优先"
+            ],
+            "result": {
+              "score": 6.0,
+              "confidence": "中",
+              "evidence": "可接受短期高强度冲刺，不可接受长期无序加班和职责边界不清。2024年底因项目密集出现疲惫，开始每周固定运动和压力记录。"
+            }
+          },
+          {
+            "item_id": "6.2.2",
+            "onet_element_id": "1.B.2.b.2",
+            "onet_element_name": "Independence",
+            "name_zh": "独立工作",
+            "onet_definition": "Workers on this job do their work alone.",
+            "high_signal": [
+              "喜欢独立完成",
+              "不需要频繁协调",
+              "自主推进",
+              "独立负责"
+            ],
+            "low_signal": [
+              "喜欢团队合作",
+              "需要他人支持",
+              "不喜欢单打独斗"
+            ],
+            "result": {
+              "score": 3.0,
+              "confidence": "中",
+              "evidence": "喜欢：目标明确、授权充分、数据驱动、跨团队协作效率高的环境。不喜欢：长时间无结论会议、口径反复变化、纯关系导向决策。有时倾向自己下场做细节，授权不彻底。"
+            }
+          },
+          {
+            "item_id": "6.2.3",
+            "onet_element_id": "1.B.2.b.3",
+            "onet_element_name": "Variety",
+            "name_zh": "工作多样性",
+            "onet_definition": "Workers on this job have something different to do every day.",
+            "high_signal": [
+              "喜欢多样性",
+              "讨厌重复",
+              "不同问题",
+              "变化丰富"
+            ],
+            "low_signal": [
+              "偏好固定流程",
+              "稳定工作内容",
+              "熟练操作"
+            ],
+            "result": {
+              "score": 6.5,
+              "confidence": "中",
+              "evidence": "希望未来3年从项目负责人升级到业务经营负责人，不只做分析支持，而是参与预算分配和经营决策。对把复杂问题拆解并落地很有成就感。负责用户增长中台从0到1建设，管理跨职能小组9人，作为业务BP与市场、运营、财务周会沟通。"
+            }
+          },
+          {
+            "item_id": "6.2.4",
+            "onet_element_id": "1.B.2.b.4",
+            "onet_element_name": "Compensation",
+            "name_zh": "薪酬",
+            "onet_definition": "Workers on this job are paid well in comparison with other workers.",
+            "high_signal": [
+              "薪酬是重要考量",
+              "明确提到薪资期望",
+              "回报率",
+              "高薪"
+            ],
+            "low_signal": [
+              "不提薪酬",
+              "强调其他因素",
+              "薪酬不是首要"
+            ],
+            "result": {
+              "score": 5.0,
+              "confidence": "中",
+              "evidence": "次高：薪酬回报、管理者专业度；优先：成就感、成长速度、自主决策权、结果导向文化。"
+            }
+          },
+          {
+            "item_id": "6.2.5",
+            "onet_element_id": "1.B.2.b.5",
+            "onet_element_name": "Security",
+            "name_zh": "就业稳定",
+            "onet_definition": "Workers on this job have steady employment.",
+            "high_signal": [
+              "偏好大公司",
+              "稳定",
+              "长期就业",
+              "不想频繁换工作"
+            ],
+            "low_signal": [
+              "愿意接受风险",
+              "创业/不确定",
+              "灵活就业"
+            ],
+            "result": {
+              "score": 5.5,
+              "confidence": "中",
+              "evidence": "某头部本地生活平台（D轮）高级数据产品经理（2022.05 - 至今），某SaaS数据智能公司（B轮）数据分析师 → 高级数据分析师（2020.03 - 2022.04），某互联网工具公司后端工程师（2017.07 - 2020.02）。"
+            }
+          },
+          {
+            "item_id": "6.2.6",
+            "onet_element_id": "1.B.2.b.6",
+            "onet_element_name": "Working Conditions",
+            "name_zh": "工作环境",
+            "onet_definition": "Workers on this job have good working conditions.",
+            "high_signal": [
+              "关注工作环境",
+              "远程/办公室偏好",
+              "硬件条件",
+              "舒适的工作场所"
+            ],
+            "low_signal": [
+              "不提工作条件",
+              "结果导向",
+              "环境无所谓"
+            ],
+            "result": {
+              "score": 4.0,
+              "confidence": "中",
+              "evidence": "不可接受长期无序加班和职责边界不清。2024年底因项目密集出现疲惫，开始每周固定运动和压力记录。"
+            }
+          }
+        ],
+        "sub_dimension_result": {
+          "score": null,
+          "confidence": null
+        }
+      },
+      "_meta": {
+        "agent_key": "work_values",
+        "sub_dimension_id": "6.2",
+        "elapsed_ms": 28906,
+        "tokens": {
+          "prompt_tokens": 2607,
+          "completion_tokens": 1558,
+          "total_tokens": 4165
+        }
+      }
+    },
+    {
+      "meta": {
+        "agent": "Agent7_WorkValuesAgent",
+        "dimension": "工作价值观",
+        "dimension_id": "6",
+        "onet_framework": "O*NET Work Values (1.B.2) - Theory of Work Adjustment (TWA)",
+        "onet_academic_source": "Dawis, R.V., & Lofquist, L.H. (1984). A psychological theory of work adjustment. University of Minnesota Press.",
+        "onet_source": "https://www.onetonline.org",
+        "scale": "1-7",
+        "anchor_note": "工作价值观无数值行为锚点。依据候选人语言信号（个人补充说明、职位选择行为、简历表述）推断各维度强度",
+        "data_source_priority": [
+          "1. 个人补充说明（supplement_text）— 最强信号",
+          "2. 职位/公司选择行为 — 次强信号",
+          "3. 简历中的行为描述 — 辅助信号"
+        ],
+        "confidence_cap": "中（无标准测试，全部依赖推断，最高置信度为中）",
+        "no_evidence_rule": "score=null, confidence=无法判断, evidence=无相关证据"
+      },
+      "sub_dimension": {
+        "sub_dimension_id": "6.3",
+        "sub_dimension_name": "认可度",
+        "onet_dimension_id": "1.B.2.c",
+        "onet_dimension_name": "Recognition",
+        "onet_definition": "Occupations that satisfy this work value offer advancement, potential for leadership, and are often considered prestigious.",
+        "needs": [
+          {
+            "item_id": "6.3.1",
+            "onet_element_id": "1.B.2.c.1",
+            "onet_element_name": "Advancement",
+            "name_zh": "晋升机会",
+            "onet_definition": "Workers on this job have opportunities for advancement.",
+            "high_signal": [
+              "职业发展路径",
+              "晋升意愿",
+              "往上走",
+              "升职"
+            ],
+            "low_signal": [
+              "不关注晋升",
+              "横向发展导向",
+              "专家路线",
+              "不想管理"
+            ],
+            "result": {
+              "score": 6.5,
+              "evidence": "希望未来3年从项目负责人升级到业务经营负责人，不只做分析支持，而是参与预算分配和经营决策",
+              "confidence": "中"
+            }
+          },
+          {
+            "item_id": "6.3.2",
+            "onet_element_id": "1.B.2.c.2",
+            "onet_element_name": "Recognition",
+            "name_zh": "被认可",
+            "onet_definition": "Workers on this job receive recognition for the work they do.",
+            "result": {
+              "score": 6.0,
+              "evidence": "对把复杂问题拆解并落地很有成就感；优先：成就感、成长速度",
+              "confidence": "中"
+            }
+          },
+          {
+            "item_id": "6.3.3",
+            "onet_element_id": "1.B.2.c.3",
+            "onet_element_name": "Authority",
+            "name_zh": "权力/指导他人",
+            "onet_definition": "Workers on this job give directions and instructions to others.",
+            "result": {
+              "score": 6.0,
+              "evidence": "管理跨职能小组9人；承担需求优先级和里程碑管理；短板：有时倾向自己下场做细节，授权不彻底",
+              "confidence": "中"
+            }
+          },
+          {
+            "item_id": "6.3.4",
+            "onet_element_id": "1.B.2.c.4",
+            "onet_element_name": "Social Status",
+            "name_zh": "社会地位",
+            "onet_definition": "Workers on this job are looked up to by others in their company and their community.",
+            "result": {
+              "score": 4.5,
+              "evidence": "输出行业报告8篇，其中2篇用于品牌公关白皮书；方案沉淀为增长补贴策略SOP v2.1并在3条业务线复用",
+              "confidence": "低"
+            }
+          }
+        ],
+        "sub_dimension_result": {
+          "score": 5.75,
+          "confidence": "中"
+        }
+      },
+      "_meta": {
+        "agent_key": "work_values",
+        "sub_dimension_id": "6.3",
+        "elapsed_ms": 21536,
+        "tokens": {
+          "prompt_tokens": 2322,
+          "completion_tokens": 937,
+          "total_tokens": 3259
+        }
+      }
+    },
+    {
+      "meta": {
+        "agent": "Agent7_WorkValuesAgent",
+        "dimension": "工作价值观",
+        "dimension_id": "6",
+        "onet_framework": "O*NET Work Values (1.B.2) - Theory of Work Adjustment (TWA)",
+        "onet_academic_source": "Dawis, R.V., & Lofquist, L.H. (1984). A psychological theory of work adjustment. University of Minnesota Press.",
+        "onet_source": "https://www.onetonline.org",
+        "scale": "1-7",
+        "anchor_note": "工作价值观无数值行为锚点。依据候选人语言信号（个人补充说明、职位选择行为、简历表述）推断各维度强度",
+        "data_source_priority": [
+          "1. 个人补充说明（supplement_text）— 最强信号",
+          "2. 职位/公司选择行为 — 次强信号",
+          "3. 简历中的行为描述 — 辅助信号"
+        ],
+        "confidence_cap": "中（无标准测试，全部依赖推断，最高置信度为中）",
+        "no_evidence_rule": "score=null, confidence=无法判断, evidence=无相关证据"
+      },
+      "sub_dimension": {
+        "sub_dimension_id": "6.4",
+        "sub_dimension_name": "人际关系",
+        "onet_dimension_id": "1.B.2.d",
+        "onet_dimension_name": "Relationships",
+        "onet_definition": "Occupations that satisfy this work value allow employees to provide service to others and work with co-workers in a friendly non-competitive environment.",
+        "needs": [
+          {
+            "item_id": "6.4.1",
+            "onet_element_id": "1.B.2.d.1",
+            "onet_element_name": "Co-workers",
+            "name_zh": "同事关系",
+            "onet_definition": "Workers on this job have co-workers who are easy to get along with.",
+            "high_signal": [
+              "强调团队氛围",
+              "看重同事关系",
+              "团队协作体验重要"
+            ],
+            "low_signal": [
+              "不提同事",
+              "注重独立产出",
+              "同事无所谓"
+            ],
+            "result": {
+              "score": 4.0,
+              "evidence": "喜欢：目标明确、授权充分、数据驱动、跨团队协作效率高的环境",
+              "confidence": "中"
+            }
+          },
+          {
+            "item_id": "6.4.2",
+            "onet_element_id": "1.B.2.d.2",
+            "onet_element_name": "Social Service",
+            "name_zh": "服务他人",
+            "onet_definition": "Workers on this job have work where they do things for other people.",
+            "high_signal": [
+              "提到帮助他人",
+              "社会影响",
+              "利他动机",
+              "为他人创造价值"
+            ],
+            "low_signal": [
+              "关注个人收益",
+              "不提社会价值",
+              "自我驱动"
+            ],
+            "result": {
+              "score": 5.5,
+              "evidence": "作为业务BP与市场、运营、财务周会沟通，负责ROI复盘、预算申请、资源协调",
+              "confidence": "中"
+            }
+          },
+          {
+            "item_id": "6.4.3",
+            "onet_element_id": "1.B.2.d.3",
+            "onet_element_name": "Moral Values",
+            "name_zh": "道德标准",
+            "onet_definition": "Workers on this job are never pressured to do things that go against their sense of right and wrong.",
+            "high_signal": [
+              "提到价值观匹配",
+              "道德底线",
+              "不做违心的事",
+              "原则性"
+            ],
+            "low_signal": [
+              "不提道德诉求",
+              "结果导向",
+              "灵活变通"
+            ],
+            "result": {
+              "score": 6.0,
+              "evidence": "不喜欢：口径反复变化、纯关系导向决策",
+              "confidence": "中"
+            }
+          }
+        ],
+        "sub_dimension_result": {
+          "score": 5.2,
+          "confidence": "中"
+        }
+      },
+      "_meta": {
+        "agent_key": "work_values",
+        "sub_dimension_id": "6.4",
+        "elapsed_ms": 16311,
+        "tokens": {
+          "prompt_tokens": 2190,
+          "completion_tokens": 913,
+          "total_tokens": 3103
+        }
+      }
+    },
+    {
+      "meta": {
+        "agent": "Agent7_WorkValuesAgent",
+        "dimension": "工作价值观",
+        "dimension_id": "6",
+        "onet_framework": "O*NET Work Values (1.B.2) - Theory of Work Adjustment (TWA)",
+        "onet_academic_source": "Dawis, R.V., & Lofquist, L.H. (1984). A psychological theory of work adjustment. University of Minnesota Press.",
+        "onet_source": "https://www.onetonline.org",
+        "scale": "1-7",
+        "anchor_note": "工作价值观无数值行为锚点。依据候选人语言信号（个人补充说明、职位选择行为、简历表述）推断各维度强度",
+        "data_source_priority": [
+          "1. 个人补充说明（supplement_text）— 最强信号",
+          "2. 职位/公司选择行为 — 次强信号",
+          "3. 简历中的行为描述 — 辅助信号"
+        ],
+        "confidence_cap": "中（无标准测试，全部依赖推断，最高置信度为中）",
+        "no_evidence_rule": "score=null, confidence=无法判断, evidence=无相关证据"
+      },
+      "sub_dimension": {
+        "sub_dimension_id": "6.5",
+        "sub_dimension_name": "支持感",
+        "onet_dimension_id": "1.B.2.e",
+        "onet_dimension_name": "Support",
+        "onet_definition": "Occupations that satisfy this work value offer supportive management that stands behind employees.",
+        "needs": [
+          {
+            "item_id": "6.5.1",
+            "onet_element_id": "1.B.2.e.1",
+            "onet_element_name": "Company Policies and Practices",
+            "name_zh": "公司公平对待",
+            "onet_definition": "Workers on this job are treated fairly by the company.",
+            "high_signal": [
+              "公平/透明的企业文化诉求",
+              "制度规范",
+              "不喜欢双标"
+            ],
+            "low_signal": [
+              "不提公司文化",
+              "自驱型",
+              "无所谓制度"
+            ],
+            "result": {
+              "score": 6.0,
+              "evidence": "不喜欢：长时间无结论会议、口径反复变化、纯关系导向决策",
+              "confidence": "中"
+            }
+          },
+          {
+            "item_id": "6.5.2",
+            "onet_element_id": "1.B.2.e.2",
+            "onet_element_name": "Supervision, Human Relations",
+            "name_zh": "人性化管理",
+            "onet_definition": "Workers on this job have supervisors who back up their workers with management.",
+            "high_signal": [
+              "看重上级支持",
+              "管理风格重要",
+              "希望被理解和支持"
+            ],
+            "low_signal": [
+              "不依赖上级",
+              "高度自主",
+              "上级无所谓"
+            ],
+            "result": {
+              "score": 5.5,
+              "evidence": "优先：自主决策权、结果导向文化；次高：管理者专业度",
+              "confidence": "中"
+            }
+          },
+          {
+            "item_id": "6.5.3",
+            "onet_element_id": "1.B.2.e.3",
+            "onet_element_name": "Supervision, Technical",
+            "name_zh": "技术指导",
+            "onet_definition": "Workers on this job have supervisors who train their workers well.",
+            "high_signal": [
+              "强调学习机会",
+              "希望有导师/mentor",
+              "希望上级专业"
+            ],
+            "low_signal": [
+              "不提学习诉求",
+              "经验丰富",
+              "自己能解决问题"
+            ],
+            "result": {
+              "score": 5.0,
+              "evidence": "优先：成长速度；典型事件：2025Q3预算评审提出缩减低效投放被质疑保守，后用3个月数据证明策略有效",
+              "confidence": "中"
+            }
+          }
+        ],
+        "sub_dimension_result": {
+          "score": 5.5,
+          "confidence": "中"
+        }
+      },
+      "_meta": {
+        "agent_key": "work_values",
+        "sub_dimension_id": "6.5",
+        "elapsed_ms": 17711,
+        "tokens": {
+          "prompt_tokens": 2166,
+          "completion_tokens": 902,
+          "total_tokens": 3068
+        }
+      }
+    },
+    {
+      "meta": {
+        "agent": "Agent7_WorkValuesAgent",
+        "dimension": "工作价值观",
+        "dimension_id": "6",
+        "onet_framework": "O*NET Work Values (1.B.2) - Theory of Work Adjustment (TWA)",
+        "onet_academic_source": "Dawis, R.V., & Lofquist, L.H. (1984). A psychological theory of work adjustment. University of Minnesota Press.",
+        "onet_source": "https://www.onetonline.org",
+        "scale": "1-7",
+        "anchor_note": "工作价值观无数值行为锚点。依据候选人语言信号（个人补充说明、职位选择行为、简历表述）推断各维度强度",
+        "data_source_priority": [
+          "1. 个人补充说明（supplement_text）— 最强信号",
+          "2. 职位/公司选择行为 — 次强信号",
+          "3. 简历中的行为描述 — 辅助信号"
+        ],
+        "confidence_cap": "中（无标准测试，全部依赖推断，最高置信度为中）",
+        "no_evidence_rule": "score=null, confidence=无法判断, evidence=无相关证据"
+      },
+      "sub_dimension": {
+        "sub_dimension_id": "6.6",
+        "sub_dimension_name": "独立性",
+        "onet_dimension_id": "1.B.2.f",
+        "onet_dimension_name": "Independence",
+        "onet_definition": "Occupations that satisfy this work value allow employees to work on their own and make decisions.",
+        "needs": [
+          {
+            "item_id": "6.6.1",
+            "onet_element_id": "1.B.2.f.1",
+            "onet_element_name": "Creativity",
+            "name_zh": "创新自由",
+            "onet_definition": "Workers on this job try out their own ideas.",
+            "high_signal": [
+              "渴望尝试自己的想法",
+              "不喜欢被约束",
+              "自主创新",
+              "探索空间"
+            ],
+            "low_signal": [
+              "偏好执行既定方案",
+              "不需要创新",
+              "按规则来"
+            ],
+            "result": {
+              "score": 6.0,
+              "confidence": "中",
+              "evidence": "【工作偏好】喜欢：目标明确、授权充分、数据驱动、跨团队协作效率高的环境。不喜欢：长时间无结论会议、口径反复变化、纯关系导向决策。【价值观】优先：成就感、成长速度、自主决策权、结果导向文化；典型事件：2025Q3预算评审提出缩减低效投放被质疑保守，后用3个月数据证明策略有效。"
+            }
+          },
+          {
+            "item_id": "6.6.2",
+            "onet_element_id": "1.B.2.f.2",
+            "onet_element_name": "Responsibility",
+            "name_zh": "决策自主",
+            "onet_definition": "Workers on this job make decisions on their own.",
+            "high_signal": [
+              "希望独立决策",
+              "对自己负责",
+              "有决策权",
+              "不需要层层审批"
+            ],
+            "low_signal": [
+              "喜欢有人拍板",
+              "不喜欢担责",
+              "团队决策为主"
+            ],
+            "result": {
+              "score": 6.5,
+              "confidence": "中",
+              "evidence": "【职业动机】希望未来3年从项目负责人升级到业务经营负责人，不只做分析支持，而是参与预算分配和经营决策。【价值观】优先：成就感、成长速度、自主决策权、结果导向文化；【典型事件】跨部门冲突中先后1对1沟通关键反对方并调整里程碑，项目按时上线。"
+            }
+          },
+          {
+            "item_id": "6.6.3",
+            "onet_element_id": "1.B.2.f.3",
+            "onet_element_name": "Autonomy",
+            "name_zh": "工作自主",
+            "onet_definition": "Workers on this job plan their work with little supervision.",
+            "high_signal": [
+              "强调自主",
+              "灵活",
+              "不喜欢被管控",
+              "自己安排时间"
+            ],
+            "low_signal": [
+              "倾向有结构/有监督的工作方式",
+              "需要明确指引"
+            ],
+            "result": {
+              "score": 6.0,
+              "confidence": "中",
+              "evidence": "【工作偏好】喜欢：目标明确、授权充分、数据驱动、跨团队协作效率高的环境。不喜欢：长时间无结论会议、口径反复变化、纯关系导向决策。【价值观】优先：自主决策权、结果导向文化；【自我反思】短板：有时倾向自己下场做细节，授权不彻底。"
+            }
+          }
+        ],
+        "sub_dimension_result": {
+          "score": 6.2,
+          "confidence": "中"
+        }
+      },
+      "_meta": {
+        "agent_key": "work_values",
+        "sub_dimension_id": "6.6",
+        "elapsed_ms": 18625,
+        "tokens": {
+          "prompt_tokens": 2163,
+          "completion_tokens": 1056,
+          "total_tokens": 3219
+        }
+      }
+    }
+  ]
+}

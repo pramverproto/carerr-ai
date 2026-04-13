@@ -1,0 +1,174 @@
+================================================================
+         Career AI 项目部署操作流程
+         环境：云服务器 + Docker Compose
+================================================================
+
+----------------------------------------------------------------
+一、前置要求（云服务器）
+----------------------------------------------------------------
+
+1. 操作系统：Ubuntu 22.04 / CentOS 8+ / Debian 12（推荐 Ubuntu）
+2. 已安装 Docker（>= 24.0）和 Docker Compose（>= 2.0）
+3. 开放端口：80（HTTP）
+4. 服务器能访问外网（需要拉取镜像、访问 LLM API 和数据库）
+
+安装 Docker（Ubuntu）：
+    curl -fsSL https://get.docker.com | sh
+    sudo usermod -aG docker $USER
+    newgrp docker
+
+验证安装：
+    docker --version
+    docker compose version
+
+----------------------------------------------------------------
+二、上传项目到服务器
+----------------------------------------------------------------
+
+方式 A：本地直接上传（scp）
+    scp -r /Users/jonysing/Desktop/py_project/g-projeact/ root@服务器IP:~/career-ai/
+
+方式 B：Git 克隆（推荐，需先推到 Git 仓库）
+    ssh root@服务器IP
+    git clone <仓库地址> ~/career-ai/
+    cd ~/career-ai/
+
+----------------------------------------------------------------
+三、配置环境变量
+----------------------------------------------------------------
+
+1. 后端环境变量（career-agent/.env）
+   确认以下内容正确，服务器上可访问：
+
+    LLM_MODEL=openai/glm-4-airx
+    LLM_API_KEY=<你的 API Key>
+    LLM_BASE_URL=https://www.dmxapi.cn/v1
+
+    DB_HOST=115.120.251.185       # 确认服务器能访问该 IP
+    DB_PORT=3306
+    DB_USER=user01
+    DB_PASSWORD=187423
+    DB_NAME=career_agent
+
+    JWT_SECRET=<改成一个 32 位以上的随机字符串，生产环境务必修改>
+
+    API_HOST=0.0.0.0
+    API_PORT=8000
+
+   生成安全 JWT_SECRET 的方法：
+    openssl rand -hex 32
+
+2. DB 微服务环境变量（career-db-service/.env）
+   确认该文件存在且配置正确，格式同上 DB 相关配置。
+
+----------------------------------------------------------------
+四、构建并启动服务
+----------------------------------------------------------------
+
+进入项目根目录（docker-compose.yml 所在目录）：
+    cd ~/career-ai/
+
+首次构建并启动（后台运行）：
+    docker compose up -d --build
+
+构建过程较长（约 5-10 分钟），请耐心等待。
+构建完成后查看运行状态：
+    docker compose ps
+
+正常状态应显示三个服务均为 Up：
+    NAME         STATUS
+    frontend     Up
+    backend      Up
+    db-service   Up
+
+----------------------------------------------------------------
+五、验证部署是否成功
+----------------------------------------------------------------
+
+1. 检查后端健康状态：
+    curl http://localhost/api/health
+    # 期望返回：{"status":"ok","database":"connected"}
+
+2. 访问前端页面：
+    浏览器打开 http://服务器IP/
+    应看到 Career AI 登录页面
+
+3. 查看各服务日志（如有异常）：
+    docker compose logs backend     # 后端日志
+    docker compose logs frontend    # 前端/Nginx 日志
+    docker compose logs db-service  # DB 微服务日志
+
+    实时追踪所有日志：
+    docker compose logs -f
+
+----------------------------------------------------------------
+六、常用运维命令
+----------------------------------------------------------------
+
+重启所有服务：
+    docker compose restart
+
+重启单个服务：
+    docker compose restart backend
+
+停止所有服务：
+    docker compose down
+
+更新代码后重新构建（不删数据）：
+    docker compose up -d --build
+
+查看容器资源占用：
+    docker stats
+
+进入容器内部排查问题：
+    docker compose exec backend bash
+    docker compose exec frontend sh
+
+----------------------------------------------------------------
+七、更新部署（代码有改动时）
+----------------------------------------------------------------
+
+1. 上传最新代码到服务器（或 git pull）：
+    cd ~/career-ai/
+    git pull
+
+2. 重新构建并重启（只重建有改动的服务）：
+    docker compose up -d --build
+
+3. 清理旧镜像（可选，释放磁盘空间）：
+    docker image prune -f
+
+----------------------------------------------------------------
+八、常见问题排查
+----------------------------------------------------------------
+
+问题 1：前端页面打开空白或 404
+  → 检查 Nginx 日志：docker compose logs frontend
+  → 确认构建成功：docker compose exec frontend ls /usr/share/nginx/html
+
+问题 2：API 请求报错 502 Bad Gateway
+  → 后端可能还未启动完成，等待 30 秒后重试
+  → 查看后端日志：docker compose logs backend
+  → 检查 .env 中数据库配置是否正确
+
+问题 3：登录后数据为空
+  → 检查数据库连接：curl http://localhost/api/health
+  → 确认 DB_HOST 在服务器上可访问：
+    docker compose exec backend ping 115.120.251.185
+
+问题 4：构建失败（npm/uv 依赖安装报错）
+  → 检查服务器网络是否能访问 pypi.org 和 npmjs.com
+  → 可配置国内镜像源后重试
+
+问题 5：端口 80 被占用
+  → 查看占用进程：sudo lsof -i :80
+  → 或修改 docker-compose.yml 中 ports 为 "8080:80" 后重试
+
+================================================================
+                     部署完成后访问地址
+================================================================
+
+    前端页面：http://服务器IP/
+    API 接口：http://服务器IP/api/
+
+================================================================

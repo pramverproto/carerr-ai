@@ -1,0 +1,898 @@
+{
+  "agent": "Agent 2 - SkillsAgent",
+  "description": "O*NET Skills: Basic Skills (2.A) and Cross-Functional Skills (2.B)",
+  "element_hierarchy": {
+    "2.A": {
+      "element_id": "2.A",
+      "name": "Basic Skills",
+      "description": "Developed capacities that facilitate learning or the more rapid acquisition of knowledge"
+    },
+    "2.A.1": {
+      "element_id": "2.A.1",
+      "name": "Content",
+      "description": "Background structures needed to work with and acquire more specific skills in a variety of different domains"
+    },
+    "2.A.1.a": {
+      "element_id": "2.A.1.a",
+      "name": "Reading Comprehension",
+      "description": "Understanding written sentences and paragraphs in work-related documents."
+    },
+    "2.A.1.b": {
+      "element_id": "2.A.1.b",
+      "name": "Active Listening",
+      "description": "Giving full attention to what other people are saying, taking time to understand the points being made, asking questions as appropriate, and not interrupting at inappropriate times."
+    },
+    "2.A.1.c": {
+      "element_id": "2.A.1.c",
+      "name": "Writing",
+      "description": "Communicating effectively in writing as appropriate for the needs of the audience."
+    },
+    "2.A.1.d": {
+      "element_id": "2.A.1.d",
+      "name": "Speaking",
+      "description": "Talking to others to convey information effectively."
+    },
+    "2.A.1.e": {
+      "element_id": "2.A.1.e",
+      "name": "Mathematics",
+      "description": "Using mathematics to solve problems."
+    },
+    "2.A.1.f": {
+      "element_id": "2.A.1.f",
+      "name": "Science",
+      "description": "Using scientific rules and methods to solve problems."
+    },
+    "2.A.2": {
+      "element_id": "2.A.2",
+      "name": "Process",
+      "description": "Procedures that contribute to the more rapid acquisition of knowledge and skill across a variety of domains"
+    },
+    "2.A.2.a": {
+      "element_id": "2.A.2.a",
+      "name": "Critical Thinking",
+      "description": "Using logic and reasoning to identify the strengths and weaknesses of alternative solutions, conclusions, or approaches to problems."
+    },
+    "2.A.2.b": {
+      "element_id": "2.A.2.b",
+      "name": "Active Learning",
+      "description": "Understanding the implications of new information for both current and future problem-solving and decision-making."
+    },
+    "2.A.2.c": {
+      "element_id": "2.A.2.c",
+      "name": "Learning Strategies",
+      "description": "Selecting and using training/instructional methods and procedures appropriate for the situation when learning or teaching new things."
+    },
+    "2.A.2.d": {
+      "element_id": "2.A.2.d",
+      "name": "Monitoring",
+      "description": "Monitoring/Assessing performance of yourself, other individuals, or organizations to make improvements or take corrective action."
+    },
+    "2.B": {
+      "element_id": "2.B",
+      "name": "Cross-Functional Skills",
+      "description": "Developed capacities that facilitate performance of activities that occur across jobs"
+    },
+    "2.B.1": {
+      "element_id": "2.B.1",
+      "name": "Social Skills",
+      "description": "Developed capacities used to work with people to achieve goals"
+    },
+    "2.B.1.a": {
+      "element_id": "2.B.1.a",
+      "name": "Social Perceptiveness",
+      "description": "Being aware of others' reactions and understanding why they react as they do."
+    },
+    "2.B.1.b": {
+      "element_id": "2.B.1.b",
+      "name": "Coordination",
+      "description": "Adjusting actions in relation to others' actions."
+    },
+    "2.B.1.c": {
+      "element_id": "2.B.1.c",
+      "name": "Persuasion",
+      "description": "Persuading others to change their minds or behavior."
+    },
+    "2.B.1.d": {
+      "element_id": "2.B.1.d",
+      "name": "Negotiation",
+      "description": "Bringing others together and trying to reconcile differences."
+    },
+    "2.B.1.e": {
+      "element_id": "2.B.1.e",
+      "name": "Instructing",
+      "description": "Teaching others how to do something."
+    },
+    "2.B.1.f": {
+      "element_id": "2.B.1.f",
+      "name": "Service Orientation",
+      "description": "Actively looking for ways to help people."
+    },
+    "2.B.2": {
+      "element_id": "2.B.2",
+      "name": "Complex Problem Solving Skills",
+      "description": "Developed capacities used to solve novel, ill-defined problems in complex, real-world settings"
+    },
+    "2.B.2.i": {
+      "element_id": "2.B.2.i",
+      "name": "Complex Problem Solving",
+      "description": "Identifying complex problems and reviewing related information to develop and evaluate options and implement solutions."
+    },
+    "2.B.3": {
+      "element_id": "2.B.3",
+      "name": "Technical Skills",
+      "description": "Developed capacities used to design, set-up, operate, and correct malfunctions involving application of machines or technological systems"
+    },
+    "2.B.3.a": {
+      "element_id": "2.B.3.a",
+      "name": "Operations Analysis",
+      "description": "Analyzing needs and product requirements to create a design."
+    },
+    "2.B.3.b": {
+      "element_id": "2.B.3.b",
+      "name": "Technology Design",
+      "description": "Generating or adapting equipment and technology to serve user needs."
+    },
+    "2.B.3.c": {
+      "element_id": "2.B.3.c",
+      "name": "Equipment Selection",
+      "description": "Determining the kind of tools and equipment needed to do a job."
+    },
+    "2.B.3.d": {
+      "element_id": "2.B.3.d",
+      "name": "Installation",
+      "description": "Installing equipment, machines, wiring, or programs to meet specifications."
+    },
+    "2.B.3.e": {
+      "element_id": "2.B.3.e",
+      "name": "Programming",
+      "description": "Writing computer programs for various purposes."
+    },
+    "2.B.3.g": {
+      "element_id": "2.B.3.g",
+      "name": "Operations Monitoring",
+      "description": "Watching gauges, dials, or other indicators to make sure a machine is working properly."
+    },
+    "2.B.3.h": {
+      "element_id": "2.B.3.h",
+      "name": "Operation and Control",
+      "description": "Controlling operations of equipment or systems."
+    },
+    "2.B.3.j": {
+      "element_id": "2.B.3.j",
+      "name": "Equipment Maintenance",
+      "description": "Performing routine maintenance on equipment and determining when and what kind of maintenance is needed."
+    },
+    "2.B.3.k": {
+      "element_id": "2.B.3.k",
+      "name": "Troubleshooting",
+      "description": "Determining causes of operating errors and deciding what to do about it."
+    },
+    "2.B.3.l": {
+      "element_id": "2.B.3.l",
+      "name": "Repairing",
+      "description": "Repairing machines or systems using the needed tools."
+    },
+    "2.B.3.m": {
+      "element_id": "2.B.3.m",
+      "name": "Quality Control Analysis",
+      "description": "Conducting tests and inspections of products, services, or processes to evaluate quality or performance."
+    },
+    "2.B.4": {
+      "element_id": "2.B.4",
+      "name": "Systems Skills",
+      "description": "Developed capacities used to understand, monitor, and improve socio-technical systems"
+    },
+    "2.B.4.e": {
+      "element_id": "2.B.4.e",
+      "name": "Judgment and Decision Making",
+      "description": "Considering the relative costs and benefits of potential actions to choose the most appropriate one."
+    },
+    "2.B.4.g": {
+      "element_id": "2.B.4.g",
+      "name": "Systems Analysis",
+      "description": "Determining how a system should work and how changes in conditions, operations, and the environment will affect outcomes."
+    },
+    "2.B.4.h": {
+      "element_id": "2.B.4.h",
+      "name": "Systems Evaluation",
+      "description": "Identifying measures or indicators of system performance and the actions needed to improve or correct performance, relative to the goals of the system."
+    },
+    "2.B.5": {
+      "element_id": "2.B.5",
+      "name": "Resource Management Skills",
+      "description": "Developed capacities used to allocate resources efficiently"
+    },
+    "2.B.5.a": {
+      "element_id": "2.B.5.a",
+      "name": "Time Management",
+      "description": "Managing one's own time and the time of others."
+    },
+    "2.B.5.b": {
+      "element_id": "2.B.5.b",
+      "name": "Management of Financial Resources",
+      "description": "Determining how money will be spent to get the work done, and accounting for these expenditures."
+    },
+    "2.B.5.c": {
+      "element_id": "2.B.5.c",
+      "name": "Management of Material Resources",
+      "description": "Obtaining and seeing to the appropriate use of equipment, facilities, and materials needed to do certain work."
+    },
+    "2.B.5.d": {
+      "element_id": "2.B.5.d",
+      "name": "Management of Personnel Resources",
+      "description": "Motivating, developing, and directing people as they work, identifying the best people for the job."
+    }
+  },
+  "behavioral_anchors": {
+    "2A_basic_skills": {
+      "2.A.1.a": {
+        "element_id": "2.A.1.a",
+        "name": "Reading Comprehension",
+        "description": "Understanding written sentences and paragraphs in work-related documents.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Read step-by-step instructions for completing a form"
+          },
+          {
+            "level": 4,
+            "description": "Understand an email from management describing new personnel policies"
+          },
+          {
+            "level": 6,
+            "description": "Read a scientific journal article describing surgical procedures"
+          }
+        ]
+      },
+      "2.A.1.b": {
+        "element_id": "2.A.1.b",
+        "name": "Active Listening",
+        "description": "Giving full attention to what other people are saying, taking time to understand the points being made, asking questions as appropriate, and not interrupting at inappropriate times.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Take a customer's order"
+          },
+          {
+            "level": 4,
+            "description": "Answer inquiries regarding credit references"
+          },
+          {
+            "level": 6,
+            "description": "Serve as a judge in a complex legal disagreement"
+          }
+        ]
+      },
+      "2.A.1.c": {
+        "element_id": "2.A.1.c",
+        "name": "Writing",
+        "description": "Communicating effectively in writing as appropriate for the needs of the audience.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Write down a guest's order at a restaurant"
+          },
+          {
+            "level": 4,
+            "description": "Write an email to staff outlining new directives"
+          },
+          {
+            "level": 6,
+            "description": "Write a novel for publication"
+          }
+        ]
+      },
+      "2.A.1.d": {
+        "element_id": "2.A.1.d",
+        "name": "Speaking",
+        "description": "Talking to others to convey information effectively.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Greet tourists and explain tourist attractions"
+          },
+          {
+            "level": 4,
+            "description": "Interview applicants to obtain personal and work history"
+          },
+          {
+            "level": 6,
+            "description": "Argue a legal case before the Supreme Court"
+          }
+        ]
+      },
+      "2.A.1.e": {
+        "element_id": "2.A.1.e",
+        "name": "Mathematics",
+        "description": "Using mathematics to solve problems.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Count the amount of change to be given to a customer"
+          },
+          {
+            "level": 4,
+            "description": "Calculate the square footage of a new home under construction"
+          },
+          {
+            "level": 6,
+            "description": "Develop a mathematical model to simulate and resolve an engineering problem"
+          }
+        ]
+      },
+      "2.A.1.f": {
+        "element_id": "2.A.1.f",
+        "name": "Science",
+        "description": "Using scientific rules and methods to solve problems.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Conduct standard tests to determine soil quality"
+          },
+          {
+            "level": 4,
+            "description": "Conduct product tests to ensure safety standards are met"
+          },
+          {
+            "level": 6,
+            "description": "Analyze aerodynamic systems to determine the practicality of a design"
+          }
+        ]
+      },
+      "2.A.2.a": {
+        "element_id": "2.A.2.a",
+        "name": "Critical Thinking",
+        "description": "Using logic and reasoning to identify the strengths and weaknesses of alternative solutions, conclusions, or approaches to problems.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Determine whether a subordinate has a good excuse for being late"
+          },
+          {
+            "level": 4,
+            "description": "Evaluate customer complaints and determine appropriate responses"
+          },
+          {
+            "level": 6,
+            "description": "Write legal brief challenging a federal law"
+          }
+        ]
+      },
+      "2.A.2.b": {
+        "element_id": "2.A.2.b",
+        "name": "Active Learning",
+        "description": "Understanding the implications of new information for both current and future problem-solving and decision-making.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Think about the implications of a news article for job opportunities"
+          },
+          {
+            "level": 4,
+            "description": "Determine the impact of new menu changes on a restaurant's purchasing requirements"
+          },
+          {
+            "level": 6,
+            "description": "Identify the implications of a new scientific theory for product design"
+          }
+        ]
+      },
+      "2.A.2.c": {
+        "element_id": "2.A.2.c",
+        "name": "Learning Strategies",
+        "description": "Selecting and using training/instructional methods and procedures appropriate for the situation when learning or teaching new things.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Learn a different method of completing a task from a coworker"
+          },
+          {
+            "level": 4,
+            "description": "Identify an alternative approach to help trainees who are having difficulties"
+          },
+          {
+            "level": 6,
+            "description": "Apply principles of educational psychology to develop new teaching methods"
+          }
+        ]
+      },
+      "2.A.2.d": {
+        "element_id": "2.A.2.d",
+        "name": "Monitoring",
+        "description": "Monitoring/Assessing performance of yourself, other individuals, or organizations to make improvements or take corrective action.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Proofread and correct a letter"
+          },
+          {
+            "level": 4,
+            "description": "Monitor a meeting and revise the agenda to ensure important topics are discussed"
+          },
+          {
+            "level": 6,
+            "description": "Review corporate productivity and develop a plan to increase it"
+          }
+        ]
+      }
+    },
+    "2B_cross_functional_skills": {
+      "2.B.1.a": {
+        "element_id": "2.B.1.a",
+        "name": "Social Perceptiveness",
+        "description": "Being aware of others' reactions and understanding why they react as they do.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Notice that customers are angry because they have been waiting too long"
+          },
+          {
+            "level": 4,
+            "description": "Be aware of how a coworker's promotion will affect a work group"
+          },
+          {
+            "level": 6,
+            "description": "Counsel patients who are depressed during a crisis period"
+          }
+        ]
+      },
+      "2.B.1.b": {
+        "element_id": "2.B.1.b",
+        "name": "Coordination",
+        "description": "Adjusting actions in relation to others' actions.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Schedule appointments for a medical clinic"
+          },
+          {
+            "level": 4,
+            "description": "Work with others to put a new roof on a house"
+          },
+          {
+            "level": 6,
+            "description": "Direct a project requiring coordination between multiple subcontractors"
+          }
+        ]
+      },
+      "2.B.1.c": {
+        "element_id": "2.B.1.c",
+        "name": "Persuasion",
+        "description": "Persuading others to change their minds or behavior.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Solicit donations for a charity"
+          },
+          {
+            "level": 4,
+            "description": "Convince a supervisor to purchase new office equipment"
+          },
+          {
+            "level": 6,
+            "description": "Change the opinion of the jury in a complex legal case"
+          }
+        ]
+      },
+      "2.B.1.d": {
+        "element_id": "2.B.1.d",
+        "name": "Negotiation",
+        "description": "Bringing others together and trying to reconcile differences.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Present justification to a manager for altering a work schedule"
+          },
+          {
+            "level": 4,
+            "description": "Contract with a wholesaler to sell items at a given cost"
+          },
+          {
+            "level": 6,
+            "description": "Work as an ambassador in negotiating a new treaty"
+          }
+        ]
+      },
+      "2.B.1.e": {
+        "element_id": "2.B.1.e",
+        "name": "Instructing",
+        "description": "Teaching others how to do something.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Instruct a new employee in the use of a timekeeping system"
+          },
+          {
+            "level": 4,
+            "description": "Instruct a coworker in how to operate a software program"
+          },
+          {
+            "level": 6,
+            "description": "Demonstrate a surgical procedure to interns in a teaching hospital"
+          }
+        ]
+      },
+      "2.B.1.f": {
+        "element_id": "2.B.1.f",
+        "name": "Service Orientation",
+        "description": "Actively looking for ways to help people.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Ask customers if they would like a cup of coffee"
+          },
+          {
+            "level": 4,
+            "description": "Make flight reservations for customers using an online booking site"
+          },
+          {
+            "level": 6,
+            "description": "Direct relief agency operations in a disaster area"
+          }
+        ]
+      },
+      "2.B.2.i": {
+        "element_id": "2.B.2.i",
+        "name": "Complex Problem Solving",
+        "description": "Identifying complex problems and reviewing related information to develop and evaluate options and implement solutions.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Lay out tools to complete a job"
+          },
+          {
+            "level": 4,
+            "description": "Redesign a floor layout to take advantage of new manufacturing techniques"
+          },
+          {
+            "level": 6,
+            "description": "Develop a plan to provide emergency relief for a major metropolitan area"
+          }
+        ]
+      },
+      "2.B.3.a": {
+        "element_id": "2.B.3.a",
+        "name": "Operations Analysis",
+        "description": "Analyzing needs and product requirements to create a design.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Select a printer for an office"
+          },
+          {
+            "level": 4,
+            "description": "Suggest changes in software to make a system more user friendly"
+          },
+          {
+            "level": 6,
+            "description": "Identify the control system needed for a new process production plant"
+          }
+        ]
+      },
+      "2.B.3.b": {
+        "element_id": "2.B.3.b",
+        "name": "Technology Design",
+        "description": "Generating or adapting equipment and technology to serve user needs.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Adjust exercise equipment for use by a customer"
+          },
+          {
+            "level": 4,
+            "description": "Redesign the handle on a hand tool for easier gripping"
+          },
+          {
+            "level": 6,
+            "description": "Create new technology for producing industrial diamonds"
+          }
+        ]
+      },
+      "2.B.3.c": {
+        "element_id": "2.B.3.c",
+        "name": "Equipment Selection",
+        "description": "Determining the kind of tools and equipment needed to do a job.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Select a tool to adjust a loose part on a bicycle"
+          },
+          {
+            "level": 4,
+            "description": "Choose a software application to complete a work assignment"
+          },
+          {
+            "level": 6,
+            "description": "Identify the equipment needed to produce a new product line"
+          }
+        ]
+      },
+      "2.B.3.d": {
+        "element_id": "2.B.3.d",
+        "name": "Installation",
+        "description": "Installing equipment, machines, wiring, or programs to meet specifications.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Install a new air filter in an air conditioner"
+          },
+          {
+            "level": 4,
+            "description": "Install a speaker system in a car"
+          },
+          {
+            "level": 6,
+            "description": "Install a custom-made production machine for a new product"
+          }
+        ]
+      },
+      "2.B.3.e": {
+        "element_id": "2.B.3.e",
+        "name": "Programming",
+        "description": "Writing computer programs for various purposes.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Write a program to sort objects in a database"
+          },
+          {
+            "level": 4,
+            "description": "Write a statistical analysis program to analyze demographic data"
+          },
+          {
+            "level": 6,
+            "description": "Write programs to analyze geological data for existence of mineral deposits"
+          }
+        ]
+      },
+      "2.B.3.g": {
+        "element_id": "2.B.3.g",
+        "name": "Operations Monitoring",
+        "description": "Watching gauges, dials, or other indicators to make sure a machine is working properly.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Monitor completion times while running a computer program"
+          },
+          {
+            "level": 4,
+            "description": "Monitor machine functions on an automated production line"
+          },
+          {
+            "level": 6,
+            "description": "Monitor feedback control in a processing facility to maintain production flow"
+          }
+        ]
+      },
+      "2.B.3.h": {
+        "element_id": "2.B.3.h",
+        "name": "Operation and Control",
+        "description": "Controlling operations of equipment or systems.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Navigate the settings on an office printer to print on both sides of the paper"
+          },
+          {
+            "level": 4,
+            "description": "Adjust the speed of assembly line equipment based on the product being assembled"
+          },
+          {
+            "level": 6,
+            "description": "Control aircraft approach and landing at a large airport during a busy period"
+          }
+        ]
+      },
+      "2.B.3.j": {
+        "element_id": "2.B.3.j",
+        "name": "Equipment Maintenance",
+        "description": "Performing routine maintenance on equipment and determining when and what kind of maintenance is needed.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Add oil to an engine as indicated by a warning light"
+          },
+          {
+            "level": 4,
+            "description": "Clean moving parts in production machinery"
+          },
+          {
+            "level": 6,
+            "description": "Conduct maintenance checks on an aircraft"
+          }
+        ]
+      },
+      "2.B.3.k": {
+        "element_id": "2.B.3.k",
+        "name": "Troubleshooting",
+        "description": "Determining causes of operating errors and deciding what to do about it.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Identify the source of a leak by looking under a machine"
+          },
+          {
+            "level": 4,
+            "description": "Identify the circuit causing an electrical system to fail"
+          },
+          {
+            "level": 6,
+            "description": "Direct the debugging of code for a new operating system"
+          }
+        ]
+      },
+      "2.B.3.l": {
+        "element_id": "2.B.3.l",
+        "name": "Repairing",
+        "description": "Repairing machines or systems using the needed tools.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Tighten a screw to get a door to close properly"
+          },
+          {
+            "level": 4,
+            "description": "Replace a faulty hydraulic valve"
+          },
+          {
+            "level": 6,
+            "description": "Repair structural damage after an earthquake"
+          }
+        ]
+      },
+      "2.B.3.m": {
+        "element_id": "2.B.3.m",
+        "name": "Quality Control Analysis",
+        "description": "Conducting tests and inspections of products, services, or processes to evaluate quality or performance.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Inspect a draft email for errors (e.g., grammar, punctuation)"
+          },
+          {
+            "level": 4,
+            "description": "Assess new parts for precision and accuracy to specifications"
+          },
+          {
+            "level": 6,
+            "description": "Develop procedures to test a prototype of a new computer system"
+          }
+        ]
+      },
+      "2.B.4.e": {
+        "element_id": "2.B.4.e",
+        "name": "Judgment and Decision Making",
+        "description": "Considering the relative costs and benefits of potential actions to choose the most appropriate one.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Decide how scheduling a break will affect work flow"
+          },
+          {
+            "level": 4,
+            "description": "Evaluate a loan application for degree of risk"
+          },
+          {
+            "level": 6,
+            "description": "Decide whether a manufacturing company should invest in new robotics technology"
+          }
+        ]
+      },
+      "2.B.4.g": {
+        "element_id": "2.B.4.g",
+        "name": "Systems Analysis",
+        "description": "Determining how a system should work and how changes in conditions, operations, and the environment will affect outcomes.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Determine how loss of a team member will affect the completion of a job"
+          },
+          {
+            "level": 4,
+            "description": "Determine how a new piece of equipment will affect production rates"
+          },
+          {
+            "level": 6,
+            "description": "Identify how changes in tax laws affect locations of manufacturing operations"
+          }
+        ]
+      },
+      "2.B.4.h": {
+        "element_id": "2.B.4.h",
+        "name": "Systems Evaluation",
+        "description": "Identifying measures or indicators of system performance and the actions needed to improve or correct performance, relative to the goals of the system.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Determine why estimates for the time to complete a task are overly optimistic"
+          },
+          {
+            "level": 4,
+            "description": "Identify the reasons why a client might be unhappy with a product"
+          },
+          {
+            "level": 6,
+            "description": "Evaluate the long-term performance of a new computer system"
+          }
+        ]
+      },
+      "2.B.5.a": {
+        "element_id": "2.B.5.a",
+        "name": "Time Management",
+        "description": "Managing one's own time and the time of others.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Keep a monthly calendar of appointments"
+          },
+          {
+            "level": 4,
+            "description": "Allocate the time of subordinates to projects for the coming week"
+          },
+          {
+            "level": 6,
+            "description": "Allocate the time of scientists to multiple research projects"
+          }
+        ]
+      },
+      "2.B.5.b": {
+        "element_id": "2.B.5.b",
+        "name": "Management of Financial Resources",
+        "description": "Determining how money will be spent to get the work done, and accounting for these expenditures.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Use available funds to buy office supplies and record the amount of the purchase"
+          },
+          {
+            "level": 4,
+            "description": "Prepare and manage a budget for a short-term project"
+          },
+          {
+            "level": 6,
+            "description": "Develop, monitor, and adjust annual budgets for a large corporation"
+          }
+        ]
+      },
+      "2.B.5.c": {
+        "element_id": "2.B.5.c",
+        "name": "Management of Material Resources",
+        "description": "Obtaining and seeing to the appropriate use of equipment, facilities, and materials needed to do certain work.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Reserve a room for a management meeting"
+          },
+          {
+            "level": 4,
+            "description": "Evaluate an annual uniform service contract for delivery drivers"
+          },
+          {
+            "level": 6,
+            "description": "Determine and monitor the computer system needs of a large corporation"
+          }
+        ]
+      },
+      "2.B.5.d": {
+        "element_id": "2.B.5.d",
+        "name": "Management of Personnel Resources",
+        "description": "Motivating, developing, and directing people as they work, identifying the best people for the job.",
+        "anchors": [
+          {
+            "level": 2,
+            "description": "Encourage a coworker who is having difficulty finishing a project"
+          },
+          {
+            "level": 4,
+            "description": "Direct the activities of a road repair crew with minimal disruption of traffic flow"
+          },
+          {
+            "level": 6,
+            "description": "Manage recruitment and training programs for a high-performance company"
+          }
+        ]
+      }
+    }
+  },
+  "total_anchor_records": 105
+}

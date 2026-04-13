@@ -1,0 +1,65 @@
+Bug 清单
+========
+
+【Critical - 运行时 Bug】
+
+1. 工具重复注册 ✓ 已修复
+   位置：agent/agent.py __init__ + agent/tools/registry.py
+   原因：每次创建 Agent 实例都调用 register_delegate_task()，
+         @tool 装饰器每次都往 TOOL_SCHEMAS 里 append，没有去重检查。
+         创建多个 sub_agent 时 delegate_task 会重复出现在工具列表里。
+   修复：delegate_task 改为模块级 @tool 装饰，启动时注册一次，运行时从 agent_config.py 读配置。
+
+2. sub_agent 断开共享 MCP 连接
+   位置：agent/agent.py run_once() finally 块
+   原因：run_once 结束时调用 self.mcp.disconnect()，
+         但 mcp 实例是从 main agent 传进来的共享对象。
+         sub_agent 结束后 main agent 的后续 MCP 工具调用会直接失败。
+
+3. API Key 写死在代码里
+   位置：agent/agent_config.py、test/test_llm.py、test/test_delegate.py、test/test_agent.py
+   原因：api_key 直接硬编码在源文件中，提交到 git 后会泄漏。
+         应改用 .env 文件 + python-dotenv 读取。
+
+【High - 影响稳定性】
+
+4. json.loads 没有异常处理
+   位置：agent/agent.py _execute_tool_calls()
+   原因：LLM 偶尔返回残缺 JSON，json.loads 会抛 JSONDecodeError，
+         导致整个对话崩溃。
+
+5. response.choices[0] 未检查是否为空
+   位置：agent/agent.py 多处
+   原因：直接访问 choices[0] 但没有检查列表是否为空，
+         API 异常返回时会抛 IndexError。
+
+6. MCP 工具调用无错误处理
+   位置：agent/agent.py _execute_tool_calls()
+   原因：await self.mcp.call_tool() 没有 try-catch，
+         MCP server 超时或返回异常会导致程序崩溃。
+
+7. messages 列表无限增长
+   位置：agent/agent.py
+   原因：self.messages 只追加不清理，长对话会超出模型 token 限制，
+         同时也会增加每次请求的费用。
+
+【Low - 代码质量】
+
+8. 无日志系统 ✓ 已修复
+   位置：全项目
+   原因：所有输出用 print()，无法按级别过滤、无法写入文件、
+         无法追踪工具调用和 API 耗时。
+   修复：新增 agent/logger.py，统一用 logging 模块。
+         控制台输出 INFO+，文件记录 DEBUG+（含完整 trace）。
+         日志文件写入 logs/YYYYMMDD_HHMMSS.log，每次启动新建一个。
+         agent.py / llm.py / mcp.py 均已接入，记录工具调用、LLM 耗时、MCP 连接状态。
+
+9. agent/providers/base.py 是旧代码残留 ✓ 已修复
+   位置：agent/providers/base.py
+   原因：重构完成后旧文件未删除，与新代码存在重复逻辑。
+   修复：已删除。
+
+10. 超时/重试机制缺失
+    位置：agent/providers/llm.py、agent/tools/mcp.py
+    原因：LLM 请求和 MCP 调用都没有 timeout 参数和重试逻辑，
+          网络抖动会导致请求无限挂起。

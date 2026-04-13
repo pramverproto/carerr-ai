@@ -1,0 +1,139 @@
+========== 基础搭建（已完成）==========
+1. 搭建 llm providers（已完成）
+   - LLMProvider 封装 litellm.completion，支持 model / api_key / base_url 配置
+   - chat() 返回 (response, elapsed_ms, usage) 三元组，usage 含 token 消耗
+
+2. 搭建 agent loop（已完成）
+   - run()：交互式主循环，等待用户输入，持续对话直到 exit/quit
+   - run_once()：单轮任务入口，供 sub_agent 调用，返回结果字符串
+   - 内层循环处理连续 tool_calls，finish_reason=stop 时输出最终回答
+
+3. 实验多轮对话（已完成）
+   - self.messages 贯穿整个对话，system prompt 始终保留在首位
+
+4. 引入工具（已完成）
+   - MCP 工具：MCPClient 连接远程 MCP server，list_tools() / call_tool()
+   - 本地工具：@tool 装饰器自动注册到 TOOL_REGISTRY / TOOL_SCHEMAS
+   - delegate_task：将子任务委派给 sub_agent 执行，支持多级 agent 调用链
+
+5. 完善工具注册机制（已完成）
+   - TOOL_REGISTRY：工具名 -> 函数的映射，call_tool() 统一调用入口
+   - TOOL_SCHEMAS：OpenAI 格式的工具描述列表，传给 LLM
+   - allowed_tools：sub_agent 白名单，限制可使用的工具范围
+
+
+========== 已实现模块 ==========
+
+memory 模块（已完成）：
+1. 长期记忆和短期记忆区分（待实现）
+2. 多轮对话持久化（已实现）：
+   - 存储层：MySQL（career_agent 数据库，messages 表），用 aiomysql 异步连接池。
+   - session_id 由前端生成传入，区分不同会话；不传则不持久化（适合 sub_agent 临时执行）。
+   - 自动建表：程序启动时 CREATE TABLE IF NOT EXISTS，无需手动维护。
+   - assistant 含 tool_calls 的消息序列化为 JSON 字符串存储，加载时自动反序列化还原。
+   - 首次对话自动写入 system prompt；续接对话直接加载历史替换 self.messages。
+   - 持久化点：user 输入、assistant 回复、tool 调用结果，覆盖完整对话链路。
+   - 连接池配置在 agent_config.py 的 DB_CONFIG，启动时 init_pool()，退出时 close_pool()。
+
+   表结构（messages）：
+   - id            BIGINT PK AUTO_INCREMENT
+   - session_id    VARCHAR(64)   会话 ID，关联前端会话
+   - role          VARCHAR(20)   消息角色：system / user / assistant / tool
+   - content       LONGTEXT      消息内容（assistant with tool_calls 时为 JSON 字符串）
+   - tool_call_id  VARCHAR(255)  工具调用 ID（仅 role=tool 时填写，用于还原 tool_calls 对应关系）
+   - created_at    TIMESTAMP     写入时间，加载时按此字段升序排序
+   索引：idx_session(session_id), idx_created(created_at)
+
+
+日志模块（已完成）：
+1. 统一入口：get_logger(name) 全项目共用，同一 name 只初始化一次，避免重复添加 handler。
+2. 双输出：控制台 INFO+（实时查看关键事件），文件 DEBUG+（完整记录所有细节）。
+3. 按启动时间分文件：logs/YYYYMMDD_HHMMSS.log，每次启动新建，方便按时间段排查。
+4. 分层命名：agent / agent.llm / agent.mcp，可按模块单独调整级别。
+
+
+trace 模块（已完成）：
+存储层：MySQL（career_agent 数据库，traces 表），与 messages 表同库，便于按 session_id JOIN 查询。
+
+表结构（traces）：
+  - id               BIGINT PK AUTO_INCREMENT    插入顺序即执行顺序，ORDER BY id 还原完整链路
+  - trace_id         VARCHAR(32)   每次 run()/run_once() 生成的唯一 ID（uuid4 短串，16位hex）
+  - parent_trace_id  VARCHAR(32)   多级 agent 时指向上层 trace_id，顶层为 NULL
+  - session_id       VARCHAR(64)   关联 messages 表的会话 ID
+  - span_type        VARCHAR(20)   事件类型：run_start / llm_call / tool_call / run_end
+  - name             VARCHAR(255)  工具名 或 模型名，llm_call 时填 model
+  - input            LONGTEXT      入参（JSON 字符串）
+  - output           LONGTEXT      出参（JSON 字符串）
+  - elapsed_ms       INT           耗时毫秒
+  - prompt_tokens    INT           LLM 输入 token 数（仅 llm_call 有值）
+  - completion_tokens INT          LLM 输出 token 数（仅 llm_call 有值）
+  - total_tokens     INT           LLM 总 token 数（仅 llm_call 有值）
+  - created_at       TIMESTAMP     事件发生时间
+  索引：idx_trace(trace_id), idx_parent(parent_trace_id), idx_session(session_id)
+
+记录点：
+1. run_start：每次 run()/run_once() 开始时，生成 trace_id，记录 session_id 和 parent_trace_id。
+2. llm_call：每次调用 LLM 后，记录 model、messages 条数、finish_reason、耗时、token 消耗。
+3. tool_call：每个工具执行后，记录工具名、入参、出参、耗时；MCP 和本地工具统一记录。
+4. run_end：run()/run_once() 结束时，记录总耗时和最终状态（完成 / 异常）。
+
+多级 agent 链路：
+   - sub_agent 由 delegate_task 创建，继承调用方的 trace_id 作为 parent_trace_id。
+   - delegate_task 被调用时，框架自动注入 _parent_trace_id（不暴露给 LLM）。
+   - 可通过 parent_trace_id 递归还原完整树状调用链。
+
+查询能力：
+   - 按 trace_id 过滤完整链路，ORDER BY id 还原执行顺序
+   - 按 span_type = 'tool_call' 统计各工具平均耗时 / 调用次数
+   - 按 span_type = 'llm_call' 汇总 token 消耗（SUM total_tokens）
+   - 按 session_id JOIN messages 表，同时查看对话内容和执行链路
+
+
+API 模块（已完成）：
+对外开放 HTTP 接口，前端通过 POST /chat 与 Agent 交互，同时支持非流式和流式（SSE）响应。
+
+文件结构：
+  - api.py            FastAPI 应用主文件，lifespan 管理 DB 连接池
+  - agent/agent.py    新增 stream_once() 方法（流式入口）
+  - agent/providers/llm.py  新增 chat_stream() 方法（litellm stream=True）
+
+接口设计：
+  - GET  /health      健康检查，返回 {"status": "ok"}
+  - POST /chat        统一对话接口，body：{message, session_id, stream}
+
+  非流式响应（stream=false）：
+    {"reply": "...", "session_id": "...", "elapsed_ms": 1200}
+
+  流式响应（stream=true），SSE text/event-stream 格式：
+    data: {"type":"text","content":"..."}             # 文本 token，逐块推送
+    data: {"type":"tool","name":"...","status":"calling"}  # 工具调用通知
+    data: {"type":"done","elapsed_ms":5121}           # 结束标志
+
+关键设计：
+  - 每次请求创建新 Agent 实例（无共享状态，并发安全）
+  - session_id 由前端传入，Agent 自动加载/保存历史消息
+  - 工具调用完整执行后再继续流式输出（推送 tool 事件告知前端进度）
+  - stream_once() 复用 run_once() 的工具执行逻辑，只有 LLM 层换成流式
+
+启动方式：
+  uv run uvicorn api:app --host 0.0.0.0 --port 8000 --reload
+
+
+========== 待实现优化 ==========
+
+agent loop 模块：
+1. token 限制：到达最大 token 限制时，清理 messages 列表，保留对话上下文核心内容。
+2. 循环控制：增加 max_iterations 参数，超过后强制结束对话，避免死循环。
+
+tools 模块：
+1. 重试次数
+2. 超时设置
+3. 错误处理机制
+4. result token 限制
+5. result 替换
+
+context 模块：
+1. 上下文压缩算法
+
+memory 模块（待实现部分）：
+1. 长期记忆和短期记忆区分

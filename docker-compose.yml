@@ -1,0 +1,39 @@
+services:
+
+  # ── 前端（Nginx + React 静态文件）────────────────────────────────
+  frontend:
+    build:
+      context: ./career-frontend
+      args:
+        VITE_API_BASE: /api
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # ── 主后端（career-agent FastAPI）───────────────────────────────
+  backend:
+    build:
+      context: ./career-agent
+    env_file:
+      - ./career-agent/.env
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ── DB 微服务（career-db-service）───────────────────────────────
+  db-service:
+    build:
+      context: ./career-db-service
+    env_file:
+      - ./career-db-service/.env
+    expose:
+      - "8001"
+    restart: unless-stopped

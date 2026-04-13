@@ -1,0 +1,97 @@
+# CareerAI API 使用说明
+
+**接口地址：** `POST http://115.120.251.185:8000/invoke/custom`
+**无需 Token，调用方自带模型配置。**
+
+---
+
+## 参数说明
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `model` | string | ✅ | 模型名，如 `openai/gpt-4o`、`openai/glm-4-airx` |
+| `api_key` | string | ✅ | 对应模型的 API Key |
+| `base_url` | string | ❌ | 自定义 API 地址（使用第三方中转时填写） |
+| `system_prompt` | string | ❌ | 系统提示词，默认"你是一个有帮助的AI助手" |
+| `message` | string | ✅ | 本轮用户消息 |
+| `allowed_tools` | array | ❌ | 工具白名单。`[]` 不使用工具，不传则使用全部工具 |
+| `session_id` | string | ❌ | 会话 ID，传相同值保持多轮对话历史 |
+
+---
+
+## 示例：单轮问答
+
+```bash
+curl -X POST http://115.120.251.185:8000/invoke/custom \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "openai/glm-4-airx",
+    "api_key": "your_api_key",
+    "base_url": "https://www.dmxapi.cn/v1",
+    "system_prompt": "你是一个简洁的AI助手，用中文回答。",
+    "message": "用一句话介绍职业规划的重要性。",
+    "allowed_tools": []
+  }'
+```
+
+**返回：**
+```json
+{
+  "result": "职业规划是个人职业发展的导航图，帮助明确方向、实现目标。",
+  "elapsed_ms": 910,
+  "model": "openai/glm-4-airx",
+  "session_id": null
+}
+```
+
+---
+
+## 示例：多轮对话
+
+每轮请求传入**相同的 `session_id`**，服务端自动维护上下文，历史消息持久化存储。
+
+```bash
+# 第1轮
+curl -X POST http://115.120.251.185:8000/invoke/custom \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "openai/glm-4-airx",
+    "api_key": "your_api_key",
+    "base_url": "https://www.dmxapi.cn/v1",
+    "system_prompt": "你是简洁的AI助手。",
+    "message": "我叫小明，今年25岁。",
+    "allowed_tools": [],
+    "session_id": "my-session-001"
+  }'
+
+# 第2轮（同一 session_id，AI 记得上轮内容）
+curl -X POST http://115.120.251.185:8000/invoke/custom \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "openai/glm-4-airx",
+    "api_key": "your_api_key",
+    "base_url": "https://www.dmxapi.cn/v1",
+    "system_prompt": "你是简洁的AI助手。",
+    "message": "你还记得我叫什么吗？",
+    "allowed_tools": [],
+    "session_id": "my-session-001"
+  }'
+```
+
+**第2轮返回：**
+```json
+{
+  "result": "是的，你叫小明，25岁。",
+  "elapsed_ms": 929,
+  "model": "openai/glm-4-airx",
+  "session_id": "my-session-001"
+}
+```
+
+---
+
+## 注意事项
+
+- `session_id` 可以是任意字符串，建议用 UUID 或用户标识生成，不同用户使用不同值隔离对话
+- `base_url` 不填则直连官方 API（需要对应 `api_key` 有权限）
+- 完整接口文档：`http://115.120.251.185:8000/docs`

@@ -1,0 +1,812 @@
+{
+  "agent": "Agent 6 - InterestsAgent",
+  "description": "O*NET Holland RIASEC Interests - Complete keyword library and definitions",
+  "riasec_definitions": {
+    "R": {
+      "code": "R",
+      "element_id": "1.B.1.a",
+      "name": "Realistic",
+      "description": "Work involves designing, building, or repairing of equipment, materials, or structures, engaging in physical activity, or working outdoors. Realistic occupations are often associated with engineering, mechanics and electronics, construction, woodworking, transportation, machine operation, agriculture, animal services, physical or manual labor, athletics, or protective services."
+    },
+    "I": {
+      "code": "I",
+      "element_id": "1.B.1.b",
+      "name": "Investigative",
+      "description": "Work involves studying and researching non-living objects, living organisms, disease or other forms of impairment, or human behavior. Investigative occupations are often associated with physical, life, medical, or social sciences, and can be found in the fields of humanities, mathematics/statistics, information technology, or health care service."
+    },
+    "A": {
+      "code": "A",
+      "element_id": "1.B.1.c",
+      "name": "Artistic",
+      "description": "Work involves creating original visual artwork, performances, written works, food, or music for a variety of media, or applying artistic principles to the design of various objects and materials. Artistic occupations are often associated with visual arts, applied arts and design, performing arts, music, creative writing, media, or culinary art."
+    },
+    "S": {
+      "code": "S",
+      "element_id": "1.B.1.d",
+      "name": "Social",
+      "description": "Work involves helping, teaching, advising, assisting, or providing service to others. Social occupations are often associated with social, health care, personal service, teaching/education, or religious activities."
+    },
+    "E": {
+      "code": "E",
+      "element_id": "1.B.1.e",
+      "name": "Enterprising",
+      "description": "Work involves managing, negotiating, marketing, or selling, typically in a business setting, or leading or advising people in political and legal situations. Enterprising occupations are often associated with business initiatives, sales, marketing/advertising, finance, management/administration, professional advising, public speaking, politics, or law."
+    },
+    "C": {
+      "code": "C",
+      "element_id": "1.B.1.f",
+      "name": "Conventional",
+      "description": "Work involves following procedures and regulations to organize information or data, typically in a business setting. Conventional occupations are often associated with office work, accounting, mathematics/statistics, information technology, finance, or human resources."
+    }
+  },
+  "riasec_keywords": {
+    "R": {
+      "total_keywords": 13,
+      "by_type": {
+        "Action": [
+          "Build",
+          "Drive",
+          "Install",
+          "Maintain",
+          "Repair",
+          "Work with Hands"
+        ],
+        "Object": [
+          "Animals",
+          "Electronics",
+          "Equipment",
+          "Machines",
+          "Plants",
+          "Real-World Materials like Wood",
+          "Tools"
+        ]
+      }
+    },
+    "I": {
+      "total_keywords": 13,
+      "by_type": {
+        "Action": [
+          "Analyze",
+          "Diagnose",
+          "Discover",
+          "Problem Solve",
+          "Research",
+          "Study",
+          "Test",
+          "Think"
+        ],
+        "Object": [
+          "Facts",
+          "Ideas",
+          "Knowledge",
+          "Laboratory",
+          "Science"
+        ]
+      }
+    },
+    "A": {
+      "total_keywords": 12,
+      "by_type": {
+        "Action": [
+          "Compose",
+          "Create",
+          "Dance",
+          "Design",
+          "Perform",
+          "Self-Express",
+          "Write"
+        ],
+        "Object": [
+          "Art",
+          "Graphics",
+          "Media",
+          "Music",
+          "Theatre"
+        ]
+      }
+    },
+    "S": {
+      "total_keywords": 11,
+      "by_type": {
+        "Action": [
+          "Advise",
+          "Educate",
+          "Guide",
+          "Help",
+          "Nurture",
+          "Teach"
+        ],
+        "Object": [
+          "Communication",
+          "Health",
+          "People",
+          "Service",
+          "Social"
+        ]
+      }
+    },
+    "E": {
+      "total_keywords": 13,
+      "by_type": {
+        "Action": [
+          "Direct",
+          "Lead",
+          "Manage",
+          "Market",
+          "Negotiate",
+          "Sell",
+          "Supervise"
+        ],
+        "Object": [
+          "Business",
+          "Customer",
+          "Employee",
+          "Law",
+          "Politics",
+          "Product"
+        ]
+      }
+    },
+    "C": {
+      "total_keywords": 13,
+      "by_type": {
+        "Action": [
+          "Attention to Detail",
+          "File",
+          "Inspect",
+          "Organize",
+          "Record",
+          "Sort"
+        ],
+        "Object": [
+          "Data",
+          "Files",
+          "Information",
+          "Office",
+          "Procedures",
+          "Regulations",
+          "Rules"
+        ]
+      }
+    }
+  },
+  "riasec_illustrative_activities": {
+    "R": {
+      "General": [
+        "Build kitchen cabinets.",
+        "Drive a truck to deliver packages to offices and homes.",
+        "Put out forest fires.",
+        "Repair household appliances."
+      ]
+    },
+    "I": {
+      "General": [
+        "Develop a new medicine.",
+        "Develop a way to better predict the weather.",
+        "Study ways to reduce water pollution.",
+        "Work in a biology lab."
+      ]
+    },
+    "A": {
+      "General": [
+        "Compose or arrange music.",
+        "Create special effects for movies.",
+        "Draw pictures.",
+        "Write books or plays."
+      ]
+    },
+    "S": {
+      "General": [
+        "Give career guidance to people.",
+        "Help people with personal or emotional problems.",
+        "Perform rehabilitation therapy.",
+        "Teach a high school class."
+      ]
+    },
+    "E": {
+      "General": [
+        "Manage a department within a large company.",
+        "Market a new line of clothing.",
+        "Represent a client in a lawsuit.",
+        "Start your own business."
+      ]
+    },
+    "C": {
+      "General": [
+        "Develop a spreadsheet using computer software.",
+        "Inventory supplies using a handheld computer.",
+        "Keep shipping and receiving records.",
+        "Load computer software into a large computer network."
+      ]
+    }
+  },
+  "basic_interest_categories": {
+    "1.B.3.a": {
+      "element_id": "1.B.3.a",
+      "name": "Mechanics/Electronics",
+      "description": "Work involves maintaining and repairing of machinery, such as automotive engines, electronic equipment, computers, and communication systems.",
+      "mapped_riasec": [
+        "R"
+      ],
+      "illustrative_activities": [
+        "Install computer systems.",
+        "Maintain aircraft engines.",
+        "Make repairs to industrial robots.",
+        "Repair motors and generators."
+      ]
+    },
+    "1.B.3.b": {
+      "element_id": "1.B.3.b",
+      "name": "Construction/Woodwork",
+      "description": "Work involves constructing, installing, or repairing structures and fixtures made of wood.",
+      "mapped_riasec": [
+        "R"
+      ],
+      "illustrative_activities": [
+        "Build and finish furniture.",
+        "Build and install cabinets.",
+        "Construct wood stairways.",
+        "Operate woodworking machines."
+      ]
+    },
+    "1.B.3.c": {
+      "element_id": "1.B.3.c",
+      "name": "Transportation/Machine Operation",
+      "description": "Work involves driving vehicles, such as vans, trucks, trains, and buses to transport people or materials. Work can also involve operating heavy equipment, such as cranes, forklifts, bulldozers, and backhoes to move materials or earth.",
+      "mapped_riasec": [
+        "R"
+      ],
+      "illustrative_activities": [
+        "Drive a bus or motor coach.",
+        "Operate a bulldozer to move dirt.",
+        "Operate a forklift to move boxes.",
+        "Transport materials in a truck or van."
+      ]
+    },
+    "1.B.3.d": {
+      "element_id": "1.B.3.d",
+      "name": "Physical/Manual Labor",
+      "description": "Work involves manually unloading and moving freight, stock, luggage, or other materials, or performing other physical labor.",
+      "mapped_riasec": [
+        "R"
+      ],
+      "illustrative_activities": [
+        "Clean a work area.",
+        "Manually move cargo and freight.",
+        "Perform physical labor at a construction site.",
+        "Unload, sort, and move materials, equipment, or supplies."
+      ]
+    },
+    "1.B.3.e": {
+      "element_id": "1.B.3.e",
+      "name": "Protective Service",
+      "description": "Work involves maintaining order and protecting life and property by conducting investigations and enforcing laws and regulations to prevent or solve crimes.",
+      "mapped_riasec": [
+        "R"
+      ],
+      "illustrative_activities": [
+        "Apprehend and arrest suspects.",
+        "Guard inmates in a prison.",
+        "Investigate criminal activity.",
+        "Maintain order and protect life by enforcing laws."
+      ]
+    },
+    "1.B.3.f": {
+      "element_id": "1.B.3.f",
+      "name": "Agriculture",
+      "description": "Work involves planting, cultivating, and harvesting crops, plants, or trees, or raising farm animals. Work can also involve preparing plant and animal products for distribution to consumers, or protecting natural resources to maximize their use in farming.",
+      "mapped_riasec": [
+        "R"
+      ],
+      "illustrative_activities": [
+        "Develop plans to reduce soil erosion and protect rangelands.",
+        "Inspect crops for disease.",
+        "Plant, cultivate, and harvest crops.",
+        "Raise and tend to farm animals."
+      ]
+    },
+    "1.B.3.g": {
+      "element_id": "1.B.3.g",
+      "name": "Nature/Outdoors",
+      "description": "Work involves planning, restoring, and conserving natural areas and wildlife habitats.",
+      "mapped_riasec": [
+        "R"
+      ],
+      "illustrative_activities": [
+        "Conserve wildlife habitats.",
+        "Manage public forested lands for recreational purposes.",
+        "Plant a public garden.",
+        "Train conservation workers in planting tree seedlings."
+      ]
+    },
+    "1.B.3.h": {
+      "element_id": "1.B.3.h",
+      "name": "Animal Service",
+      "description": "Work involves feeding, grooming, exercising, or otherwise providing care to promote and maintain the well-being of pets and other animals in settings such as kennels, animal shelters, and zoos.",
+      "mapped_riasec": [
+        "R",
+        "S"
+      ],
+      "illustrative_activities": [
+        "Exercise animals in a shelter.",
+        "Provide treatment to sick or injured animals.",
+        "Supply animals with food, water, and personal care.",
+        "Train animals to assist persons with disabilities."
+      ]
+    },
+    "1.B.3.i": {
+      "element_id": "1.B.3.i",
+      "name": "Athletics",
+      "description": "Work involves training, practicing, or competing in athletic events, or supporting those participating in athletics through coaching, training, or officiating.",
+      "mapped_riasec": [
+        "E",
+        "R"
+      ],
+      "illustrative_activities": [
+        "Coach a sports team.",
+        "Compete in an athletic event.",
+        "Play sports.",
+        "Train for an athletic event."
+      ]
+    },
+    "1.B.3.j": {
+      "element_id": "1.B.3.j",
+      "name": "Engineering",
+      "description": "Work involves applying science and technology to the design, building, testing, and use of electrical and electronic components, mechanical devices and machines, automotive, marine, and aerospace equipment and vehicles, materials, or structures.",
+      "mapped_riasec": [
+        "R"
+      ],
+      "illustrative_activities": [
+        "Apply principles of engineering in designing buildings.",
+        "Design, construct, and test aircraft, missiles, and spacecraft.",
+        "Explain engineering drawings.",
+        "Test performance of electronic and mechanical systems."
+      ]
+    },
+    "1.B.3.k": {
+      "element_id": "1.B.3.k",
+      "name": "Physical Science",
+      "description": "Work involves studying and researching non-living objects, materials, and phenomena through scientific disciplines such as physics, chemistry, astronomy, meteorology, or geology.",
+      "mapped_riasec": [
+        "I"
+      ],
+      "illustrative_activities": [
+        "Investigate the chemical composition of an unknown substance.",
+        "Study formation of stars using space-based telescopes.",
+        "Study ways to make foods safe and healthy.",
+        "Use computer models for weather forecasting."
+      ]
+    },
+    "1.B.3.l": {
+      "element_id": "1.B.3.l",
+      "name": "Life Science",
+      "description": "Work involves studying and researching living organisms through scientific disciplines such as biology, botany, zoology, microbiology, physiology, biochemistry, or zoology.",
+      "mapped_riasec": [
+        "I"
+      ],
+      "illustrative_activities": [
+        "Develop medically useful products for humans.",
+        "Investigate the effects of bacteria on humans and animals.",
+        "Prepare environmental impact reports on wildlife.",
+        "Study the science of genes."
+      ]
+    },
+    "1.B.3.m": {
+      "element_id": "1.B.3.m",
+      "name": "Medical Science",
+      "description": "Work involves studying and researching the causes, nature, effects, and treatments of disease or other forms of impairment or illness.",
+      "mapped_riasec": [
+        "I"
+      ],
+      "illustrative_activities": [
+        "Conduct research on ways to treat a new type of illness.",
+        "Evaluate the performance of a newly developed medicine.",
+        "Investigate the causes of human disease.",
+        "Study ways of preventing disease."
+      ]
+    },
+    "1.B.3.n": {
+      "element_id": "1.B.3.n",
+      "name": "Social Science",
+      "description": "Work involves studying and researching human behavior, society, politics, and social relationships through scientific disciplines such as psychology, sociology, economics, or political science.",
+      "mapped_riasec": [
+        "I",
+        "S"
+      ],
+      "illustrative_activities": [
+        "Conduct research on economic issues.",
+        "Study cultural differences.",
+        "Study mental and emotional disorders.",
+        "Study public opinion on political issues."
+      ]
+    },
+    "1.B.3.o": {
+      "element_id": "1.B.3.o",
+      "name": "Humanities",
+      "description": "Work involves studying and researching aspects of human history, culture, and language through disciplines such as history, philosophy, the language arts, or area/ethnic studies.",
+      "mapped_riasec": [
+        "A",
+        "I"
+      ],
+      "illustrative_activities": [
+        "Research and compare religious beliefs.",
+        "Research influences on a literary work.",
+        "Study the culture and history of a region of the world.",
+        "Study the history of the family."
+      ]
+    },
+    "1.B.3.p": {
+      "element_id": "1.B.3.p",
+      "name": "Mathematics/Statistics",
+      "description": "Work involves developing and applying mathematics and statistical theory and methods.",
+      "mapped_riasec": [
+        "C",
+        "I"
+      ],
+      "illustrative_activities": [
+        "Develop a statistical model to explain human behavior.",
+        "Extend mathematical knowledge in the field of geometry.",
+        "Make predictions based on statistical analyses.",
+        "Solve mathematical problems."
+      ]
+    },
+    "1.B.3.q": {
+      "element_id": "1.B.3.q",
+      "name": "Information Technology",
+      "description": "Work involves designing, developing, testing, and maintaining computer software, hardware, networks, and systems.",
+      "mapped_riasec": [
+        "C"
+      ],
+      "illustrative_activities": [
+        "Diagnose and resolve computer software problems.",
+        "Research security measures for computer systems.",
+        "Test, maintain, and monitor computer programs and systems.",
+        "Write and review code for software."
+      ]
+    },
+    "1.B.3.r": {
+      "element_id": "1.B.3.r",
+      "name": "Visual Arts",
+      "description": "Work involves creating original visual artwork for a variety of media and purposes using various techniques and software.",
+      "mapped_riasec": [
+        "A"
+      ],
+      "illustrative_activities": [
+        "Create a sculpture.",
+        "Create computer-generated graphics or animation.",
+        "Create photography art prints.",
+        "Sketch a picture or design."
+      ]
+    },
+    "1.B.3.s": {
+      "element_id": "1.B.3.s",
+      "name": "Applied Arts and Design",
+      "description": "Work involves applying artistic principles to the design and creation of various objects and materials.",
+      "mapped_riasec": [
+        "A"
+      ],
+      "illustrative_activities": [
+        "Create appealing product designs for home appliances.",
+        "Create the set for film or theater productions.",
+        "Design and create handmade clothes.",
+        "Design displays to sell products in stores."
+      ]
+    },
+    "1.B.3.t": {
+      "element_id": "1.B.3.t",
+      "name": "Performing Arts",
+      "description": "Work involves acting as a performer in dance, comedy, or dramatic productions, choreographing of dance performances, or producing of live or recorded entertainment.",
+      "mapped_riasec": [
+        "A"
+      ],
+      "illustrative_activities": [
+        "Act on stage for an audience.",
+        "Create new dance routines.",
+        "Direct stage, television, radio, video, or film productions.",
+        "Study and rehearse roles from scripts."
+      ]
+    },
+    "1.B.3.u": {
+      "element_id": "1.B.3.u",
+      "name": "Music",
+      "description": "Work involves conducting, composing, or playing music or singing.",
+      "mapped_riasec": [
+        "A"
+      ],
+      "illustrative_activities": [
+        "Create musical compositions, arrangements, or scores.",
+        "Perform music for a live audience.",
+        "Play a musical instrument.",
+        "Sing in a band."
+      ]
+    },
+    "1.B.3.v": {
+      "element_id": "1.B.3.v",
+      "name": "Creative Writing",
+      "description": "Work involves developing creative written works, such as novels, scripts, song lyrics, poetry, stories, or advertisements.",
+      "mapped_riasec": [
+        "A"
+      ],
+      "illustrative_activities": [
+        "Write a novel.",
+        "Write advertisements.",
+        "Write poetry or lyrics.",
+        "Write scripts for movies and media."
+      ]
+    },
+    "1.B.3.w": {
+      "element_id": "1.B.3.w",
+      "name": "Media",
+      "description": "Work involves producing, developing, writing, directing, or presenting information through print, radio, television, or digital media.",
+      "mapped_riasec": [
+        "A"
+      ],
+      "illustrative_activities": [
+        "Develop content for a podcast.",
+        "Direct a television series.",
+        "Speak or read from scripted materials on radio or television.",
+        "Write and report human interest stories."
+      ]
+    },
+    "1.B.3.x": {
+      "element_id": "1.B.3.x",
+      "name": "Culinary Art",
+      "description": "Work involves preparing, cooking, and presenting food in a distinctive style usually associated with a specific culture or region.",
+      "mapped_riasec": [
+        "A",
+        "S"
+      ],
+      "illustrative_activities": [
+        "Coordinate activities of cooks engaged in food preparation.",
+        "Create new recipes or food presentations.",
+        "Develop a distinctive style of cooking.",
+        "Select and ensure freshness of food and ingredients for preparation."
+      ]
+    },
+    "1.B.3.y": {
+      "element_id": "1.B.3.y",
+      "name": "Teaching/Education",
+      "description": "Work involves teaching through lectures, discussions, and demonstrations in one or more subjects.",
+      "mapped_riasec": [
+        "S"
+      ],
+      "illustrative_activities": [
+        "Adapt teaching methods to meet students' interests.",
+        "Instruct students in activities designed to further intellectual growth.",
+        "Teach school subjects.",
+        "Teach social skills to students."
+      ]
+    },
+    "1.B.3.z": {
+      "element_id": "1.B.3.z",
+      "name": "Social Service",
+      "description": "Work involves providing social services and assistance to improve the well-being and social and psychological functioning of children and adults.",
+      "mapped_riasec": [
+        "S"
+      ],
+      "illustrative_activities": [
+        "Advocate for individual or community needs.",
+        "Assist people with special needs.",
+        "Counsel clients with mental health issues.",
+        "Provide personal and economic assistance for homeless individuals."
+      ]
+    },
+    "1.B.3.aa": {
+      "element_id": "1.B.3.aa",
+      "name": "Health Care Service",
+      "description": "Work involves providing health care services to individuals to include the diagnosis, prevention, or treatment of diseases and other forms of illness or impairment.",
+      "mapped_riasec": [
+        "I",
+        "S"
+      ],
+      "illustrative_activities": [
+        "Administer first aid treatment or life support to injured persons.",
+        "Develop medical treatment plans for patients.",
+        "Prescribe medications.",
+        "Provide preventive care to individuals."
+      ]
+    },
+    "1.B.3.ab": {
+      "element_id": "1.B.3.ab",
+      "name": "Religious Activities",
+      "description": "Work involves conducting religious worship, leading a church or other religious group, and offering moral guidance associated with beliefs and practices of a religious faith.",
+      "mapped_riasec": [
+        "E",
+        "S"
+      ],
+      "illustrative_activities": [
+        "Lead a religious group.",
+        "Organize religious services.",
+        "Plan religious education programs.",
+        "Provide spiritual guidance."
+      ]
+    },
+    "1.B.3.ac": {
+      "element_id": "1.B.3.ac",
+      "name": "Personal Service",
+      "description": "Work involves providing personal services to individuals in need of non-medical assistance such as helping arrange or plan for travel, meals, or events.",
+      "mapped_riasec": [
+        "S"
+      ],
+      "illustrative_activities": [
+        "Assist customers with problems or questions.",
+        "Help individuals plan special events.",
+        "Make reservations for guests, such as for dinner, spa treatments, or golf tee times.",
+        "Make travel arrangements for sightseeing or other tours."
+      ]
+    },
+    "1.B.3.ad": {
+      "element_id": "1.B.3.ad",
+      "name": "Professional Advising",
+      "description": "Work involves providing expert advice, coaching, and counseling on topics such as careers, educational opportunities, and educational and professional development.",
+      "mapped_riasec": [
+        "E",
+        "S"
+      ],
+      "illustrative_activities": [
+        "Advise people on how to have a successful career.",
+        "Coach students on study skills.",
+        "Counsel people how to achieve their professional goals.",
+        "Teach employees leadership and soft skills."
+      ]
+    },
+    "1.B.3.ae": {
+      "element_id": "1.B.3.ae",
+      "name": "Business Initiatives",
+      "description": "Work involves creating strategic plans or taking actions to expand an organization's business or market share.",
+      "mapped_riasec": [
+        "E"
+      ],
+      "illustrative_activities": [
+        "Create business strategies or policies to increase productivity.",
+        "Develop a long-term strategic plan for a company.",
+        "Identify partner companies to pursue new business opportunities.",
+        "Plan activities of businesses to maximize returns on investments."
+      ]
+    },
+    "1.B.3.af": {
+      "element_id": "1.B.3.af",
+      "name": "Sales",
+      "description": "Work involves selling goods or services.",
+      "mapped_riasec": [
+        "E"
+      ],
+      "illustrative_activities": [
+        "Demonstrate products to consumers.",
+        "Direct sales or customer service activities.",
+        "Persuade customers to buy a new product.",
+        "Sell goods at bargain prices."
+      ]
+    },
+    "1.B.3.ag": {
+      "element_id": "1.B.3.ag",
+      "name": "Marketing/Advertising",
+      "description": "Work involves promoting or creating a public image for products, services, or organizations to attract interest, engagement, or sales.",
+      "mapped_riasec": [
+        "A",
+        "E"
+      ],
+      "illustrative_activities": [
+        "Develop promotional materials for advertising.",
+        "Plan an advertising or marketing campaign.",
+        "Promote a new product by advertising.",
+        "Use social media to market a company."
+      ]
+    },
+    "1.B.3.ah": {
+      "element_id": "1.B.3.ah",
+      "name": "Finance",
+      "description": "Work involves directing and managing financial activities, such as planning and investments for an individual or organization to generate income.",
+      "mapped_riasec": [
+        "C",
+        "E"
+      ],
+      "illustrative_activities": [
+        "Analyze financials and securities of a company.",
+        "Make investments to generate future income.",
+        "Manage large amounts of money for a business.",
+        "Plan and direct financial decisions for a business."
+      ]
+    },
+    "1.B.3.ai": {
+      "element_id": "1.B.3.ai",
+      "name": "Accounting",
+      "description": "Work involves examining, analyzing, and interpreting accounting records for financial statements, or maintaining, auditing, or evaluating records and accounts.",
+      "mapped_riasec": [
+        "C"
+      ],
+      "illustrative_activities": [
+        "Keep accounting records for a company.",
+        "Prepare budgets for a business.",
+        "Prepare employee payroll.",
+        "Verify and record numerical data for financial records."
+      ]
+    },
+    "1.B.3.aj": {
+      "element_id": "1.B.3.aj",
+      "name": "Human Resources",
+      "description": "Work involves recruiting, selecting, and training job applicants, maintaining employee personnel records, administering compensation and employee-benefit programs, and conducting employee performance reviews.",
+      "mapped_riasec": [
+        "C",
+        "S"
+      ],
+      "illustrative_activities": [
+        "Conduct training to improve employee skills and organizational performance.",
+        "Interpret and explain company policies and benefits to employees.",
+        "Maintain employee personnel records.",
+        "Recruit and hire employees for a company."
+      ]
+    },
+    "1.B.3.ak": {
+      "element_id": "1.B.3.ak",
+      "name": "Office Work",
+      "description": "Work involves clerical and administrative tasks for an organization such as answering phones, bookkeeping, updating records, scheduling appointments or meetings, and editing of documents and files.",
+      "mapped_riasec": [
+        "C"
+      ],
+      "illustrative_activities": [
+        "Answer telephones, direct calls, and take messages.",
+        "Maintain and update filing, inventory, and database systems.",
+        "Operate office machines, such as printers and scanners.",
+        "Schedule appointments for customers."
+      ]
+    },
+    "1.B.3.al": {
+      "element_id": "1.B.3.al",
+      "name": "Management/Administration",
+      "description": "Work involves planning, directing, or coordinating the daily operations of an organization, and overseeing personnel, business, or administrative services.",
+      "mapped_riasec": [
+        "E"
+      ],
+      "illustrative_activities": [
+        "Develop organizational goals or objectives.",
+        "Manage an organization or group of people.",
+        "Plan or coordinate one or more administrative services.",
+        "Supervise organizational operations or projects."
+      ]
+    },
+    "1.B.3.am": {
+      "element_id": "1.B.3.am",
+      "name": "Public Speaking",
+      "description": "Work involves speaking before an audience to educate, entertain, or influence the listeners.",
+      "mapped_riasec": [
+        "E"
+      ],
+      "illustrative_activities": [
+        "Be a speaker at a club meeting.",
+        "Discuss your ideas on a podcast.",
+        "Make a public speech to raise money for a worthy cause.",
+        "Provide a public announcement on TV or radio."
+      ]
+    },
+    "1.B.3.an": {
+      "element_id": "1.B.3.an",
+      "name": "Politics",
+      "description": "Work involves engaging in political activities to influence government policy.",
+      "mapped_riasec": [
+        "E"
+      ],
+      "illustrative_activities": [
+        "Campaign for political office.",
+        "Develop knowledge of government policy decisions.",
+        "Engage in a political debate.",
+        "Lead a political campaign."
+      ]
+    },
+    "1.B.3.ao": {
+      "element_id": "1.B.3.ao",
+      "name": "Law",
+      "description": "Work involves studying and applying legal knowledge.",
+      "mapped_riasec": [
+        "E"
+      ],
+      "illustrative_activities": [
+        "Defend a client in court.",
+        "Draw up legal documents.",
+        "Mediate legal disputes.",
+        "Provide legal advice to clients."
+      ]
+    }
+  },
+  "total_keyword_records": 75
+}
