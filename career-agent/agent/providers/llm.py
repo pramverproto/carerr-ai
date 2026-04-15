@@ -23,6 +23,7 @@ class LLMProvider:
             base_url=self.base_url,
             messages=messages,
             tools=tools or None,
+            max_tokens=4096,
         )
         elapsed_ms = int((time.perf_counter() - t0) * 1000)
         finish_reason = response.choices[0].finish_reason if response.choices else "unknown"

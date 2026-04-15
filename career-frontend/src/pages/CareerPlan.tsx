@@ -576,7 +576,7 @@ const CareerPlan: React.FC = () => {
     setMatchLoading(true);
     setMatchError(null);
     setStep('match_loading');
-    api.matchCareers(assessmentId)
+    api.matchCareers(assessmentId, force)
       .then((res) => { setMatchData(res.data); setStep('select'); })
       .catch((err) => {
         setMatchError(err?.response?.data?.detail || err?.message || '职业匹配失败');

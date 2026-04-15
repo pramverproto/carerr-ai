@@ -86,10 +86,10 @@ export const api = {
     apiClient.get<ReportResponse>(`/report/${assessmentId}`, { timeout: 120_000 }),
 
   /** POST /career/match */
-  matchCareers: (assessmentId: string) =>
+  matchCareers: (assessmentId: string, force = false) =>
     apiClient.post<CareerMatchResponse>(
       '/career/match',
-      { assessment_id: assessmentId },
+      { assessment_id: assessmentId, force },
       { timeout: 120_000 },
     ),
 
