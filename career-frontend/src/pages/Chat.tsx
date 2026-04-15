@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Spin, message } from 'antd';
+import { App } from 'antd';
 import { Send, Bot, User, Wrench, RotateCcw, Square } from 'lucide-react';
+import ChatSkeleton from '@/components/skeletons/ChatSkeleton';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useAuthStore } from '@/store/authStore';
@@ -44,6 +45,7 @@ function setSessionId(userId: number | undefined, id: string): void {
 const STREAM_TIMEOUT_MS = 120_000; // 2 分钟超时
 
 const Chat: React.FC = () => {
+  const { message } = App.useApp();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
@@ -173,19 +175,32 @@ const Chat: React.FC = () => {
                 ),
               );
             } else if (chunk.type === 'tool') {
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === assistantId
-                    ? {
-                        ...m,
-                        toolCalls: [
-                          ...(m.toolCalls || []),
-                          { name: chunk.name, status: chunk.status },
-                        ],
-                      }
-                    : m,
-                ),
-              );
+              if (chunk.status === 'calling') {
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === assistantId
+                      ? {
+                          ...m,
+                          toolCalls: [
+                            ...(m.toolCalls || []),
+                            { name: chunk.name, status: 'calling' },
+                          ],
+                        }
+                      : m,
+                  ),
+                );
+              } else if (chunk.status === 'done') {
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === assistantId
+                      ? {
+                          ...m,
+                          toolCalls: (m.toolCalls || []).filter((tc) => tc.name !== chunk.name),
+                        }
+                      : m,
+                  ),
+                );
+              }
             }
           } catch {
             /* 忽略解析错误 */
@@ -209,17 +224,13 @@ const Chat: React.FC = () => {
   }, [input, streaming, token]);
 
   if (loadingHistory) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Spin size="large" />
-      </div>
-    );
+    return <ChatSkeleton />;
   }
 
   return (
     <div className="flex flex-col -m-6" style={{ height: 'calc(100vh - 84px - 48px)' }}>
       {/* 顶部工具栏 */}
-      <div className="flex items-center justify-between px-6 py-2 border-b border-gray-100">
+      <div className="flex items-center justify-between px-6 py-2 border-b border-gray-100 dark:border-gray-700">
         <span className="text-xs text-gray-400">
           {messages.length > 0 ? `${messages.length} 条消息` : '新对话'}
         </span>
@@ -236,8 +247,8 @@ const Chat: React.FC = () => {
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
         {messages.length === 0 && (
           <div className="text-center text-gray-400 mt-20">
-            <Bot size={48} className="mx-auto mb-4 text-gray-300" />
-            <p className="text-lg font-medium">你好，我是 Career AI</p>
+            <Bot size={48} className="mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+            <p className="text-lg font-medium dark:text-gray-300">你好，我是 Career AI</p>
             <p className="text-sm mt-2">
               你可以问我关于个人资料、评估历史、今日任务等问题，
               <br />
@@ -249,7 +260,7 @@ const Chat: React.FC = () => {
                   <button
                     key={q}
                     onClick={() => setInput(q)}
-                    className="text-sm px-3 py-1.5 rounded-full border border-gray-300 text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
+                    className="text-sm px-3 py-1.5 rounded-full border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
                   >
                     {q}
                   </button>
@@ -280,56 +291,71 @@ const Chat: React.FC = () => {
               </div>
 
               <div>
-                {(msg.toolCalls || []).map((tc, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-1.5 text-xs text-gray-400 mb-1"
-                  >
-                    <Wrench size={12} className="animate-spin" />
-                    <span>正在调用 {tc.name} ...</span>
-                  </div>
-                ))}
-
                 <div
                   className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                     msg.role === 'user'
                       ? 'bg-blue-500 text-white whitespace-pre-wrap'
-                      : 'bg-gray-100 text-gray-800'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
                   }`}
                 >
                   {msg.role === 'user' ? (
                     msg.content
                   ) : msg.content ? (
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        h1: (p: any) => <h1 className="text-lg font-bold mt-3 mb-1">{p.children}</h1>,
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        h2: (p: any) => <h2 className="text-base font-bold mt-3 mb-1">{p.children}</h2>,
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        h3: (p: any) => <h3 className="text-sm font-bold mt-2 mb-0.5">{p.children}</h3>,
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        p: (p: any) => <p className="mb-2 last:mb-0">{p.children}</p>,
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        ul: (p: any) => <ul className="list-disc pl-4 mb-2 space-y-0.5">{p.children}</ul>,
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        ol: (p: any) => <ol className="list-decimal pl-4 mb-2 space-y-0.5">{p.children}</ol>,
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        li: (p: any) => <li className="leading-relaxed">{p.children}</li>,
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        strong: (p: any) => <strong className="font-semibold">{p.children}</strong>,
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        code: (p: any) => <code className="bg-gray-200 rounded px-1 py-0.5 text-xs font-mono">{p.children}</code>,
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        pre: (p: any) => <pre className="bg-gray-200 rounded p-3 text-xs font-mono overflow-x-auto mb-2">{p.children}</pre>,
-                        hr: () => <hr className="my-2 border-gray-300" />,
-                      }}
-                    >
-                      {msg.content}
-                    </ReactMarkdown>
-                  ) : streaming ? (
-                    <Spin size="small" />
+                    <>
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          h1: (p: any) => <h1 className="text-lg font-bold mt-3 mb-1">{p.children}</h1>,
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          h2: (p: any) => <h2 className="text-base font-bold mt-3 mb-1">{p.children}</h2>,
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          h3: (p: any) => <h3 className="text-sm font-bold mt-2 mb-0.5">{p.children}</h3>,
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          p: (p: any) => <p className="mb-2 last:mb-0">{p.children}</p>,
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          ul: (p: any) => <ul className="list-disc pl-4 mb-2 space-y-0.5">{p.children}</ul>,
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          ol: (p: any) => <ol className="list-decimal pl-4 mb-2 space-y-0.5">{p.children}</ol>,
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          li: (p: any) => <li className="leading-relaxed">{p.children}</li>,
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          strong: (p: any) => <strong className="font-semibold">{p.children}</strong>,
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          code: (p: any) => <code className="bg-gray-200 dark:bg-gray-600 rounded px-1 py-0.5 text-xs font-mono">{p.children}</code>,
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          pre: (p: any) => <pre className="bg-gray-200 dark:bg-gray-600 rounded p-3 text-xs font-mono overflow-x-auto mb-2">{p.children}</pre>,
+                          hr: () => <hr className="my-2 border-gray-300 dark:border-gray-600" />,
+                        }}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                      {/* 流式输出时的打字光标 */}
+                      {streaming && msg.id === messages[messages.length - 1]?.id && (
+                        <span className="inline-block w-0.5 h-4 bg-gray-500 ml-0.5 align-middle animate-pulse" />
+                      )}
+                    </>
+                  ) : streaming && msg.id === messages[messages.length - 1]?.id ? (
+                    /* 工具调用阶段：气泡内显示进度 */
+                    <div className="space-y-1.5 py-0.5">
+                      {(msg.toolCalls || []).length > 0 ? (
+                        (msg.toolCalls || []).map((tc, i) => (
+                          <div key={i} className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                            <Wrench size={13} className="animate-spin flex-shrink-0" />
+                            <span>正在调用 <span className="font-medium text-gray-700 dark:text-gray-300">{tc.name}</span>...</span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="flex items-center gap-2 text-gray-400">
+                          <span className="flex gap-0.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                          </span>
+                          <span>思考中...</span>
+                        </div>
+                      )}
+                    </div>
                   ) : null}
                 </div>
               </div>
@@ -339,10 +365,10 @@ const Chat: React.FC = () => {
       </div>
 
       {/* 输入区域 - 固定在底部 */}
-      <div className="flex-shrink-0 border-t border-gray-200 px-6 py-4 bg-white rounded-b-2xl">
+      <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-white dark:bg-gray-800 rounded-b-2xl">
         <div className="flex items-center gap-3">
           <input
-            className="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="flex-1 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="输入消息..."
             value={input}
             onChange={(e) => setInput(e.target.value)}

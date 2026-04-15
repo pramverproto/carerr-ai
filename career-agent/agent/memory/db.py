@@ -119,6 +119,19 @@ _ALTER_ADD_USER_ID_SQLS = [
     "ALTER TABLE resume_uploads ADD COLUMN user_id BIGINT DEFAULT NULL",
 ]
 
+# 补充索引（索引已存在时 1061 可忽略）
+_ALTER_ADD_INDEX_SQLS = [
+    "ALTER TABLE assessment_jobs ADD INDEX idx_aj_user (user_id)",
+    "ALTER TABLE assessment_jobs ADD INDEX idx_aj_status (status)",
+    "ALTER TABLE assessment_jobs ADD INDEX idx_aj_user_created (user_id, created_at DESC)",
+    "ALTER TABLE assessment_jobs ADD INDEX idx_aj_user_status (user_id, status)",
+    "ALTER TABLE plan_schedules ADD INDEX idx_ps_user (user_id)",
+    "ALTER TABLE plan_daily_tasks ADD INDEX idx_pdt_date (plan_id, date)",
+    "ALTER TABLE resume_uploads ADD INDEX idx_ru_user (user_id)",
+    "ALTER TABLE career_plan_blocks ADD INDEX idx_cpb_assessment (assessment_id)",
+    "ALTER TABLE assessment_dimensions ADD INDEX idx_ad_assessment (assessment_id)",
+]
+
 
 async def init_pool(host: str, port: int, user: str, password: str, db: str,
                     minsize: int = 1, maxsize: int = 5) -> None:
@@ -157,6 +170,14 @@ async def init_pool(host: str, port: int, user: str, password: str, db: str,
                 except Exception as e:
                     if "1060" not in str(e) and "Duplicate column name" not in str(e):
                         raise
+            # 补充缺失索引（1061=索引已存在，可忽略）
+            for sql in _ALTER_ADD_INDEX_SQLS:
+                try:
+                    await cur.execute(sql)
+                except Exception as e:
+                    err_str = str(e)
+                    if "1061" not in err_str and "Duplicate key name" not in err_str:
+                        logger.warning(f"[Memory] 建索引跳过: {e}")
     logger.debug(f"[Memory] 连接池初始化成功，数据库：{db}@{host}:{port}")
 
 

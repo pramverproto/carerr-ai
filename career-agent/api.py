@@ -173,6 +173,16 @@ app.add_middleware(
 #  Agent 工厂                                                           #
 # ------------------------------------------------------------------ #
 
+
+# 对话界面只开放查询类工具，避免 AI 在对话里误触发耗时的评估/规划流程
+_CHAT_ALLOWED_TOOLS = [
+    "query_profile",
+    "update_profile",
+    "query_my_assessments",
+    "query_my_plans",
+    "query_today_tasks",
+]
+
 def _make_agent(session_id: str | None) -> Agent:
     """每次请求创建新 Agent 实例，无共享状态，并发安全。"""
     llm = LLMProvider(
@@ -187,6 +197,7 @@ def _make_agent(session_id: str | None) -> Agent:
         system_prompt=MAIN_AGENT_CONFIG["system_prompt"],
         mcp=mcp,
         session_id=session_id,
+        allowed_tools=_CHAT_ALLOWED_TOOLS,
     )
 
 
@@ -562,8 +573,8 @@ async def chat_history(session_id: str, user: dict = Depends(get_current_user)):
         if role not in ("user", "assistant"):
             continue
         content = msg.get("content", "")
-        # assistant 的 tool_calls 消息跳过（content 为空或 None）
-        if role == "assistant" and not content:
+        # assistant 的 tool_calls 中间消息跳过（含 tool_calls 或 content 为空）
+        if role == "assistant" and (not content or msg.get("tool_calls")):
             continue
         messages.append({"role": role, "content": content})
     return {"session_id": session_id, "messages": messages}
@@ -593,6 +604,29 @@ async def _json_chat(message: str, session_id: str | None, user_id: int) -> dict
 #  Streaming (SSE)                                                      #
 # ------------------------------------------------------------------ #
 
+async def _cleanup_orphan_messages(session_id: str) -> None:
+    """删除 session 末尾连续的未配对 user/tool 消息（没有对应 assistant 回复的）。"""
+    if not memory_db._pool:
+        return
+    async with memory_db._pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            # 从末尾往前找，删除连续的非 assistant/system 消息
+            await cur.execute(
+                "SELECT id, role FROM messages WHERE session_id = %s ORDER BY id DESC LIMIT 20",
+                (session_id,),
+            )
+            rows = await cur.fetchall()
+            ids_to_delete = []
+            for row_id, role in rows:
+                if role in ("assistant", "system"):
+                    break
+                ids_to_delete.append(row_id)
+            if ids_to_delete:
+                placeholders = ",".join(["%s"] * len(ids_to_delete))
+                await cur.execute(f"DELETE FROM messages WHERE id IN ({placeholders})", ids_to_delete)
+                logger.debug(f"[Chat Stream] 清理了 {len(ids_to_delete)} 条孤立消息")
+
+
 async def _stream_chat(message: str, session_id: str | None, user_id: int):
     """
     SSE 生成器，每条消息格式为：
@@ -609,8 +643,19 @@ async def _stream_chat(message: str, session_id: str | None, user_id: int):
         async for chunk in agent.stream_once(message):
             yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
     except Exception as exc:
-        logger.error(f"[Chat Stream] 错误: {exc}")
-        yield f"data: {json.dumps({'type': 'error', 'content': '抱歉，AI 处理时出现错误，请稍后重试。'}, ensure_ascii=False)}\n\n"
+        logger.error(f"[Chat Stream] 错误: {exc}", exc_info=True)
+        # 清理本次失败留下的孤立消息，防止损坏的历史导致后续请求持续失败
+        if session_id:
+            try:
+                await _cleanup_orphan_messages(session_id)
+            except Exception:
+                logger.debug("[Chat Stream] 清理孤立消息失败（已忽略）")
+        err_str = str(exc)
+        if "额度" in err_str or "balance" in err_str.lower() or "insufficient" in err_str.lower():
+            msg = "AI 服务余额不足，请联系管理员充值后重试。"
+        else:
+            msg = "抱歉，AI 处理时出现错误，请稍后重试。"
+        yield f"data: {json.dumps({'type': 'error', 'content': msg}, ensure_ascii=False)}\n\n"
     finally:
         current_user_id.reset(tok)
 
@@ -1478,6 +1523,7 @@ async def career_match(req: CareerMatchRequest, user: dict = Depends(get_current
 class CareerPlanRequest(BaseModel):
     assessment_id: str
     onetsoc_code: str
+    title: str | None = None  # JD 直接推荐时必传（jd- 开头的 code）
 
 
 @app.post("/career/plan", tags=["职业"], summary="生成指定职业的详细规划")
@@ -1507,9 +1553,10 @@ async def career_plan(req: CareerPlanRequest, user: dict = Depends(get_current_u
         mcp=None,
         session_id=None,
     )
+    title_part = f"（职业标题：{req.title}）" if req.title else ""
     task = (
         f"请为评估 ID 为 {req.assessment_id} 的候选人，"
-        f"针对目标职业 {req.onetsoc_code} 生成完整详细规划报告。"
+        f"针对目标职业 {req.onetsoc_code}{title_part} 生成完整详细规划报告。"
     )
     result_str = await agent.run_once(task)
     elapsed_ms = int((time.perf_counter() - t0) * 1000)
@@ -2417,42 +2464,50 @@ async def archive_detail(assessment_id: str, user: dict = Depends(get_current_us
             )
             plan_rows = await cur.fetchall()
             plans = []
-            for p in plan_rows:
-                pid = p["plan_id"]
-                # 统计完成任务数
+            if plan_rows:
+                plan_ids = [p["plan_id"] for p in plan_rows]
+                ph = ",".join(["%s"] * len(plan_ids))
+                # 一次查询获取所有计划的任务数据（避免 N+1）
                 await cur.execute(
-                    "SELECT tasks, completed_ids FROM plan_daily_tasks WHERE plan_id=%s",
-                    (pid,),
+                    f"SELECT plan_id, tasks, completed_ids FROM plan_daily_tasks WHERE plan_id IN ({ph})",
+                    plan_ids,
                 )
-                task_rows = await cur.fetchall()
-                total_tasks = 0
-                completed_tasks = 0
-                for t in task_rows:
+                all_task_rows = await cur.fetchall()
+                # 按 plan_id 分组统计
+                task_stats: dict[str, tuple[int, int]] = {}
+                for t in all_task_rows:
+                    pid = t["plan_id"]
                     tasks_data = t["tasks"]
                     if isinstance(tasks_data, str):
                         try:
                             tasks_data = json.loads(tasks_data)
                         except (json.JSONDecodeError, TypeError):
                             tasks_data = []
-                    total_tasks += len(tasks_data) if isinstance(tasks_data, list) else 0
                     cids = t["completed_ids"]
                     if isinstance(cids, str):
                         try:
                             cids = json.loads(cids)
                         except (json.JSONDecodeError, TypeError):
                             cids = []
-                    completed_tasks += len(cids) if isinstance(cids, list) else 0
+                    total, done = task_stats.get(pid, (0, 0))
+                    task_stats[pid] = (
+                        total + (len(tasks_data) if isinstance(tasks_data, list) else 0),
+                        done + (len(cids) if isinstance(cids, list) else 0),
+                    )
 
-                plans.append({
-                    "plan_id": pid,
-                    "onetsoc_code": p["onetsoc_code"],
-                    "duration_weeks": p["duration_weeks"],
-                    "start_date": str(p["start_date"]) if p["start_date"] else None,
-                    "status": p["status"],
-                    "created_at": str(p["created_at"]) if p["created_at"] else None,
-                    "total_tasks": total_tasks,
-                    "completed_tasks": completed_tasks,
-                })
+                for p in plan_rows:
+                    pid = p["plan_id"]
+                    total_tasks, completed_tasks = task_stats.get(pid, (0, 0))
+                    plans.append({
+                        "plan_id": pid,
+                        "onetsoc_code": p["onetsoc_code"],
+                        "duration_weeks": p["duration_weeks"],
+                        "start_date": str(p["start_date"]) if p["start_date"] else None,
+                        "status": p["status"],
+                        "created_at": str(p["created_at"]) if p["created_at"] else None,
+                        "total_tasks": total_tasks,
+                        "completed_tasks": completed_tasks,
+                    })
 
     return {
         "assessment_id": assessment_id,

@@ -15,6 +15,7 @@
 """
 
 import asyncio
+import hashlib
 import json
 import os
 import re
@@ -197,6 +198,59 @@ async def _load_onet_occupation(onetsoc_code: str) -> dict | None:
         v = row.get(key)
         row[key] = json.loads(v) if isinstance(v, str) and v else []
     return row
+
+
+# ------------------------------------------------------------------ #
+#  JD 直接推荐：构建 onet-like 代理数据
+# ------------------------------------------------------------------ #
+
+async def _build_jd_proxy(
+    title: str,
+    onetsoc_code: str,
+    qdrant: AsyncQdrantClient,
+    openai_client: AsyncOpenAI,
+) -> dict:
+    """
+    为 jd- 开头的合成职业代码构建 onet-like 字典。
+    通过 Qdrant 搜索相似 JD 聚合描述和技能。
+    """
+    jds = await _fetch_top_jds(title, qdrant, openai_client, k=10)
+
+    descriptions = []
+    all_skills: list[str] = []
+    for jd in jds[:5]:
+        desc = jd.get("description", "")
+        if desc:
+            descriptions.append(desc)
+        reqs = jd.get("requirements", "")
+        if reqs:
+            all_skills.extend([s.strip() for s in reqs.split("、") if s.strip()])
+
+    # 去重保留顺序
+    seen: set[str] = set()
+    unique_skills: list[str] = []
+    for s in all_skills:
+        if s not in seen:
+            seen.add(s)
+            unique_skills.append(s)
+
+    proxy: dict = {
+        "onetsoc_code": onetsoc_code,
+        "title": title,
+        "description": descriptions[0][:400] if descriptions else f"JD 直接匹配职业方向：{title}",
+        "core_tasks_json": unique_skills[:12],
+        "tech_tools_json": [],
+        "job_zone": None,
+        "_is_jd_proxy": True,
+    }
+    # 所有维度子分数设为 None（规则算分将跳过）
+    for name_map in SUB_DIM_MAP.values():
+        for col in name_map.values():
+            proxy[col] = None
+    for key in ["skills", "knowledge", "abilities", "work_styles", "work_values"]:
+        proxy[f"dim_{key}"] = None
+
+    return proxy
 
 
 # ------------------------------------------------------------------ #
@@ -441,7 +495,11 @@ async def _build_match_overview(
     rule_score, dim_comparison = _compute_rule_score(dims, onet)
     llm_result = await _llm_match_analysis(candidate_summary, onet, sub_scores, rule_score, llm)
 
-    final_score = round(0.6 * rule_score + 0.4 * llm_result["llm_score"], 1)
+    # JD 直接推荐没有 O*NET 维度数据，100% 使用 LLM 评分
+    if onet.get("_is_jd_proxy") or not dim_comparison:
+        final_score = round(llm_result["llm_score"], 1)
+    else:
+        final_score = round(0.6 * rule_score + 0.4 * llm_result["llm_score"], 1)
 
     if final_score >= 80:
         verdict = "高度匹配"
@@ -870,7 +928,8 @@ async def _save_blocks(assessment_id: str, onetsoc_code: str, blocks: list[dict]
         "Block2 jd_recommendations: 从市场JD中取3个真实岗位，并发LLM生成完整JD+对照分析；\n"
         "Block3 gap_analysis: 差距（3-5项）与优势（3-5项）的LLM驱动深度分析。\n"
         "结果写入DB，返回3个Block JSON + gap_context（供 generate_action_plan 使用）。\n"
-        "必须在 match_careers 完成后，用户已选定目标职业 onetsoc_code 时调用。"
+        "必须在 match_careers 完成后，用户已选定目标职业 onetsoc_code 时调用。\n"
+        "当 onetsoc_code 以 'jd-' 开头时，表示 JD 直接匹配推荐，必须同时传入 title。"
     ),
     parameters={
         "type": "object",
@@ -881,35 +940,60 @@ async def _save_blocks(assessment_id: str, onetsoc_code: str, blocks: list[dict]
             },
             "onetsoc_code": {
                 "type": "string",
-                "description": "用户从职业推荐结果中选定的目标职业 O*NET 代码，如 '13-2051.00'",
+                "description": "目标职业代码。O*NET 代码如 '13-2051.00'，JD 直接推荐为 'jd-xxxxxxxx'",
+            },
+            "title": {
+                "type": "string",
+                "description": "职业标题。当 onetsoc_code 以 'jd-' 开头时必须提供",
             },
         },
         "required": ["assessment_id", "onetsoc_code"],
     },
 )
-async def generate_career_plan(assessment_id: str, onetsoc_code: str) -> str:
+async def generate_career_plan(assessment_id: str, onetsoc_code: str, title: str = "") -> str:
     """生成职业规划 Block 1/2/3，写入 DB，返回 blocks + gap_context。"""
-    logger.info(f"[generate_career_plan] 开始 assessment_id={assessment_id} onetsoc_code={onetsoc_code}")
+    logger.info(f"[generate_career_plan] 开始 assessment_id={assessment_id} onetsoc_code={onetsoc_code} title={title}")
+
+    is_jd_direct = onetsoc_code.startswith("jd-")
 
     # ① 并发加载数据
-    dims, candidate, onet = await asyncio.gather(
+    dims, candidate = await asyncio.gather(
         _load_assessment(assessment_id),
         _load_candidate(assessment_id),
-        _load_onet_occupation(onetsoc_code),
     )
     if not dims:
         return json.dumps({"error": f"assessment_id={assessment_id} 无评估数据"}, ensure_ascii=False)
-    if not onet:
-        return json.dumps({"error": f"onetsoc_code={onetsoc_code} 不存在"}, ensure_ascii=False)
 
-    # ② 初始化客户端
+    if is_jd_direct:
+        if not title:
+            return json.dumps({"error": "JD 直接推荐必须提供 title 参数"}, ensure_ascii=False)
+        # JD 直接推荐：从 Qdrant JD 数据构建代理 onet 字典
+        qdrant = AsyncQdrantClient(url=QDRANT_URL)
+        openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL)
+        try:
+            onet = await _build_jd_proxy(title, onetsoc_code, qdrant, openai_client)
+        except Exception as e:
+            logger.warning(f"[generate_career_plan] _build_jd_proxy 失败: {e}")
+            onet = {
+                "onetsoc_code": onetsoc_code, "title": title,
+                "description": f"JD 直接匹配职业方向：{title}",
+                "core_tasks_json": [], "tech_tools_json": [],
+                "job_zone": None, "_is_jd_proxy": True,
+            }
+    else:
+        onet = await _load_onet_occupation(onetsoc_code)
+        if not onet:
+            return json.dumps({"error": f"onetsoc_code={onetsoc_code} 不存在"}, ensure_ascii=False)
+
+    # ② 初始化客户端（JD 直接推荐时 qdrant/openai_client 已在上方创建）
     llm = LLMProvider(
         model=MAIN_AGENT_CONFIG["model"],
         api_key=MAIN_AGENT_CONFIG["api_key"],
         base_url=MAIN_AGENT_CONFIG["base_url"],
     )
-    qdrant = AsyncQdrantClient(url=QDRANT_URL)
-    openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL)
+    if not is_jd_direct:
+        qdrant = AsyncQdrantClient(url=QDRANT_URL)
+        openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL)
 
     try:
         # ③ 阶段2（并行）：Block 1 / Block 2 互相独立，同时跑

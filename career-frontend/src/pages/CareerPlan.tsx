@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Spin, Alert, Steps, Tag, Collapse, Divider } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/appStore';
+import CareerMatchSkeleton from '@/components/skeletons/CareerMatchSkeleton';
 import { api } from '@/api/client';
 import type {
   CareerRecommendation,
@@ -43,8 +44,8 @@ const SEVERITY_LABEL: Record<string, string> = {
 };
 
 const PHASE_COLORS = ['#1677ff', '#722ed1', '#52c41a'];
-const PHASE_BG = ['bg-blue-50', 'bg-purple-50', 'bg-green-50'];
-const PHASE_BORDER = ['border-blue-200', 'border-purple-200', 'border-green-200'];
+const PHASE_BG = ['bg-blue-50 dark:bg-blue-900/20', 'bg-purple-50 dark:bg-purple-900/20', 'bg-green-50 dark:bg-green-900/20'];
+const PHASE_BORDER = ['border-blue-200 dark:border-blue-800', 'border-purple-200 dark:border-purple-800', 'border-green-200 dark:border-green-800'];
 const PHASE_TEXT = ['text-blue-700', 'text-purple-700', 'text-green-700'];
 
 const VERDICT_COLOR: Record<string, string> = {
@@ -91,12 +92,12 @@ function CareerCard({
 }) {
   const score = typeof rec.match_score === 'number' ? rec.match_score : null;
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm p-5 flex flex-col hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-2">
-        <h3 className="font-bold text-gray-800 text-base">{rec.title}</h3>
+        <h3 className="font-bold text-gray-800 dark:text-gray-100 text-base">{rec.title}</h3>
         <div className="flex items-center gap-2 shrink-0">
           {planned && (
-            <span className="bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-full">
+            <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium px-2 py-0.5 rounded-full">
               已规划
             </span>
           )}
@@ -107,19 +108,17 @@ function CareerCard({
           )}
         </div>
       </div>
-      <p className="text-xs text-gray-400 mb-2 font-mono">{rec.onetsoc_code}</p>
-
       {rec.jd_market_signal && (
-        <Tag color="cyan" className="mb-3 self-start">{rec.jd_market_signal}</Tag>
+        <Tag color="cyan" className="mb-2 self-start">{rec.jd_market_signal}</Tag>
       )}
 
       {rec.match_reason && (
-        <p className="text-gray-600 text-sm mb-3 leading-relaxed flex-1">{rec.match_reason}</p>
+        <p className="text-gray-600 dark:text-gray-300 text-sm mb-3 leading-relaxed flex-1">{rec.match_reason}</p>
       )}
 
       {(rec.key_gaps || []).length > 0 && (
         <div className="mb-3">
-          <p className="text-xs text-gray-400 mb-1">关键差距</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">关键差距</p>
           <ul className="list-disc list-inside text-sm text-orange-600 space-y-0.5">
             {(rec.key_gaps || []).map((g, i) => <li key={i}>{g}</li>)}
           </ul>
@@ -128,7 +127,7 @@ function CareerCard({
 
       {(rec.typical_jd_skills || []).length > 0 && (
         <div className="mb-4">
-          <p className="text-xs text-gray-400 mb-1">JD 高频技能</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">JD 高频技能</p>
           <div className="flex flex-wrap gap-1">
             {(rec.typical_jd_skills || []).map((s, i) => (
               <Tag key={i} className="text-xs">{s}</Tag>
@@ -166,20 +165,20 @@ function MatchOverviewSection({ block }: { block: MatchOverviewBlock }) {
   const { rule_based, llm_analysis } = block;
 
   return (
-    <section id="plan-match_overview" className="mb-6 bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+    <section id="plan-match_overview" className="mb-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-5">
       {/* 标题行 */}
       <div className="flex items-start justify-between mb-5">
         <div>
-          <h3 className="font-bold text-gray-800 text-lg">{block.occupation_title}</h3>
-          <p className="text-xs text-gray-400 font-mono mt-0.5">{block.onetsoc_code}</p>
+          <h3 className="font-bold text-gray-800 dark:text-gray-100 text-lg">{block.occupation_title}</h3>
+          <Tag color="blue" className="mt-0.5 text-xs">市场匹配</Tag>
         </div>
         <div className="text-center flex-shrink-0">
           <div
             className="w-20 h-20 rounded-full flex flex-col items-center justify-center border-4"
             style={{ borderColor: verdictColor }}
           >
-            <span className="text-2xl font-bold text-gray-800">{block.final_score}</span>
-            <span className="text-xs text-gray-400">/ 100</span>
+            <span className="text-2xl font-bold text-gray-800 dark:text-gray-100">{block.final_score}</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">/ 100</span>
           </div>
           <Tag color={verdictColor === '#52c41a' ? 'green' : verdictColor === '#ff4d4f' ? 'red' : verdictColor === '#fa8c16' ? 'orange' : 'blue'} className="mt-1">
             {block.verdict}
@@ -187,51 +186,56 @@ function MatchOverviewSection({ block }: { block: MatchOverviewBlock }) {
         </div>
       </div>
 
-      {/* 规则算分 */}
-      <div className="mb-5">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-sm font-semibold text-gray-700">规则算分</span>
-          <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">权重 60% · {rule_based.score}/100</span>
-        </div>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-gray-400 border-b">
-              <th className="text-left py-2">维度</th>
-              <th className="text-center py-2">候选人</th>
-              <th className="text-center py-2">目标要求</th>
-              <th className="text-center py-2">Gap</th>
-              <th className="text-center py-2">状态</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rule_based.dim_comparison.map((d, i) => (
-              <tr key={i} className="border-b border-gray-50">
-                <td className="py-2 text-gray-700">{d.label}</td>
-                <td className="text-center font-medium">{d.candidate_score.toFixed(1)}</td>
-                <td className="text-center text-gray-500">{d.onet_required.toFixed(1)}</td>
-                <td className="text-center font-medium" style={{ color: d.gap > 0 ? '#fa8c16' : '#52c41a' }}>
-                  {d.gap > 0 ? '+' : ''}{d.gap.toFixed(2)}
-                </td>
-                <td className="text-center">
-                  <Tag color={GAP_STATUS_COLOR[d.status] || 'default'}>{d.status}</Tag>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <Divider className="my-4" />
+      {/* 规则算分（JD 直接匹配无维度对比时隐藏） */}
+      {rule_based.dim_comparison.length > 0 && (
+        <>
+          <div className="mb-5">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">规则算分</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">权重 60% · {rule_based.score}/100</span>
+            </div>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-gray-400 dark:text-gray-500 border-b dark:border-gray-600">
+                  <th className="text-left py-2">维度</th>
+                  <th className="text-center py-2">候选人</th>
+                  <th className="text-center py-2">目标要求</th>
+                  <th className="text-center py-2">Gap</th>
+                  <th className="text-center py-2">状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rule_based.dim_comparison.map((d, i) => (
+                  <tr key={i} className="border-b border-gray-50 dark:border-gray-700">
+                    <td className="py-2 text-gray-700 dark:text-gray-200">{d.label}</td>
+                    <td className="text-center font-medium dark:text-gray-200">{d.candidate_score.toFixed(1)}</td>
+                    <td className="text-center text-gray-500 dark:text-gray-400">{d.onet_required.toFixed(1)}</td>
+                    <td className="text-center font-medium" style={{ color: d.gap > 0 ? '#fa8c16' : '#52c41a' }}>
+                      {d.gap > 0 ? '+' : ''}{d.gap.toFixed(2)}
+                    </td>
+                    <td className="text-center">
+                      <Tag color={GAP_STATUS_COLOR[d.status] || 'default'}>{d.status}</Tag>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Divider className="my-4" />
+        </>
+      )}
 
       {/* LLM 综合判断 */}
       <div>
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-sm font-semibold text-gray-700">AI 综合判断</span>
-          <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">权重 40% · {llm_analysis.score}/100</span>
+          <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">AI 综合判断</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
+            {rule_based.dim_comparison.length > 0 ? `权重 40% · ${llm_analysis.score}/100` : `${llm_analysis.score}/100`}
+          </span>
         </div>
 
         {llm_analysis.narrative && (
-          <p className="text-gray-600 text-sm leading-relaxed mb-4 bg-gray-50 rounded-lg px-4 py-3">
+          <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4 bg-gray-50 dark:bg-gray-700 rounded-lg px-4 py-3">
             {llm_analysis.narrative}
           </p>
         )}
@@ -239,13 +243,13 @@ function MatchOverviewSection({ block }: { block: MatchOverviewBlock }) {
         {(llm_analysis.key_factors || []).length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {(llm_analysis.key_factors || []).map((f: KeyFactor, i: number) => (
-              <div key={i} className="flex items-start gap-2 bg-white border border-gray-100 rounded-lg px-3 py-2">
+              <div key={i} className="flex items-start gap-2 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg px-3 py-2">
                 <Tag color={IMPACT_COLOR[f.impact] || 'default'} className="mt-0.5 shrink-0 text-xs">
                   {f.impact === 'positive' ? '✅ 正向' : f.impact === 'negative' ? '⚠️ 负向' : '─ 中性'}
                 </Tag>
                 <div>
-                  <p className="text-sm font-medium text-gray-800">{f.factor}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{f.note}</p>
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{f.factor}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{f.note}</p>
                 </div>
               </div>
             ))}
@@ -266,16 +270,16 @@ function JDPositionCard({ pos, index }: { pos: JDPosition; index: number }) {
   const diff = pos.match_analysis?.entry_difficulty || 'moderate';
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl shadow-sm overflow-hidden">
       {/* 卡片头 */}
-      <div className="px-5 py-4 border-b border-gray-100 flex items-start justify-between">
+      <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-gray-400">#{index + 1}</span>
-            <h4 className="font-bold text-gray-800">{pos.title}</h4>
+            <span className="text-xs font-bold text-gray-400 dark:text-gray-500">#{index + 1}</span>
+            <h4 className="font-bold text-gray-800 dark:text-gray-100">{pos.title}</h4>
           </div>
           {pos.company_type && (
-            <p className="text-xs text-gray-400 mt-0.5">{pos.company_type}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{pos.company_type}</p>
           )}
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">
@@ -284,28 +288,28 @@ function JDPositionCard({ pos, index }: { pos: JDPosition; index: number }) {
             {difficultyLabel[diff as keyof typeof difficultyLabel] || diff}
           </Tag>
           {pos.salary_range && (
-            <span className="text-xs text-gray-400">{pos.salary_range}</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">{pos.salary_range}</span>
           )}
         </div>
       </div>
 
       {/* 岗位解读 */}
       {pos.role_explanation && (
-        <div className="px-5 py-3 bg-blue-50 border-b border-blue-100">
-          <p className="text-xs text-blue-600 font-medium mb-1">这个岗位在做什么</p>
-          <p className="text-sm text-blue-800 leading-relaxed">{pos.role_explanation}</p>
+        <div className="px-5 py-3 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-800">
+          <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">这个岗位在做什么</p>
+          <p className="text-sm text-blue-800 dark:text-blue-300 leading-relaxed">{pos.role_explanation}</p>
         </div>
       )}
 
       {/* 职责 & 要求 */}
       {((pos.key_responsibilities || []).length > 0 || (pos.required_qualifications || []).length > 0) && (
-        <div className="px-5 py-3 grid grid-cols-1 sm:grid-cols-2 gap-4 border-b border-gray-100">
+        <div className="px-5 py-3 grid grid-cols-1 sm:grid-cols-2 gap-4 border-b border-gray-100 dark:border-gray-700">
           {(pos.key_responsibilities || []).length > 0 && (
             <div>
-              <p className="text-xs font-medium text-gray-500 mb-1.5">核心职责</p>
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">核心职责</p>
               <ul className="space-y-1">
                 {(pos.key_responsibilities || []).map((r, i) => (
-                  <li key={i} className="text-xs text-gray-600 flex items-start gap-1">
+                  <li key={i} className="text-xs text-gray-600 dark:text-gray-300 flex items-start gap-1">
                     <span className="text-blue-400 mt-0.5">▸</span>{r}
                   </li>
                 ))}
@@ -314,11 +318,11 @@ function JDPositionCard({ pos, index }: { pos: JDPosition; index: number }) {
           )}
           {(pos.required_qualifications || []).length > 0 && (
             <div>
-              <p className="text-xs font-medium text-gray-500 mb-1.5">任职要求</p>
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">任职要求</p>
               <ul className="space-y-1">
                 {(pos.required_qualifications || []).map((q, i) => (
-                  <li key={i} className="text-xs text-gray-600 flex items-start gap-1">
-                    <span className="text-gray-400 mt-0.5">·</span>{q}
+                  <li key={i} className="text-xs text-gray-600 dark:text-gray-300 flex items-start gap-1">
+                    <span className="text-gray-400 dark:text-gray-500 mt-0.5">·</span>{q}
                   </li>
                 ))}
               </ul>
@@ -329,20 +333,20 @@ function JDPositionCard({ pos, index }: { pos: JDPosition; index: number }) {
 
       {/* 对照分析：优势 & 顾虑 */}
       {pos.match_analysis && (
-        <div className="px-5 py-3 grid grid-cols-1 sm:grid-cols-2 gap-4 border-b border-gray-100">
+        <div className="px-5 py-3 grid grid-cols-1 sm:grid-cols-2 gap-4 border-b border-gray-100 dark:border-gray-700">
           <div>
-            <p className="text-xs font-medium text-green-600 mb-1.5">✅ 你的优势</p>
+            <p className="text-xs font-medium text-green-600 dark:text-green-400 mb-1.5">✅ 你的优势</p>
             <ul className="space-y-1">
               {(pos.match_analysis.strengths || []).map((s, i) => (
-                <li key={i} className="text-xs text-gray-600">{s}</li>
+                <li key={i} className="text-xs text-gray-600 dark:text-gray-300">{s}</li>
               ))}
             </ul>
           </div>
           <div>
-            <p className="text-xs font-medium text-orange-500 mb-1.5">⚠ 顾虑</p>
+            <p className="text-xs font-medium text-orange-500 dark:text-orange-400 mb-1.5">⚠ 顾虑</p>
             <ul className="space-y-1">
               {(pos.match_analysis.concerns || []).map((c, i) => (
-                <li key={i} className="text-xs text-gray-600">{c}</li>
+                <li key={i} className="text-xs text-gray-600 dark:text-gray-300">{c}</li>
               ))}
             </ul>
           </div>
@@ -352,12 +356,12 @@ function JDPositionCard({ pos, index }: { pos: JDPosition; index: number }) {
       {/* 结论 + 完整 JD 展开 */}
       <div className="px-5 py-3">
         {pos.match_analysis?.verdict && (
-          <p className="text-sm text-gray-600 italic mb-2">{pos.match_analysis.verdict}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-300 italic mb-2">{pos.match_analysis.verdict}</p>
         )}
         {pos.full_jd && (
           <Collapse ghost>
             <Panel header={<span className="text-xs text-blue-500">查看完整 JD</span>} key="jd">
-              <div className="prose prose-sm max-w-none text-gray-600 text-xs leading-relaxed whitespace-pre-wrap">
+              <div className="prose prose-sm max-w-none text-gray-600 dark:text-gray-300 text-xs leading-relaxed whitespace-pre-wrap">
                 {pos.full_jd}
               </div>
             </Panel>
@@ -371,9 +375,9 @@ function JDPositionCard({ pos, index }: { pos: JDPosition; index: number }) {
 function JdRecommendationsSection({ block }: { block: JdRecommendationsBlock }) {
   return (
     <section id="plan-jd_recommendations" className="mb-6">
-      <h3 className="font-bold text-gray-800 text-lg mb-4">
+      <h3 className="font-bold text-gray-800 dark:text-gray-100 text-lg mb-4">
         高匹配岗位推荐
-        <span className="ml-2 text-sm font-normal text-gray-400">（{block.positions.length} 个岗位）</span>
+        <span className="ml-2 text-sm font-normal text-gray-400 dark:text-gray-500">（{block.positions.length} 个岗位）</span>
       </h3>
       <div className="space-y-4">
         {(block.positions || []).map((pos, i) => (
@@ -391,39 +395,39 @@ function JdRecommendationsSection({ block }: { block: JdRecommendationsBlock }) 
 function GapAnalysisSection({ block }: { block: GapAnalysisBlock }) {
   return (
     <section id="plan-gap_analysis" className="mb-6">
-      <h3 className="font-bold text-gray-800 text-lg mb-2">差距与优势分析</h3>
+      <h3 className="font-bold text-gray-800 dark:text-gray-100 text-lg mb-2">差距与优势分析</h3>
       {block.summary && (
-        <p className="text-gray-500 text-sm mb-4 leading-relaxed">{block.summary}</p>
+        <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 leading-relaxed">{block.summary}</p>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* 左：差距 */}
         <div>
           <h4 className="text-sm font-semibold text-red-600 mb-3 flex items-center gap-1">
-            ⚠️ 需要弥合的差距 <span className="text-gray-400 font-normal">（{(block.gaps || []).length} 项）</span>
+            ⚠️ 需要弥合的差距 <span className="text-gray-400 dark:text-gray-500 font-normal">（{(block.gaps || []).length} 项）</span>
           </h4>
           <div className="space-y-3">
             {(block.gaps || []).map((g: GapItem, i: number) => (
-              <div key={i} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+              <div key={i} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl p-4 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <Tag color={SEVERITY_COLOR[g.severity] || 'default'} className="text-xs">
                     {SEVERITY_LABEL[g.severity] || g.severity}
                   </Tag>
-                  <span className="font-semibold text-gray-800 text-sm">{g.area}</span>
+                  <span className="font-semibold text-gray-800 dark:text-gray-100 text-sm">{g.area}</span>
                 </div>
-                <div className="space-y-1.5 text-xs text-gray-600">
+                <div className="space-y-1.5 text-xs text-gray-600 dark:text-gray-300">
                   <div className="flex items-start gap-1.5">
-                    <span className="text-gray-400 shrink-0 mt-0.5">岗位要求：</span>
+                    <span className="text-gray-400 dark:text-gray-500 shrink-0 mt-0.5">岗位要求：</span>
                     <span className="leading-relaxed">{g.required}</span>
                   </div>
                   <div className="flex items-start gap-1.5">
-                    <span className="text-gray-400 shrink-0 mt-0.5">当前状态：</span>
+                    <span className="text-gray-400 dark:text-gray-500 shrink-0 mt-0.5">当前状态：</span>
                     <span className="leading-relaxed">{g.current}</span>
                   </div>
                   {g.how_to_close && (
-                    <div className="flex items-start gap-1.5 bg-orange-50 rounded px-2 py-1.5 mt-2">
-                      <span className="text-orange-500 shrink-0 mt-0.5">💡 闭合：</span>
-                      <span className="text-orange-700 leading-relaxed">{g.how_to_close}</span>
+                    <div className="flex items-start gap-1.5 bg-orange-50 dark:bg-orange-900/20 rounded px-2 py-1.5 mt-2">
+                      <span className="text-orange-500 dark:text-orange-400 shrink-0 mt-0.5">💡 闭合：</span>
+                      <span className="text-orange-700 dark:text-orange-300 leading-relaxed">{g.how_to_close}</span>
                     </div>
                   )}
                 </div>
@@ -435,25 +439,25 @@ function GapAnalysisSection({ block }: { block: GapAnalysisBlock }) {
         {/* 右：优势 */}
         <div>
           <h4 className="text-sm font-semibold text-green-600 mb-3 flex items-center gap-1">
-            ✅ 超过要求的优势 <span className="text-gray-400 font-normal">（{(block.strengths || []).length} 项）</span>
+            ✅ 超过要求的优势 <span className="text-gray-400 dark:text-gray-500 font-normal">（{(block.strengths || []).length} 项）</span>
           </h4>
           <div className="space-y-3">
             {(block.strengths || []).map((s: StrengthItem, i: number) => (
-              <div key={i} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-                <span className="font-semibold text-gray-800 text-sm">{s.area}</span>
-                <div className="space-y-1.5 text-xs text-gray-600 mt-2">
+              <div key={i} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl p-4 shadow-sm">
+                <span className="font-semibold text-gray-800 dark:text-gray-100 text-sm">{s.area}</span>
+                <div className="space-y-1.5 text-xs text-gray-600 dark:text-gray-300 mt-2">
                   <div className="flex items-start gap-1.5">
-                    <span className="text-gray-400 shrink-0 mt-0.5">岗位基线：</span>
+                    <span className="text-gray-400 dark:text-gray-500 shrink-0 mt-0.5">岗位基线：</span>
                     <span className="leading-relaxed">{s.required}</span>
                   </div>
                   <div className="flex items-start gap-1.5">
-                    <span className="text-gray-400 shrink-0 mt-0.5">你的水平：</span>
+                    <span className="text-gray-400 dark:text-gray-500 shrink-0 mt-0.5">你的水平：</span>
                     <span className="leading-relaxed">{s.current}</span>
                   </div>
                   {s.leverage && (
-                    <div className="flex items-start gap-1.5 bg-green-50 rounded px-2 py-1.5 mt-2">
-                      <span className="text-green-600 shrink-0 mt-0.5">🚀 放大：</span>
-                      <span className="text-green-700 leading-relaxed">{s.leverage}</span>
+                    <div className="flex items-start gap-1.5 bg-green-50 dark:bg-green-900/20 rounded px-2 py-1.5 mt-2">
+                      <span className="text-green-600 dark:text-green-400 shrink-0 mt-0.5">🚀 放大：</span>
+                      <span className="text-green-700 dark:text-green-300 leading-relaxed">{s.leverage}</span>
                     </div>
                   )}
                 </div>
@@ -473,7 +477,7 @@ function GapAnalysisSection({ block }: { block: GapAnalysisBlock }) {
 function ActionPlanSection({ block }: { block: ActionPlanBlock }) {
   return (
     <section id="plan-action_plan" className="mb-6">
-      <h3 className="font-bold text-gray-800 text-lg mb-4">分阶段行动计划</h3>
+      <h3 className="font-bold text-gray-800 dark:text-gray-100 text-lg mb-4">分阶段行动计划</h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {block.phases.map((phase, pi) => (
           <div
@@ -482,21 +486,21 @@ function ActionPlanSection({ block }: { block: ActionPlanBlock }) {
             style={{ borderLeftWidth: 4, borderLeftColor: PHASE_COLORS[pi] }}
           >
             <p className={`font-bold text-sm mb-1 ${PHASE_TEXT[pi]}`}>{phase.label}</p>
-            <p className="text-xs text-gray-500 mb-3">{phase.focus}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{phase.focus}</p>
             <div className="space-y-3">
               {phase.actions.map((action, ai) => (
-                <div key={ai} className="bg-white rounded-lg p-3 shadow-sm">
+                <div key={ai} className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <span className="font-semibold text-gray-800 text-sm">📌 {action.item}</span>
+                    <span className="font-semibold text-gray-800 dark:text-gray-100 text-sm">📌 {action.item}</span>
                     {action.severity && (
                       <Tag color={SEVERITY_COLOR[action.severity] || 'default'} className="text-xs">
                         {SEVERITY_LABEL[action.severity] || action.severity}
                       </Tag>
                     )}
                   </div>
-                  <p className="text-gray-600 text-xs mt-1"><strong>行动：</strong>{action.action}</p>
-                  <p className="text-gray-600 text-xs mt-0.5"><strong>产出：</strong>{action.deliverable}</p>
-                  <p className="text-blue-600 text-xs mt-0.5"><strong>资源：</strong>{action.resource}</p>
+                  <p className="text-gray-600 dark:text-gray-300 text-xs mt-1"><strong>行动：</strong>{action.action}</p>
+                  <p className="text-gray-600 dark:text-gray-300 text-xs mt-0.5"><strong>产出：</strong>{action.deliverable}</p>
+                  <p className="text-blue-600 dark:text-blue-400 text-xs mt-0.5"><strong>资源：</strong>{action.resource}</p>
                 </div>
               ))}
             </div>
@@ -620,13 +624,15 @@ const CareerPlan: React.FC = () => {
   };
 
   // ── 生成/重新生成规划（POST 走 Agent，慢） ───────────────
-  const handleGeneratePlan = (code: string) => {
+  const handleGeneratePlan = (code: string, title?: string) => {
     if (!assessmentId) return;
     setSelectedCareer(code);
     setPlanLoading(true);
     setPlanError(null);
     setStep('plan_loading');
-    api.careerPlan(assessmentId, code)
+    // JD 直接推荐需要传 title 给后端
+    const jdTitle = code.startsWith('jd-') ? title : undefined;
+    api.careerPlan(assessmentId, code, jdTitle)
       .then((res) => {
         setPlanData(res.data);
         setStep('report');
@@ -661,19 +667,14 @@ const CareerPlan: React.FC = () => {
   if (!assessmentId) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-gray-500">请先完成能力评估</p>
+        <p className="text-gray-500 dark:text-gray-400">请先完成能力评估</p>
         <Button type="primary" onClick={() => navigate('/profile')}>去评估</Button>
       </div>
     );
   }
 
   if (step === 'match_loading') {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <Spin size="large" />
-        <p className="text-gray-500">正在为您匹配最适合的职业方向...</p>
-      </div>
-    );
+    return <CareerMatchSkeleton />;
   }
 
   if (step === 'select' && matchError) {
@@ -696,11 +697,11 @@ const CareerPlan: React.FC = () => {
     const recs = extractRecs();
     const plannedCount = Object.keys(plannedCodes).length;
     return (
-      <div className="animate-fade-in">
+      <div>
         <div className="mb-6 flex items-start justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">为您推荐的职业方向</h2>
-            <p className="text-gray-500 mt-1">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">为您推荐的职业方向</h2>
+            <p className="text-gray-500 dark:text-gray-400 mt-1">
               基于您的能力画像，以下职业方向与您最为匹配
               {plannedCount > 0 && (
                 <span className="ml-2 text-green-600 text-sm">（已规划 {plannedCount} 个方向）</span>
@@ -728,9 +729,9 @@ const CareerPlan: React.FC = () => {
                 key={rec.onetsoc_code}
                 rec={rec}
                 planned={plannedCodes[rec.onetsoc_code]}
-                onSelect={() => handleGeneratePlan(rec.onetsoc_code)}
+                onSelect={() => handleGeneratePlan(rec.onetsoc_code, rec.title)}
                 onView={() => handleViewPlan(rec.onetsoc_code)}
-                onReplan={() => handleGeneratePlan(rec.onetsoc_code)}
+                onReplan={() => handleGeneratePlan(rec.onetsoc_code, rec.title)}
               />
             ))}
           </div>
@@ -743,7 +744,7 @@ const CareerPlan: React.FC = () => {
     return (
       <div className="max-w-md mx-auto mt-12 text-center">
         <Spin size="large" />
-        <p className="text-blue-700 font-medium text-lg mt-4 mb-6">正在生成详细职业规划（约2-4分钟）...</p>
+        <p className="text-blue-700 dark:text-blue-400 font-medium text-lg mt-4 mb-6">正在生成详细职业规划（约2-4分钟）...</p>
         <Steps
           current={planStep}
           direction="vertical"
@@ -760,17 +761,17 @@ const CareerPlan: React.FC = () => {
       blocks.match_overview?.occupation_title || selectedCareer || '';
 
     return (
-      <div className="animate-fade-in">
+      <div>
         {/* 顶部导航栏 */}
-        <div className="sticky top-0 z-10 bg-white border-b border-gray-100 -mx-6 px-6 py-2 mb-6 flex items-center gap-4">
+        <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 -mx-6 px-6 py-2 mb-6 flex items-center gap-4">
           <button
             onClick={() => setStep('select')}
-            className="text-sm text-gray-400 hover:text-blue-600 transition-colors"
+            className="text-sm text-gray-400 dark:text-gray-500 hover:text-blue-600 transition-colors"
           >
             ← 返回列表
           </button>
-          <span className="text-sm text-gray-500">|</span>
-          <span className="text-sm font-medium text-gray-700">{occupationTitle}</span>
+          <span className="text-sm text-gray-500 dark:text-gray-400">|</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{occupationTitle}</span>
           {blocks.match_overview && (
             <Tag
               color={blocks.match_overview.verdict === '不建议' ? 'red' : blocks.match_overview.verdict === '潜力匹配' ? 'orange' : 'blue'}
@@ -785,7 +786,7 @@ const CareerPlan: React.FC = () => {
                 handleGeneratePlan(selectedCareer);
               }
             }}
-            className="text-xs text-gray-400 hover:text-orange-500 border border-gray-200 hover:border-orange-300 px-2 py-1 rounded transition-colors whitespace-nowrap"
+            className="text-xs text-gray-400 dark:text-gray-500 hover:text-orange-500 border border-gray-200 dark:border-gray-600 hover:border-orange-300 px-2 py-1 rounded transition-colors whitespace-nowrap"
           >
             重新规划
           </button>
@@ -794,7 +795,7 @@ const CareerPlan: React.FC = () => {
               <button
                 key={id}
                 onClick={() => scrollTo(id)}
-                className="text-xs text-gray-400 hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded whitespace-nowrap transition-colors"
+                className="text-xs text-gray-400 dark:text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 px-2 py-1 rounded whitespace-nowrap transition-colors"
               >
                 {label}
               </button>

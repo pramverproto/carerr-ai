@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Tabs, message } from 'antd';
+import { Form, Input, Button, Tabs, App } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/api/client';
@@ -45,6 +45,7 @@ const Login: React.FC = () => {
   const setAuth = useAuthStore((s) => s.setAuth);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const { message } = App.useApp();
 
   const handleLogin = async (values: { username: string; password: string }) => {
     setLoading(true);

@@ -54,7 +54,7 @@ function renderSubDimension(entry: SubDimensionEntry, idx: number) {
         key={entry.id || idx}
         header={
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-medium text-gray-800">{name}</span>
+            <span className="font-medium text-gray-800 dark:text-gray-100">{name}</span>
             {score !== null && (
               <span className="text-blue-600 font-bold">{score.toFixed(1)}</span>
             )}
@@ -84,7 +84,7 @@ function renderSubDimension(entry: SubDimensionEntry, idx: number) {
 
         {/* 解读（必显示） */}
         {meaningProse && (
-          <p className="text-gray-600 text-sm leading-relaxed mb-3">
+          <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-3">
             {meaningProse}
           </p>
         )}
@@ -92,12 +92,12 @@ function renderSubDimension(entry: SubDimensionEntry, idx: number) {
         {/* 证据 bullets */}
         {evidenceBullets.length > 0 && (
           <div className="mb-3">
-            <p className="text-xs text-gray-400 mb-1">证据</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">证据</p>
             <ul className="space-y-1">
               {evidenceBullets.map((bullet, j) => (
                 <li
                   key={j}
-                  className="text-sm text-gray-600 border-l-2 border-blue-200 pl-3"
+                  className="text-sm text-gray-600 dark:text-gray-300 border-l-2 border-blue-200 dark:border-blue-700 pl-3"
                 >
                   {bullet}
                 </li>
@@ -109,11 +109,11 @@ function renderSubDimension(entry: SubDimensionEntry, idx: number) {
         {/* work_styles sub_items 分面 */}
         {subItems && Object.keys(subItems).length > 0 && (
           <div className="mb-3">
-            <p className="text-xs text-gray-400 mb-2">分面得分</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">分面得分</p>
             <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
               {Object.entries(subItems).map(([k, v]) => (
-                <div key={k} className="bg-gray-50 rounded px-2 py-1 text-xs">
-                  <span className="text-gray-500">{k}</span>
+                <div key={k} className="bg-gray-50 dark:bg-gray-700 rounded px-2 py-1 text-xs">
+                  <span className="text-gray-500 dark:text-gray-400">{k}</span>
                   <span className="ml-1 text-blue-600 font-medium">
                     {typeof v === 'number' ? v.toFixed(1) : String(v)}
                   </span>
@@ -146,7 +146,7 @@ function renderSubDimension(entry: SubDimensionEntry, idx: number) {
   } catch {
     return (
       <Panel key={idx} header={`子维度 ${idx + 1}`}>
-        <p className="text-gray-400 text-sm">数据格式异常</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm">数据格式异常</p>
       </Panel>
     );
   }
@@ -170,29 +170,29 @@ function renderLocked(block: DimBlockType) {
   const unlockCta = block.unlock_cta;
 
   return (
-    <section className="mb-6 bg-gray-50 rounded-xl p-5 border border-gray-200">
+    <section className="mb-6 bg-gray-50 dark:bg-gray-700 rounded-xl p-5 border border-gray-200 dark:border-gray-600">
       <div className="flex items-center gap-2 mb-2">
-        <LockOutlined className="text-gray-400" />
-        <h3 className="font-bold text-gray-600 text-lg">{label}</h3>
+        <LockOutlined className="text-gray-400 dark:text-gray-500" />
+        <h3 className="font-bold text-gray-600 dark:text-gray-300 text-lg">{label}</h3>
         <Tag color="default">未解锁</Tag>
       </div>
 
       {block.unlock_intro && (
-        <p className="text-gray-500 text-sm leading-relaxed mb-4">{block.unlock_intro}</p>
+        <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-4">{block.unlock_intro}</p>
       )}
 
       {/* 推断信号 */}
       {signals.length > 0 && (
         <div className="mb-4">
-          <p className="text-xs text-gray-400 mb-2">从简历中捕捉的信号</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">从简历中捕捉的信号</p>
           <div className="space-y-2">
             {signals.map((s, i) => (
               <div
                 key={i}
-                className="bg-white rounded-md p-3 border border-gray-100 text-sm"
+                className="bg-white dark:bg-gray-800 rounded-md p-3 border border-gray-100 dark:border-gray-700 text-sm"
               >
-                <p className="text-gray-700">{s.signal}</p>
-                <p className="text-gray-400 text-xs mt-1">→ 暗示：{s.implies}</p>
+                <p className="text-gray-700 dark:text-gray-200">{s.signal}</p>
+                <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">→ 暗示：{s.implies}</p>
               </div>
             ))}
           </div>
@@ -202,14 +202,14 @@ function renderLocked(block: DimBlockType) {
       {/* abilities 估计范围 */}
       {ranges.length > 0 && (
         <div className="mb-4">
-          <p className="text-xs text-gray-400 mb-2">能力估计范围（1-7）</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">能力估计范围（1-7）</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             {ranges.map((r) => (
               <div
                 key={r.id}
-                className="bg-white rounded-md p-3 border border-gray-100"
+                className="bg-white dark:bg-gray-800 rounded-md p-3 border border-gray-100 dark:border-gray-700"
               >
-                <p className="text-sm font-medium text-gray-700">{r.name}</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{r.name}</p>
                 <p className="text-blue-600 text-lg font-bold">{r.range}</p>
               </div>
             ))}
@@ -220,13 +220,13 @@ function renderLocked(block: DimBlockType) {
       {/* interests 推断代码 + 角色 */}
       {inferredCode && (
         <div className="mb-3">
-          <span className="text-sm text-gray-500">推断 Holland 代码：</span>
+          <span className="text-sm text-gray-500 dark:text-gray-400">推断 Holland 代码：</span>
           <span className="font-bold text-purple-600 ml-1">{inferredCode}</span>
         </div>
       )}
       {inferredRoles.length > 0 && (
         <div className="mb-4">
-          <p className="text-xs text-gray-400 mb-1">可能适合的方向</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">可能适合的方向</p>
           <div className="flex flex-wrap gap-1">
             {inferredRoles.map((role, i) => (
               <Tag key={i} color="purple">{role}</Tag>
@@ -255,8 +255,8 @@ function renderLocked(block: DimBlockType) {
 function renderPending(block: DimBlockType) {
   const label = block.dimension_label || block.block_id;
   return (
-    <section className="mb-6 bg-gray-50 rounded-xl p-5 border border-dashed border-gray-300">
-      <h3 className="font-bold text-gray-500 text-lg mb-2">{label}</h3>
+    <section className="mb-6 bg-gray-50 dark:bg-gray-700 rounded-xl p-5 border border-dashed border-gray-300 dark:border-gray-500">
+      <h3 className="font-bold text-gray-500 dark:text-gray-400 text-lg mb-2">{label}</h3>
       <Alert
         type="warning"
         showIcon
@@ -294,19 +294,19 @@ const DimBlock: React.FC<Props> = ({ block }) => {
   }
 
   return (
-    <section className="mb-6 bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+    <section className="mb-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-5">
       {/* 标题行 */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <h3 className="font-bold text-gray-800 text-lg">{label}</h3>
+          <h3 className="font-bold text-gray-800 dark:text-gray-100 text-lg">{label}</h3>
           {block.persona_tag && (
             <Tag color="purple">{block.persona_tag}</Tag>
           )}
         </div>
         <div className="flex items-center gap-2">
           {score != null && (
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 border-2 border-blue-200">
-              <span className="text-blue-700 font-bold text-lg">{score.toFixed(1)}</span>
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700">
+              <span className="text-blue-700 dark:text-blue-300 font-bold text-lg">{score.toFixed(1)}</span>
             </div>
           )}
           {confidence && (
@@ -319,7 +319,7 @@ const DimBlock: React.FC<Props> = ({ block }) => {
 
       {/* 摘要 */}
       {summary && (
-        <p className="text-gray-600 text-sm mb-4 leading-relaxed">{summary}</p>
+        <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 leading-relaxed">{summary}</p>
       )}
 
       {/* work_styles bigfive 展示 */}
@@ -327,7 +327,7 @@ const DimBlock: React.FC<Props> = ({ block }) => {
         <div className="mb-4 grid grid-cols-5 gap-2">
           {Object.entries(block.bigfive_display).map(([k, v]) => (
             <div key={k} className="text-center">
-              <div className="text-xs text-gray-500 mb-1">{k}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">{k}</div>
               <Progress
                 type="circle"
                 percent={v}
@@ -348,8 +348,8 @@ const DimBlock: React.FC<Props> = ({ block }) => {
 
       {/* skills tech_gap */}
       {block.tech_gap && (block.tech_gap as string[]).length > 0 && (
-        <div className="mt-4 pt-3 border-t border-gray-100">
-          <span className="text-sm text-gray-500">技术缺口：</span>
+        <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
+          <span className="text-sm text-gray-500 dark:text-gray-400">技术缺口：</span>
           <div className="flex flex-wrap gap-1 mt-1">
             {(block.tech_gap as string[]).map((t, i) => (
               <Tag key={i} color="orange">{t}</Tag>

@@ -212,6 +212,7 @@ export interface CareerRecommendation {
   key_gaps?: string[];
   jd_market_signal?: string;
   typical_jd_skills?: string[];
+  source?: string;  // "onet+jd" | "jd_direct"
   [key: string]: unknown;
 }
 

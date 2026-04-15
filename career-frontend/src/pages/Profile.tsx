@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Form, Input, Button, Select, InputNumber, Collapse, Steps,
-  Slider, Alert, Divider, message,
+  Slider, Alert, Divider, App,
 } from 'antd';
 import { PlusOutlined, MinusCircleOutlined, UploadOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -48,6 +48,7 @@ const RIASEC_DIMS = [
 
 const Profile: React.FC = () => {
   const [form] = Form.useForm();
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const { assessStatus, assessError, profileDraft, setProfileDraft, setAssessStatus, setAssessmentId, setReportData, resetDownstream } = useAppStore();
 
@@ -259,11 +260,11 @@ const Profile: React.FC = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto animate-fade-in">
+    <div className="max-w-3xl mx-auto">
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">个人信息完善</h2>
-          <p className="text-gray-500 mt-1">请填写您的基本信息，用于生成专属能力评估报告</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">个人信息完善</h2>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">请填写您的基本信息，用于生成专属能力评估报告</p>
         </div>
         {!isLoading && (
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -298,8 +299,8 @@ const Profile: React.FC = () => {
       )}
 
       {isLoading ? (
-        <div className="bg-blue-50 rounded-xl p-8 text-center">
-          <p className="text-blue-700 font-medium text-lg mb-6">正在为您生成能力评估报告（约2-3分钟）...</p>
+        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-8 text-center">
+          <p className="text-blue-700 dark:text-blue-300 font-medium text-lg mb-6">正在为您生成能力评估报告（约2-3分钟）...</p>
           <Steps
             current={stepIndex}
             direction="vertical"
@@ -343,11 +344,11 @@ const Profile: React.FC = () => {
                 {(fields, { add, remove }) => (
                   <>
                     {fields.map(({ key, name }) => (
-                      <div key={key} className="border border-gray-200 rounded-lg p-4 mb-4 relative">
+                      <div key={key} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 mb-4 relative">
                         <button
                           type="button"
                           onClick={() => remove(name)}
-                          className="absolute top-3 right-3 text-gray-400 hover:text-red-500"
+                          className="absolute top-3 right-3 text-gray-400 dark:text-gray-500 hover:text-red-500"
                         >
                           <MinusCircleOutlined />
                         </button>
@@ -421,11 +422,11 @@ const Profile: React.FC = () => {
 
             {/* 心理测评（可选） */}
             <Panel header="心理测评（可选，提升评估精度）" key="bigfive">
-              <p className="text-gray-500 text-sm mb-4">若您已完成大五人格测试，请填写各维度得分（0-100）</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">若您已完成大五人格测试，请填写各维度得分（0-100）</p>
               <div className="space-y-3 mb-6">
                 {BIG_FIVE_DIMS.map(({ key, label }) => (
                   <div key={key} className="flex items-center gap-4">
-                    <span className="text-sm text-gray-600 w-48">{label}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-300 w-48">{label}</span>
                     <Form.Item name={`bigfive_${key}`} noStyle>
                       <Slider className="flex-1" min={0} max={100} />
                     </Form.Item>
@@ -438,11 +439,11 @@ const Profile: React.FC = () => {
 
               <Divider />
 
-              <p className="text-gray-500 text-sm mb-4">若您已完成 RIASEC 职业兴趣测试，请填写各类型得分（0-100）</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">若您已完成 RIASEC 职业兴趣测试，请填写各类型得分（0-100）</p>
               <div className="space-y-3">
                 {RIASEC_DIMS.map(({ key, label }) => (
                   <div key={key} className="flex items-center gap-4">
-                    <span className="text-sm text-gray-600 w-48">{label}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-300 w-48">{label}</span>
                     <Form.Item name={`riasec_${key}`} noStyle>
                       <Slider className="flex-1" min={0} max={100} />
                     </Form.Item>

@@ -94,10 +94,10 @@ export const api = {
     ),
 
   /** POST /career/plan — 超时5分钟 */
-  careerPlan: (assessmentId: string, onetsocCode: string) =>
+  careerPlan: (assessmentId: string, onetsocCode: string, title?: string) =>
     apiClient.post<CareerPlanResponse>(
       '/career/plan',
-      { assessment_id: assessmentId, onetsoc_code: onetsocCode },
+      { assessment_id: assessmentId, onetsoc_code: onetsocCode, ...(title ? { title } : {}) },
       { timeout: 300_000 },
     ),
 

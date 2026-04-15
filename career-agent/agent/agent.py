@@ -1,3 +1,4 @@
+import asyncio
 import json
 import time
 import uuid
@@ -134,8 +135,11 @@ class Agent:
                 if name == "delegate_task":
                     args["_parent_trace_id"] = trace_id
                 result = await call_tool(name, args)
-            else:
+            elif self.mcp:
                 result = await self.mcp.call_tool(name, args)
+            else:
+                logger.warning(f"[_execute_tool_calls] 未知工具调用被拒绝：{name}")
+                result = f"工具 {name} 不可用，请在对应页面操作此功能。"
 
             elapsed_ms = int((time.perf_counter() - t0) * 1000)
             logger.info(f"[工具结果] {name}  耗时：{elapsed_ms}ms  结果：{result}")
@@ -254,25 +258,33 @@ class Agent:
 
         try:
             while True:
-                stream = self.llm.chat_stream(self.messages, tools=all_tools)
+                # 同步的 litellm stream 需要在线程池里跑，避免阻塞 async event loop
+                def _collect_stream():
+                    s = self.llm.chat_stream(self.messages, tools=all_tools)
+                    chunks = []
+                    for chunk in s:
+                        chunks.append(chunk)
+                    return chunks
 
-                # 收集流式输出：累积文本 + 收集 tool_calls
-                full_text = ""
-                tool_calls_buf: dict[int, dict] = {}  # index -> {id, name, arguments}
-                finish_reason = None
                 t0 = time.perf_counter()
+                raw_chunks = await asyncio.to_thread(_collect_stream)
+                elapsed_ms = int((time.perf_counter() - t0) * 1000)
 
-                for chunk in stream:
+                # 解析收集到的 chunks
+                full_text = ""
+                tool_calls_buf: dict[int, dict] = {}
+                finish_reason = None
+                text_chunks = []
+
+                for chunk in raw_chunks:
                     choice = chunk.choices[0]
                     finish_reason = choice.finish_reason
                     delta = choice.delta
 
-                    # 文本 token
                     if delta.content:
                         full_text += delta.content
-                        yield {"type": "text", "content": delta.content}
+                        text_chunks.append(delta.content)
 
-                    # 工具调用增量（name/arguments 分多个 chunk 到达）
                     if delta.tool_calls:
                         for tc in delta.tool_calls:
                             idx = tc.index
@@ -285,7 +297,9 @@ class Agent:
                             if tc.function.arguments:
                                 tool_calls_buf[idx]["arguments"] += tc.function.arguments
 
-                elapsed_ms = int((time.perf_counter() - t0) * 1000)
+                # 逐 token yield 文本（保持流式体验）
+                for token in text_chunks:
+                    yield {"type": "text", "content": token}
 
                 if finish_reason == "stop":
                     # 持久化 assistant 文本消息，写 trace
@@ -327,8 +341,12 @@ class Agent:
                             if name == "delegate_task":
                                 args["_parent_trace_id"] = trace_id
                             result = await call_tool(name, args)
-                        else:
+                        elif self.mcp:
                             result = await self.mcp.call_tool(name, args)
+                        else:
+                            # 工具不在允许列表或未注册，返回提示而不是崩溃
+                            logger.warning(f"[stream_once] 未知工具调用被拒绝：{name}")
+                            result = f"工具 {name} 不可用，请在对应页面操作此功能。"
                         tool_elapsed_ms = int((time.perf_counter() - t_tool) * 1000)
 
                         logger.info(f"[stream工具结果] {name}  耗时：{tool_elapsed_ms}ms")
@@ -341,6 +359,7 @@ class Agent:
                             "content": str(result),
                         })
                         await self._persist("tool", str(result), tool_call_id=tc["id"])
+                        yield {"type": "tool", "name": name, "status": "done"}
 
                     # 继续下一轮流式调用
                     continue

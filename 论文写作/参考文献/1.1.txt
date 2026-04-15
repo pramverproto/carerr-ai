@@ -1,0 +1,161 @@
+1.1 课题研究背景和意义 — 参考文献（精选版）
+共15条 | 优先级：贴合主题 > 新 > 开放获取
+
+===========================================================
+主题一：高校毕业生就业形势（5条）
+【分层引用策略】
+  A. 官方统计数据 → 引用国家统计局、人民日报（权威度最高）
+  B. 学术期刊论文 → 引用Sustainability/China Economic Review（学术性强）
+  C. 媒体数据来源 → 引用财新/联合早报（佐证，非主引）
+===========================================================
+
+--- A. 官方/核心媒体来源（最适合论文正文引用） ---
+
+[1] 2025届高校毕业生预计达1222万人
+    黄超. 人民日报, 2024-11-15(007). DOI: 10.28655/n.cnki.nrmrb.2024.014085
+    URL（CNKI）: https://kns.cnki.net/kcms2/article/abstract?v=...（可在CNKI检索"黄超 1222万"）
+    ★★ 最优先引用。人民日报官方报道，开题报告已引用，格式规范，导师认可度最高。
+    引用场景: "2025届全国普通高校毕业生规模预计达1222万人[1]"
+
+[2] 2025年12月城镇调查失业率数据解读
+    国家统计局. 2026-01-19
+    URL: https://www.stats.gov.cn/sj/sjjd/202601/t20260119_1962339.html
+    数据: 全国城镇调查失业率约5.1%–5.3%；16–24岁青年失业率年末约16.5%
+    ★★ 强烈建议引用。国家统计局官方网站，权威度最高，数据精确可追溯。
+    引用场景: "全国城镇调查失业率约5.2%，青年失业率显著高于总体水平[2]"
+
+--- B. 学术期刊（结构性矛盾的学术支撑） ---
+
+[3] Is There a Surplus of College Graduates in China? Exploring Strategies for Sustainable Employment
+    Sustainability, 2023, 15(21), 15540. MDPI — 开放获取
+    URL: https://www.mdpi.com/2071-1050/15/21/15540
+    用途: 2020–2024届毕业生数量增长趋势学术分析，供需结构性失衡的学术来源。
+    引用场景: 用于支撑"就业压力持续增大"的趋势性论述
+
+[4] Reasons for College Major-Job Mismatch and Labor Market Outcomes: Evidence from China
+    China Economic Review, 2022
+    URL: https://www.sciencedirect.com/science/article/abs/pii/S1043951X22000803
+    用途: 约25%毕业生专业-工作不匹配，支持"就业难与招人难并存的结构性矛盾"。
+    引用场景: "约四分之一的毕业生所从事的工作与其所学专业并不匹配[4]"
+
+--- C. 媒体来源（数据佐证，可用可不用） ---
+
+[参考] 中国青年失业率分年龄段数据（2025）
+    财新经济. 2026-01-22
+    URL: https://economy.caixin.com/2026-01-22/102406740.html
+    数据: 25–29岁约6.9%–7.2%；30–59岁约3.9%；含在校生16–24岁约16.5%
+    说明: 财新是国内知名财经媒体，数据具体，但媒体来源在学术论文中通常作为辅助引用。
+          可用于支撑"就业压力高度集中在青年群体"的层次化论述。
+    ⚠️ 若导师要求严格学术来源，优先用[2]国家统计局，不用此条。
+
+【不建议引用】
+    bfrsks.com（聚合类商业网站）、zaobao.com.sg（境外媒体），
+    论文中替换为[1]人民日报 + [2]国家统计局即可，数据更权威且格式规范。
+
+===========================================================
+主题二：传统职业规划工具的局限性（3条）
+===========================================================
+
+[3] Evaluating the Validity of Myers-Briggs Type Indicator Theory: A Teaching Tool and Window into Intuitive Psychology
+    Social and Personality Psychology Compass, 2019, 13(8), e12434 — 开放获取PDF
+    URL: https://onlinelibrary.wiley.com/doi/pdf/10.1111/spc3.12434
+    用途: 严格评估MBTI科学性，指出其效度不足、内部矛盾，与Big Five相比明显逊色。
+          支持"MBTI仅反映认知偏好、无法独立支撑全面评估"的论点。
+    ★ MBTI批评的最佳近期引用（2019，免费PDF）
+
+[4] The Development, Evolution, and Status of Holland's Theory of Vocational Personalities
+    Nauta, M.M. Journal of Counseling Psychology, 2010, 57(1), 11–22 — 开放获取PDF
+    URL: https://openbooks.library.baylor.edu/app/uploads/sites/23/2020/09/Nauta-2010.pdf
+    用途: Holland RIASEC理论权威综述，承认其局限：一致性-满意度相关仅0.17，
+          对年轻群体和非西方人群适用性不足。支持"Holland仅覆盖兴趣类型"的批评。
+    ★ Holland局限的标准引用（权威 + 免费PDF）
+
+[5] Artificial Intelligence for Career Guidance — Current Requirements and Future Prospects
+    Interdisciplinary Journal of e-Skills and Lifelong Learning, 2022 — ERIC开放获取
+    URL: https://files.eric.ed.gov/fulltext/EJ1318705.pdf
+    用途: 直接对比传统职业指导工具与AI方案的现状与差距，是连接"传统局限→AI新机遇"的桥接引用。
+    ★ 是少数直接讨论AI+职业指导的综述，主题高度吻合
+
+===========================================================
+主题三：大语言模型与AI技术带来的新机遇（10条）
+===========================================================
+
+--- LLM 基础能力 ---
+
+[6] A Survey of Large Language Models
+    Zhao, W.X., Zhou, K., Li, J. et al. arXiv 2303.18223, 2023（持续更新）
+    URL: https://arxiv.org/abs/2303.18223
+    用途: 最权威LLM综述（1300+引用），覆盖预训练、对齐与评估，
+          是论文中介绍LLM能力时的标准引用。
+
+[7] GPT-4 Technical Report
+    OpenAI (Achiam et al.) arXiv 2303.08774, 2023
+    URL: https://arxiv.org/abs/2303.08774
+    用途: GPT-4在律师、医师资格等专业考试达到前10%，
+          直接论证LLM具备胜任知识密集型职业规划任务的能力。
+
+--- Agent架构与RAG ---
+
+[8] Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks
+    Lewis et al. (Facebook AI) NeurIPS 2020
+    URL: https://arxiv.org/abs/2005.11401
+    用途: RAG原始论文。支持系统结合O*NET职业库检索与LLM推理的架构设计。
+
+[9] Generative Agents: Interactive Simulacra of Human Behavior
+    Park, J.S. et al. (Stanford/Google) ACM UIST 2023
+    URL: https://arxiv.org/abs/2304.03442
+    用途: 提出具备记忆、反思、规划能力的生成式Agent架构，
+          是多Agent职业规划系统设计的直接理论来源，开题报告已引用。
+
+[10] Large Language Model based Multi-Agents: A Survey of Progress and Challenges
+     IJCAI 2024 — 开放获取
+     URL: https://www.ijcai.org/proceedings/2024/0890.pdf
+     用途: IJCAI 2024多Agent LLM系统权威综述，覆盖协作推理与分布式决策，
+           为本系统的多Agent架构提供近年理论依据。
+     ★ 2024最新，顶会，主题高度吻合
+
+--- LLM在职业与教育领域的应用 ---
+
+[11] Large Language Models for Education: A Survey and Outlook
+     arXiv 2403.18105, 2024
+     URL: https://arxiv.org/pdf/2403.18105
+     用途: 全面综述LLM在教育中的个性化学习、辅导与评估应用，
+           支持"LLM为职业指导带来规模化个性化服务的新范式"论点。
+
+[12] Generative Job Recommendations with Large Language Model (GIRL)
+     Luo, S. et al. arXiv 2307.02157, 2023
+     URL: https://arxiv.org/abs/2307.02157
+     用途: LLM从简历生成个性化岗位描述，相比传统匹配更具上下文感知，
+           是LLM职业推荐领域直接相关的前期工作。
+
+[13] Letters from Future Self: LLM-based Agents to Enhance Young Adults' Career Exploration
+     Jeon, H. et al. CHI 2025
+     URL: https://dl.acm.org/doi/10.1145/3706598.3713887
+     用途: CHI顶会，将LLM Agent用于青年职业探索，显著提升参与度与投入感，
+           开题报告已引用，直接相关，2025最新。
+     ★ 最贴合主题 + 最新 + 顶会
+
+--- 人格模型与职业评估框架（用于支撑评估体系选型） ---
+
+[14] A Broad-Bandwidth, Public Domain, Personality Inventory (IPIP)
+     Goldberg, L.R. Personality Psychology in Europe, Vol.7, 1999 — 开放获取PDF
+     URL: https://ipip.ori.org/A%20broad-bandwidth%20inventory.pdf
+     用途: IPIP量表奠基论文，系统使用IPIP-NEO-120题库时的必引文献。
+           虽年份较早，但无可替代（是量表本身的来源文献）。
+
+[15] Understanding Work Using the Occupational Information Network (O*NET)
+     Peterson, N.G. et al. Personnel Psychology, 2001, 54(2), 451–492 — 开放获取PDF
+     URL: http://www.morgeson.com/downloads/peterson_et_al_2001.pdf
+     用途: O*NET职业能力框架权威奠基论文，系统使用O*NET四大模块时必引。
+           同[14]，年份较早但无可替代，是框架本身的来源。
+
+===========================================================
+使用建议（对应1.1段落）
+===========================================================
+
+就业形势段落        → [1][2]
+传统工具局限段落    → [3][4]（MBTI用[3]，Holland用[4]）
+AI新机遇引入段落    → [5][6][7]（[5]做桥接，[6][7]支撑LLM能力）
+系统设计依据段落    → [8][9][10]（RAG+Agent+多Agent）
+应用先例段落        → [11][12][13]（教育+职业推荐+职业探索）
+评估体系选型依据    → [14][15]（IPIP+O*NET，第2章也会用到）

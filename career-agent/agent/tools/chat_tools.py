@@ -47,7 +47,7 @@ async def query_my_assessments() -> str:
 # ── 查询：我的计划列表 ────────────────────────────────────────────────
 
 @tool(
-    description="查询当前用户的所有职业计划列表，返回每个计划的 plan_id、关联的评估 ID、目标职业代码、状态、起始日期。",
+    description="查询当前用户的所有职业规划报告和详细计划。返回职业规划报告（含匹配概览、JD推荐、差距分析、行动计划）以及详细日程计划。",
     parameters={"type": "object", "properties": {}, "required": []},
 )
 async def query_my_plans() -> str:
@@ -57,6 +57,19 @@ async def query_my_plans() -> str:
 
     async with memory_db._pool.acquire() as conn:
         async with conn.cursor(aiomysql.DictCursor) as cur:
+            # 1) 查职业规划报告（career_plan_blocks 通过 assessment_jobs 关联 user_id）
+            await cur.execute(
+                """SELECT cpb.assessment_id, cpb.onetsoc_code, cpb.block_id,
+                          cpb.block_json, cpb.generated_at
+                   FROM career_plan_blocks cpb
+                   JOIN assessment_jobs aj ON aj.assessment_id = cpb.assessment_id
+                   WHERE aj.user_id = %s
+                   ORDER BY cpb.generated_at DESC LIMIT 40""",
+                (user_id,),
+            )
+            block_rows = await cur.fetchall()
+
+            # 2) 查详细日程计划（plan_schedules）
             await cur.execute(
                 """SELECT plan_id, assessment_id, onetsoc_code,
                           duration_weeks, start_date, status, created_at
@@ -64,16 +77,42 @@ async def query_my_plans() -> str:
                    ORDER BY created_at DESC LIMIT 20""",
                 (user_id,),
             )
-            rows = await cur.fetchall()
+            schedule_rows = await cur.fetchall()
 
-    for r in rows:
+    # 整理规划报告：按 assessment_id + onetsoc_code 分组
+    career_reports: dict[str, dict] = {}
+    for r in block_rows:
+        key = f"{r['assessment_id']}_{r['onetsoc_code']}"
+        if key not in career_reports:
+            career_reports[key] = {
+                "assessment_id": r["assessment_id"],
+                "onetsoc_code": r["onetsoc_code"],
+                "generated_at": str(r["generated_at"]) if r.get("generated_at") else None,
+                "blocks": {},
+            }
+        block_json = r["block_json"]
+        if isinstance(block_json, str):
+            try:
+                block_json = json.loads(block_json)
+            except (json.JSONDecodeError, TypeError):
+                pass
+        career_reports[key]["blocks"][r["block_id"]] = block_json
+
+    # 整理日程计划
+    for r in schedule_rows:
         for k in ("start_date", "created_at"):
             if r.get(k):
                 r[k] = str(r[k])
 
-    if not rows:
-        return json.dumps({"message": "你还没有任何职业计划"}, ensure_ascii=False)
-    return json.dumps({"plans": rows}, ensure_ascii=False)
+    result = {}
+    if career_reports:
+        result["career_reports"] = list(career_reports.values())
+    if schedule_rows:
+        result["detailed_schedules"] = schedule_rows
+
+    if not result:
+        return json.dumps({"message": "你还没有任何职业规划记录"}, ensure_ascii=False)
+    return json.dumps(result, ensure_ascii=False, default=str)
 
 
 # ── 查询：今天的任务 ──────────────────────────────────────────────────

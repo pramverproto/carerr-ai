@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
-import { message } from 'antd';
+import { App } from 'antd';
 import { useAppStore } from '@/store/appStore';
+import PlanProgressSkeleton from '@/components/skeletons/PlanProgressSkeleton';
 import { api } from '@/api/client';
 import type { PlanSchedule, PlanWeek, PlanDay, DailyTask, PlanListItem } from '@/types';
 
@@ -46,10 +47,10 @@ const TASK_TYPE_LABEL: Record<string, string> = {
 };
 
 const TASK_TYPE_COLOR: Record<string, string> = {
-  study: 'bg-blue-100 text-blue-700',
-  practice: 'bg-green-100 text-green-700',
-  network: 'bg-purple-100 text-purple-700',
-  apply: 'bg-orange-100 text-orange-700',
+  study: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+  practice: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
+  network: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
+  apply: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300',
 };
 
 // ── 子组件 ────────────────────────────────────────────────────────────
@@ -59,7 +60,7 @@ const ProgressBar: React.FC<{ value: number; max: number; className?: string }> 
 }) => {
   const pct = max === 0 ? 0 : Math.round((value / max) * 100);
   return (
-    <div className={`h-2 bg-gray-200 rounded-full overflow-hidden ${className}`}>
+    <div className={`h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden ${className}`}>
       <div
         className="h-full bg-blue-500 rounded-full transition-all duration-300"
         style={{ width: `${pct}%` }}
@@ -76,6 +77,7 @@ interface DayCardProps {
 }
 
 const DayCard: React.FC<DayCardProps> = ({ planId, week, day, onUpdated }) => {
+  const { message } = App.useApp();
   const [saving, setSaving] = useState(false);
   // noteInputTaskId: which task's note input is open
   const [noteInputTaskId, setNoteInputTaskId] = useState<string | null>(null);
@@ -133,10 +135,10 @@ const DayCard: React.FC<DayCardProps> = ({ planId, week, day, onUpdated }) => {
   const total = day.tasks.length;
 
   return (
-    <div className="border border-gray-200 rounded-xl p-4 bg-white">
+    <div className="border border-gray-200 dark:border-gray-600 rounded-xl p-4 bg-white dark:bg-gray-800">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <span className="font-medium text-gray-800">
+          <span className="font-medium text-gray-800 dark:text-gray-100">
             {day.date.slice(5).replace('-', '/')} 周{weekday}
           </span>
           <span className="ml-2 text-sm text-gray-400">{done}/{total} 完成</span>
@@ -150,9 +152,9 @@ const DayCard: React.FC<DayCardProps> = ({ planId, week, day, onUpdated }) => {
           const existingNote = day.task_notes?.[task.id];
           const isNoteOpen = noteInputTaskId === task.id;
           return (
-            <li key={task.id} className="rounded-lg border border-transparent hover:border-gray-100 transition-colors">
+            <li key={task.id} className="rounded-lg border border-transparent hover:border-gray-100 dark:hover:border-gray-700 transition-colors">
               <div
-                className={`flex items-start gap-3 p-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${
+                className={`flex items-start gap-3 p-2 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
                   checked ? 'opacity-70' : ''
                 }`}
                 onClick={() => toggle(task)}
@@ -166,12 +168,12 @@ const DayCard: React.FC<DayCardProps> = ({ planId, week, day, onUpdated }) => {
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${TASK_TYPE_COLOR[task.type] ?? 'bg-gray-100 text-gray-600'}`}>
+                    <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${TASK_TYPE_COLOR[task.type] ?? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
                       {TASK_TYPE_LABEL[task.type] ?? task.type}
                     </span>
                     <span className="text-xs text-gray-400">{task.duration_min}分钟</span>
                   </div>
-                  <p className={`text-sm mt-1 ${checked ? 'line-through text-gray-400' : 'text-gray-700'}`}>
+                  <p className={`text-sm mt-1 ${checked ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-200'}`}>
                     {task.title}
                   </p>
                   {task.description && (
@@ -180,7 +182,7 @@ const DayCard: React.FC<DayCardProps> = ({ planId, week, day, onUpdated }) => {
                   {/* existing note preview */}
                   {checked && existingNote && !isNoteOpen && (
                     <div
-                      className="mt-1.5 text-xs text-blue-600 bg-blue-50 rounded px-2 py-1 cursor-pointer hover:bg-blue-100 transition-colors"
+                      className="mt-1.5 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded px-2 py-1 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
                       onClick={(e) => { e.stopPropagation(); openNote(task); }}
                     >
                       💡 {existingNote}
@@ -199,19 +201,19 @@ const DayCard: React.FC<DayCardProps> = ({ planId, week, day, onUpdated }) => {
               </div>
               {/* note input panel */}
               {isNoteOpen && (
-                <div className="mx-2 mb-2 p-2 bg-blue-50 rounded-lg" onClick={(e) => e.stopPropagation()}>
+                <div className="mx-2 mb-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg" onClick={(e) => e.stopPropagation()}>
                   <textarea
                     autoFocus
                     value={noteText}
                     onChange={(e) => setNoteText(e.target.value)}
                     placeholder="写下你的完成总结或学习感悟…"
-                    className="w-full text-xs text-gray-700 bg-transparent resize-none outline-none placeholder-gray-400 min-h-[60px]"
+                    className="w-full text-xs text-gray-700 dark:text-gray-200 bg-transparent resize-none outline-none placeholder-gray-400 dark:placeholder-gray-500 min-h-[60px]"
                     rows={3}
                   />
                   <div className="flex items-center justify-end gap-2 mt-1">
                     <button
                       onClick={() => setNoteInputTaskId(null)}
-                      className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                      className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                     >
                       取消
                     </button>
@@ -244,13 +246,13 @@ const WeekCard: React.FC<WeekCardProps> = ({ week, isSelected, onClick }) => (
     onClick={onClick}
     className={`border rounded-xl p-4 cursor-pointer transition-all ${
       isSelected
-        ? 'border-blue-500 bg-blue-50 shadow-sm'
-        : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-sm'
+        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-sm'
+        : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-blue-300 hover:shadow-sm'
     }`}
   >
     <div className="flex items-center gap-2 mb-2">
       <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-        isSelected ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'
+        isSelected ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
       }`}>
         第{week.week_number}周
       </span>
@@ -258,11 +260,11 @@ const WeekCard: React.FC<WeekCardProps> = ({ week, isSelected, onClick }) => (
         <span className="text-xs text-gray-400">{week.phase_ref}</span>
       )}
     </div>
-    <p className="font-semibold text-gray-800 text-sm">{week.theme}</p>
-    <p className="text-xs text-gray-500 mt-1 line-clamp-2">{week.focus}</p>
+    <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm">{week.theme}</p>
+    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{week.focus}</p>
     <ul className="mt-2 space-y-1">
       {(week.weekly_goals ?? []).map((g, i) => (
-        <li key={i} className="text-xs text-gray-600 flex items-start gap-1">
+        <li key={i} className="text-xs text-gray-600 dark:text-gray-300 flex items-start gap-1">
           <span className="text-blue-400 mt-0.5">•</span>
           <span>{g}</span>
         </li>
@@ -284,6 +286,7 @@ type Step = 'idle' | 'config' | 'weekly_loading' | 'weekly_review' | 'daily_load
 // ── 主页面 ────────────────────────────────────────────────────────────
 
 const PlanProgress: React.FC = () => {
+  const { message } = App.useApp();
   const { assessmentId, planData, selectedCareer, currentPlanId, setCurrentPlanId, cachedPlan, setCachedPlan } = useAppStore();
 
   // ── 从 store 缓存恢复初始状态（避免导航返回时闪烁） ───
@@ -547,7 +550,7 @@ const PlanProgress: React.FC = () => {
   // ── 前置检查 ──────────────────────────────────────────────────────
   if (!planData || !selectedCareer) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-500">
+      <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
         <div className="text-center">
           <p className="text-lg font-medium mb-2">请先完成职业规划</p>
           <p className="text-sm">前往「职业规划」页面，选择目标职业并生成规划报告后，再来制定每日计划。</p>
@@ -557,11 +560,7 @@ const PlanProgress: React.FC = () => {
   }
 
   if (initializing) {
-    return (
-      <div className="flex items-center justify-center h-full text-gray-400 text-sm">
-        加载中…
-      </div>
-    );
+    return <PlanProgressSkeleton />;
   }
 
   // ── Step: idle（无计划） ──────────────────────────────────────────
@@ -569,10 +568,10 @@ const PlanProgress: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Plus size={28} className="text-blue-400" />
           </div>
-          <p className="text-gray-700 font-medium mb-1">还没有计划</p>
+          <p className="text-gray-700 dark:text-gray-200 font-medium mb-1">还没有计划</p>
           {error ? (
             <p className="text-sm text-red-500 mb-4">{error}</p>
           ) : (
@@ -595,24 +594,24 @@ const PlanProgress: React.FC = () => {
       <div className="max-w-lg mx-auto mt-12 px-4">
         <button
           onClick={() => setStep(allPlans.length > 0 ? 'progress' : 'idle')}
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-6 transition-colors"
+          className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 mb-6 transition-colors"
         >
           <ArrowLeft size={16} />
           返回
         </button>
 
-        <h1 className="text-2xl font-bold text-gray-800 mb-1">新建计划</h1>
-        <p className="text-sm text-gray-500 mb-4">配置计划参数，AI 将为你生成周计划概览供确认</p>
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-1">新建计划</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">配置计划参数，AI 将为你生成周计划概览供确认</p>
 
         {historyPlans.length > 0 && (
-          <div className="mb-6 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
+          <div className="mb-6 text-sm text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-3">
             已有 <b>{historyPlans.length}</b> 个历史计划，新计划将基于已有进度进行增量规划，避免重复内容。
             开始日期已自动设为上期计划结束日。
           </div>
         )}
 
         {error && (
-          <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3 flex items-center justify-between">
+          <div className="mb-4 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 flex items-center justify-between">
             <span>{error}</span>
             {pendingPlanId && (
               <button
@@ -637,7 +636,7 @@ const PlanProgress: React.FC = () => {
 
         <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               计划时长：<span className="text-blue-600 font-bold">{durationWeeks} 周</span>
             </label>
             <input
@@ -653,12 +652,12 @@ const PlanProgress: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">开始日期</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">开始日期</label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:border-blue-400"
+              className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm w-full bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 focus:outline-none focus:border-blue-400"
             />
           </div>
 
@@ -676,7 +675,7 @@ const PlanProgress: React.FC = () => {
   // ── Step: weekly_loading ──────────────────────────────────────────
   if (step === 'weekly_loading') {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-4 text-gray-500">
+      <div className="flex flex-col items-center justify-center h-full gap-4 text-gray-500 dark:text-gray-400">
         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
         <p className="text-sm">正在生成周计划概览，约需 20 秒…</p>
       </div>
@@ -689,19 +688,19 @@ const PlanProgress: React.FC = () => {
       <div className="max-w-2xl mx-auto px-4 py-8">
         <button
           onClick={() => setStep('config')}
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-6 transition-colors"
+          className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 mb-6 transition-colors"
         >
           <ArrowLeft size={16} />
           返回修改配置
         </button>
 
-        <h1 className="text-xl font-bold text-gray-800 mb-1">确认周计划</h1>
-        <p className="text-sm text-gray-500 mb-6">
+        <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-1">确认周计划</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
           AI 已生成 {weeklyDraft.length} 周计划概览，确认无误后将自动生成每日详细任务
         </p>
 
         {error && (
-          <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+          <div className="mb-4 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3">
             {error}
           </div>
         )}
@@ -730,10 +729,10 @@ const PlanProgress: React.FC = () => {
   // ── Step: daily_loading ───────────────────────────────────────────
   if (step === 'daily_loading') {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-4 text-gray-500">
+      <div className="flex flex-col items-center justify-center h-full gap-4 text-gray-500 dark:text-gray-400">
         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
         <p className="text-sm">正在为每周生成每日任务，每周约需 15 秒…</p>
-        <p className="text-xs text-gray-400">完成后将自动跳转，请耐心等待</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500">完成后将自动跳转，请耐心等待</p>
       </div>
     );
   }
@@ -754,10 +753,10 @@ const PlanProgress: React.FC = () => {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* 顶部总进度 */}
-      <div className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-4">
+      <div className="flex-shrink-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-600 px-6 py-4">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <h1 className="text-lg font-bold text-gray-800">计划进度</h1>
+            <h1 className="text-lg font-bold text-gray-800 dark:text-gray-100">计划进度</h1>
             <p className="text-xs text-gray-400 mt-0.5">
               共 {allPlans.length} 个计划 · {flatWeeks.length} 周
             </p>
@@ -771,7 +770,7 @@ const PlanProgress: React.FC = () => {
             </div>
             <button
               onClick={startNewPlan}
-              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 border border-gray-200 hover:border-blue-300 px-3 py-1.5 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 border border-gray-200 dark:border-gray-600 hover:border-blue-300 px-3 py-1.5 rounded-lg transition-colors"
             >
               <Plus size={14} />
               新建计划
@@ -782,20 +781,20 @@ const PlanProgress: React.FC = () => {
       </div>
 
       {/* 周标签 — 所有计划的周扁平展示，不同计划间加分隔线 */}
-      <div className="flex-shrink-0 flex items-center gap-2 px-6 py-3 border-b border-gray-100 bg-gray-50 overflow-x-auto">
+      <div className="flex-shrink-0 flex items-center gap-2 px-6 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 overflow-x-auto">
         {flatWeeks.map((fw, i) => {
           const wp = weekProgress(fw);
           const active = selectedWeek === i;
           const isNewPlan = i > 0 && fw._planId !== flatWeeks[i - 1]._planId;
           return (
             <React.Fragment key={`${fw._planId}-${fw.week_number}`}>
-              {isNewPlan && <div className="w-px h-8 bg-gray-300 mx-1 flex-shrink-0" />}
+              {isNewPlan && <div className="w-px h-8 bg-gray-300 dark:bg-gray-500 mx-1 flex-shrink-0" />}
               <button
                 onClick={() => setSelectedWeek(i)}
                 className={`flex-shrink-0 flex flex-col items-center px-4 py-2 rounded-lg text-xs transition-all ${
                   active
                     ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300'
+                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:border-blue-300'
                 }`}
               >
                 <span className="font-medium">第{fw.week_number}周</span>
@@ -815,13 +814,13 @@ const PlanProgress: React.FC = () => {
             <div className="mb-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-base font-bold text-gray-800">{currentFlatWeek.theme}</h2>
-                  <p className="text-sm text-gray-500 mt-1">{currentFlatWeek.focus}</p>
+                  <h2 className="text-base font-bold text-gray-800 dark:text-gray-100">{currentFlatWeek.theme}</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{currentFlatWeek.focus}</p>
                 </div>
                 <button
                   onClick={() => handleDeleteWeek(currentFlatWeek._planId, currentFlatWeek.week_number)}
                   disabled={deletingWeek !== null}
-                  className="flex-shrink-0 flex items-center gap-1.5 text-xs text-gray-500 hover:text-red-600 border border-gray-200 hover:border-red-300 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50"
+                  className="flex-shrink-0 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 border border-gray-200 dark:border-gray-600 hover:border-red-300 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50"
                 >
                   <Trash2 size={12} />
                   {deletingWeek === currentFlatWeek.week_number ? '删除中…' : '删除本周'}
