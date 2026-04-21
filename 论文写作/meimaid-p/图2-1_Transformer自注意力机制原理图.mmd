@@ -1,0 +1,45 @@
+%% 图2-1 Transformer自注意力机制原理图
+%% Figure 2-1 Transformer Self-Attention Mechanism Principle Diagram
+
+flowchart LR
+    X["输入序列 X<br/>(Token Embeddings)"]
+
+    subgraph Proj["线性投影层"]
+        WQ["W_Q"]
+        WK["W_K"]
+        WV["W_V"]
+    end
+
+    Q["查询矩阵 Q"]
+    K["键矩阵 K"]
+    V["值矩阵 V"]
+
+    MM1["矩阵乘法<br/>Q · K^T"]
+    Scale["缩放<br/>÷ √d_k"]
+    SM["Softmax<br/>归一化注意力权重"]
+    MM2["加权求和<br/>× V"]
+
+    Out["注意力输出<br/>Attention(Q, K, V)"]
+
+    MH["多头注意力 (Multi-Head)<br/>h 个并行子空间 → 拼接"]
+
+    X --> WQ --> Q
+    X --> WK --> K
+    X --> WV --> V
+
+    Q --> MM1
+    K --> MM1
+    MM1 --> Scale --> SM --> MM2
+    V --> MM2
+    MM2 --> Out
+    Out -.并行 h 次.-> MH
+
+    classDef in fill:#e3f2fd,stroke:#1976d2,stroke-width:1.5px
+    classDef proj fill:#fff3e0,stroke:#f57c00,stroke-width:1.5px
+    classDef calc fill:#f1f8e9,stroke:#558b2f,stroke-width:1.5px
+    classDef out fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+
+    class X in
+    class WQ,WK,WV,Q,K,V proj
+    class MM1,Scale,SM,MM2 calc
+    class Out,MH out

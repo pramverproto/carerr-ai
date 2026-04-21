@@ -1,0 +1,41 @@
+%% 图2-2 LLM Agent ReAct框架工作机制图
+%% Figure 2-2 LLM Agent ReAct Framework Working Mechanism Diagram
+
+flowchart TD
+    Start(["用户任务输入"])
+    Profile["档案模块 Profile<br/>角色定义 + 能力边界"]
+    Memory["记忆模块 Memory<br/>短期工作记忆 + 长期持久记忆"]
+    LLM{"LLM 推理引擎<br/>(GPT-4o / Claude / GLM)"}
+
+    subgraph ReAct["ReAct 循环"]
+        direction TB
+        Thought["思考 Thought<br/>(Chain-of-Thought 显式推理)"]
+        Action["行动 Action<br/>(选择并执行工具)"]
+        Obs["观察 Observation<br/>(接收工具返回结果)"]
+
+        Thought --> Action --> Obs --> Thought
+    end
+
+    Tools["工具注册表 Tool Registry<br/>查询档案 / 检索 JD / 调用 API"]
+    Done{"任务完成?"}
+    Final(["最终答案<br/>Final Answer"])
+
+    Start --> Profile --> LLM
+    Memory <--> LLM
+    LLM --> Thought
+    Action <--> Tools
+    Obs --> Done
+    Done -->|否| Thought
+    Done -->|是| Final
+
+    classDef startend fill:#e8eaf6,stroke:#3949ab,stroke-width:2px
+    classDef module fill:#fff3e0,stroke:#f57c00,stroke-width:1.5px
+    classDef llm fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef cycle fill:#f1f8e9,stroke:#558b2f,stroke-width:1.5px
+    classDef tool fill:#e0f7fa,stroke:#00838f,stroke-width:1.5px
+
+    class Start,Final startend
+    class Profile,Memory module
+    class LLM llm
+    class Thought,Action,Obs cycle
+    class Tools,Done tool

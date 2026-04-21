@@ -1,15 +1,15 @@
 """
-职业选择工具集。
+职业路线推荐工具集。
 
 match_careers:
     根据候选人评估结果，通过双路 JD 召回 + LLM 深度匹配，
-    推荐最匹配的 3-5 个职业方向。
+    推荐 3-4 条职业发展路线（每条含 3 个阶段：起点→中期→远期）。
 
 召回策略：
   Path A: 语义向量召回 —— 候选人中文画像 embed → Qdrant jobs（Top 30）
   Path B: 技能关键词召回 —— 候选人技能分组 embed → Qdrant jobs（3-4 组 × Top 15）
 
-合并去重 → 预过滤 → LLM 深度匹配（聚类 + 评估） → 输出 3-5 个职业方向
+合并去重 → 预过滤 → LLM 深度匹配（路线设计 + 评估） → 输出 3-4 条职业发展路线
 """
 
 import asyncio
@@ -238,12 +238,9 @@ def _parse_jd_point(point, source: str = "vector") -> dict:
 #  Path A: 语义向量召回
 # ------------------------------------------------------------------ #
 
-async def _recall_vector(profile_text: str, qdrant: AsyncQdrantClient,
-                         openai_client: AsyncOpenAI) -> list[dict]:
+async def _recall_vector(vec: list[float], qdrant: AsyncQdrantClient) -> list[dict]:
     """候选人画像 embed → Qdrant jobs → Top N。"""
     try:
-        resp = await openai_client.embeddings.create(model=EMBED_MODEL, input=[profile_text])
-        vec = resp.data[0].embedding
         results = await qdrant.query_points(
             collection_name=JOBS_COLLECTION,
             query=vec,
@@ -288,16 +285,12 @@ def _build_skill_queries(resume_skills: list, target_role: str) -> list[str]:
     return queries[:MAX_SKILL_GROUPS]
 
 
-async def _recall_keyword(skill_queries: list[str], qdrant: AsyncQdrantClient,
-                          openai_client: AsyncOpenAI) -> list[dict]:
+async def _recall_keyword(vecs: list[list[float]], qdrant: AsyncQdrantClient) -> list[dict]:
     """多组技能查询 embed → Qdrant jobs → 合并。"""
-    if not skill_queries:
+    if not vecs:
         return []
 
     try:
-        resp = await openai_client.embeddings.create(model=EMBED_MODEL, input=skill_queries)
-        vecs = [item.embedding for item in resp.data]
-
         async def _query(vec):
             return await qdrant.query_points(
                 collection_name=JOBS_COLLECTION,
@@ -314,7 +307,7 @@ async def _recall_keyword(skill_queries: list[str], qdrant: AsyncQdrantClient,
             for p in results.points:
                 all_jds.append(_parse_jd_point(p, "keyword"))
 
-        logger.info(f"[技能召回] {len(skill_queries)} 组查询 → {len(all_jds)} 条 JD（含重复）")
+        logger.info(f"[技能召回] {len(vecs)} 组查询 → {len(all_jds)} 条 JD（含重复）")
         return all_jds
     except Exception as e:
         logger.warning(f"[技能召回] 失败：{e}")
@@ -441,14 +434,15 @@ def _build_llm_candidate_context(dims: dict, candidate: dict, resume_skills: lis
     return "\n".join(parts)
 
 
-def _generate_direction_code(title: str) -> str:
-    """为职业方向生成确定性 jd-xxxxxxxx 合成码。"""
-    return f"jd-{hashlib.md5(title.encode()).hexdigest()[:8]}"
+def _generate_path_code(path_name: str) -> str:
+    """为职业路线生成确定性 path-xxxxxxxx 合成码。"""
+    return f"path-{hashlib.md5(path_name.encode()).hexdigest()[:8]}"
 
 
 async def _llm_deep_match(jds: list[dict], dims: dict,
-                          candidate: dict, resume_skills: list) -> dict:
-    """LLM 一次调用：将 JD 聚类为职业方向 + 深度匹配评估。"""
+                          candidate: dict, resume_skills: list,
+                          custom_start: str = "") -> dict:
+    """LLM 一次调用：基于 JD 数据 + 候选人画像，设计 3-4 条职业发展路线。"""
     candidate_context = _build_llm_candidate_context(dims, candidate, resume_skills)
 
     # 压缩 JD 列表（只保留关键字段）
@@ -467,62 +461,90 @@ async def _llm_deep_match(jds: list[dict], dims: dict,
         }
         jd_entries.append(entry)
 
-    system_prompt = """\
+    custom_start_instruction = ""
+    if custom_start:
+        custom_start_instruction = f"""
+**用户指定起点**：用户期望从「{custom_start}」方向起步，请围绕此方向设计路线，Stage 1 必须贴近该方向。
+"""
+
+    system_prompt = f"""\
 你是一名资深中国职业规划顾问。你将收到候选人的完整能力画像和一组真实市场招聘信息（JD）。
 
 **你的任务**：
-1. 将这些 JD 按「职业方向」聚类为 3-5 个方向（如"AI 应用开发工程师"、"Python 后端工程师"等）
-2. 对每个方向，综合评估候选人与该方向的匹配程度
-3. 输出结构化推荐
+1. 分析这些 JD，了解市场岗位分布
+2. 为候选人设计 3-4 条**职业发展路线**，每条路线包含 3 个阶段（起点→中期→远期）
+3. Stage 1（起点）必须基于实际 JD 数据推荐，Stage 2-3 基于行业发展规律推断
+{custom_start_instruction}
+**路线设计规则**：
+- Stage 1（起点岗位）：从 JD 列表中选出候选人当前最适合切入的岗位方向，必须有 JD 数据支撑
+- Stage 2（中期目标，2-4年后）：基于 Stage 1 的自然晋升方向，技能在 Stage 1 基础上拓展
+- Stage 3（远期目标，5-8年后）：Stage 2 的进一步发展，通常涉及更高层级或管理方向
+- 每条路线的 3 个阶段必须形成合理的职业递进关系
+- 不同路线之间应有明显差异（如技术深耕 vs 管理转型 vs 跨领域）
 
-**聚类规则**：
-- 同一方向下的 JD 应职责相似、技能要求有大量重叠
-- 方向名称必须是中文，贴近中国市场真实岗位名称
-- 不要强行合并差异很大的 JD
-- 同一方向下至少有 1 条 JD 支撑
-
-**匹配评估依据**（优先级从高到低）：
+**Stage 1 匹配评估依据**（优先级从高到低）：
 1. 候选人技能与 JD 技能的直接重叠（overlap 字段是已计算的交集）
 2. 候选人目标岗位与该方向的吻合度
 3. 候选人工作经验年限与 JD 要求的匹配
-4. 候选人评估维度（技能/知识/能力得分和概述）与该方向核心要求的契合
-5. 候选人 Holland 兴趣类型与该方向的契合
+4. 评估维度得分与该方向核心要求的契合
+5. Holland 兴趣类型与该方向的契合
 
 **评分规则**：
-- match_score 0-100：
-  90+：技能高度重叠 + 目标岗位完全一致 + 经验充分
-  75-89：技能大部分匹配 + 方向契合 + 有小量差距
-  60-74：技能部分匹配 + 需要补充 2-3 个关键技能
-  <60：不推荐，不要输出
+- overall_score 0-100：综合路线可行性（Stage 1 匹配度权重最大）
+- Stage 1 的 match_score 0-100：与当前岗位的匹配度
 
-**市场热度**：
-- 该方向下 3+ 条 JD → "热门"
-- 1-2 条 JD → "一般"
-- 仅 1 条 → "稀缺"
+**市场热度**（基于该路线 Stage 1 方向下的 JD 数量）：
+- 3+ 条 JD → "热门"
+- 1-2 条 → "一般"
 
-**输出格式**（严格 JSON，不加任何解释文字）：
-{
+**输出格式**（严格 JSON，不加任何 markdown 或解释文字）：
+{{
   "recommended": [
-    {
-      "title": "中文职业方向名称",
-      "match_score": 85,
-      "match_reason": "2-3句中文，具体说明技能重叠、候选人优势、与目标岗位的关系",
-      "key_gaps": ["候选人缺少的 1-3 个具体技能"],
-      "typical_jd_skills": ["该方向 JD 中最高频的 5 个技能"],
-      "jd_market_signal": "热门/一般/稀缺",
-      "source": "jd_match",
-      "_jd_indices": [1, 3, 7],
-      "_jd_count": 3
-    }
+    {{
+      "path_name": "路线简称（如 AI应用开发→架构师路线）",
+      "path_summary": "1-2句话描述这条路线的发展逻辑",
+      "overall_score": 82,
+      "market_signal": "热门/一般",
+      "stages": [
+        {{
+          "stage": 1,
+          "title": "Stage 1 岗位名称（中国市场真实岗位名）",
+          "timeframe": "当前起步",
+          "salary_range": "基于JD数据的薪资范围（如15-25K）",
+          "match_score": 85,
+          "key_skills": ["该阶段需要的3-5个核心技能"],
+          "match_reason": "2-3句，说明候选人为何适合从这里起步，引用具体技能",
+          "key_gaps": ["候选人目前缺少的1-3个技能"],
+          "_jd_indices": [1, 3, 7],
+          "_jd_count": 3
+        }},
+        {{
+          "stage": 2,
+          "title": "Stage 2 岗位名称",
+          "timeframe": "2-4年后",
+          "salary_range": "推测薪资范围",
+          "key_skills": ["该阶段需要新增的3-5个技能"],
+          "transition_from_prev": "1-2句，从Stage 1到Stage 2需要哪些关键能力跃迁"
+        }},
+        {{
+          "stage": 3,
+          "title": "Stage 3 岗位名称",
+          "timeframe": "5-8年后",
+          "salary_range": "推测薪资范围",
+          "key_skills": ["该阶段核心能力"],
+          "transition_from_prev": "1-2句，从Stage 2到Stage 3的关键转变"
+        }}
+      ]
+    }}
   ],
-  "excluded_reason": "简要说明排除了哪些方向及原因"
-}
+  "excluded_reason": "简要说明排除了哪些路线方向及原因"
+}}
 
 **注意**：
-- 必须输出 3-5 个推荐方向，按 match_score 降序排列
-- 所有文字必须为中文
-- title 使用中国市场常见的岗位名称
-- match_reason 必须引用具体的技能名称，不要泛泛而谈"""
+- 输出 3-4 条路线，按 overall_score 降序
+- 所有文字中文，岗位名称贴近中国市场
+- Stage 1 的 match_reason 必须引用具体技能名称
+- 每条路线的 path_name 格式为「起点→终点路线」"""
 
     user_message = (
         f"【候选人画像】\n{candidate_context}\n\n"
@@ -530,12 +552,13 @@ async def _llm_deep_match(jds: list[dict], dims: dict,
         f"{json.dumps(jd_entries, ensure_ascii=False, indent=2)}"
     )
 
-    logger.info(f"[LLM深度匹配] 送入 {len(jd_entries)} 条 JD + 候选人画像")
+    logger.info(f"[LLM路线匹配] 送入 {len(jd_entries)} 条 JD + 候选人画像"
+                + (f"，用户指定起点：{custom_start}" if custom_start else ""))
 
     text, _, _ = await run_prompt(
         system_prompt=system_prompt,
         user_message=user_message,
-        agent_name="career_jd_match",
+        agent_name="career_path_match",
     )
 
     # 解析 LLM 输出
@@ -544,12 +567,12 @@ async def _llm_deep_match(jds: list[dict], dims: dict,
     try:
         result = json.loads(result_text)
     except json.JSONDecodeError:
-        logger.warning(f"[LLM深度匹配] JSON 解析失败，原始输出：{text[:500]}")
+        logger.warning(f"[LLM路线匹配] JSON 解析失败，原始输出：{text[:500]}")
         result = {"raw_output": text, "parse_error": True}
 
-    # 为每个推荐生成确定性 onetsoc_code
+    # 为每条路线生成确定性 path_code
     for rec in result.get("recommended", []):
-        rec["onetsoc_code"] = _generate_direction_code(rec.get("title", "unknown"))
+        rec["path_code"] = _generate_path_code(rec.get("path_name", "unknown"))
 
     return result
 
@@ -560,9 +583,9 @@ async def _llm_deep_match(jds: list[dict], dims: dict,
 
 @tool(
     description=(
-        "根据候选人评估结果推荐最匹配的 3-5 个职业方向。"
-        "内部执行双路 JD 召回（语义向量 + 技能关键词）→ 合并去重 → LLM 深度匹配，"
-        "返回 3-5 个职业方向推荐，每个附推荐理由、匹配度、关键差距和市场信号。"
+        "根据候选人评估结果推荐 3-4 条职业发展路线。"
+        "内部执行双路 JD 召回（语义向量 + 技能关键词）→ 合并去重 → LLM 路线设计，"
+        "每条路线含 3 个阶段（起点→中期→远期），Stage 1 基于真实 JD 数据。"
         "必须在 run_assessment 完成后调用，传入 assessment_id。"
     ),
     parameters={
@@ -571,14 +594,19 @@ async def _llm_deep_match(jds: list[dict], dims: dict,
             "assessment_id": {
                 "type": "string",
                 "description": "run_assessment 返回的 assessment_id",
-            }
+            },
+            "custom_start": {
+                "type": "string",
+                "description": "用户自定义的起始岗位方向（可选，如'产品经理'）",
+            },
         },
         "required": ["assessment_id"],
     },
 )
-async def match_careers(assessment_id: str) -> str:
-    """双路 JD 召回 + LLM 深度匹配，推荐最匹配职业方向。"""
-    logger.info(f"[match_careers] 开始  assessment_id={assessment_id}")
+async def match_careers(assessment_id: str, custom_start: str = "") -> str:
+    """双路 JD 召回 + LLM 路线设计，推荐职业发展路线。"""
+    logger.info(f"[match_careers] 开始  assessment_id={assessment_id}"
+                + (f"  custom_start={custom_start}" if custom_start else ""))
 
     # 1. 并发加载数据
     dims, candidate, resume_skills = await asyncio.gather(
@@ -618,14 +646,26 @@ async def match_careers(assessment_id: str) -> str:
     logger.info(f"[match_careers] 画像文本：\n{profile_text}")
     logger.info(f"[match_careers] 技能查询组 ({len(skill_queries)})：{skill_queries}")
 
-    # 4. 双路并发召回
+    # 4. 双路并发召回（embedding 合并成一次 OpenAI 调用，再并发 Qdrant 查询）
     qdrant = AsyncQdrantClient(url=QDRANT_URL)
     openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL)
 
     try:
+        embed_inputs = [profile_text] + skill_queries
+        try:
+            embed_resp = await openai_client.embeddings.create(
+                model=EMBED_MODEL, input=embed_inputs,
+            )
+            all_vecs = [d.embedding for d in embed_resp.data]
+            profile_vec = all_vecs[0]
+            skill_vecs = all_vecs[1:]
+        except Exception as e:
+            logger.warning(f"[embedding] 批量调用失败：{e}")
+            profile_vec, skill_vecs = None, []
+
         vector_results, keyword_results = await asyncio.gather(
-            _recall_vector(profile_text, qdrant, openai_client),
-            _recall_keyword(skill_queries, qdrant, openai_client),
+            _recall_vector(profile_vec, qdrant) if profile_vec else asyncio.sleep(0, result=[]),
+            _recall_keyword(skill_vecs, qdrant),
         )
 
         # 5. 合并去重 + 预过滤
@@ -638,8 +678,8 @@ async def match_careers(assessment_id: str) -> str:
                 ensure_ascii=False,
             )
 
-        # 6. LLM 深度匹配
-        result = await _llm_deep_match(filtered, dims, candidate, resume_skills)
+        # 6. LLM 路线设计
+        result = await _llm_deep_match(filtered, dims, candidate, resume_skills, custom_start)
 
         # 7. 补充元数据
         result["assessment_id"] = assessment_id
@@ -652,7 +692,7 @@ async def match_careers(assessment_id: str) -> str:
         }
 
         rec_count = len(result.get("recommended", []))
-        logger.info(f"[match_careers] 完成，推荐 {rec_count} 个职业方向")
+        logger.info(f"[match_careers] 完成，推荐 {rec_count} 条职业路线")
         return json.dumps(result, ensure_ascii=False, indent=2)
 
     finally:

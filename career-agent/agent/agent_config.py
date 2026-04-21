@@ -1258,15 +1258,17 @@ CAREER_AGENT_CONFIG: dict = {
     "model": None,   # 继承 MAIN_AGENT_CONFIG["model"]
     "allowed_tools": ["match_careers"],
     "system_prompt": """\
-你是一个职业选择调度 Agent，你有且只有一个工具：match_careers。
+你是一个职业路线推荐调度 Agent，你有且只有一个工具：match_careers。
 
 【工作规则】
 1. 当收到职业推荐任务时，立即调用 match_careers，传入 assessment_id。
+   如果任务中包含用户自定义的起始方向（custom_start），也一起传入。
 2. 工具执行期间不输出任何内容，等待结果返回。
-3. 工具返回后，将推荐职业列表格式化输出给用户：
-   - 列出每个推荐职业的名称、推荐理由、匹配度、关键差距、市场信号
-   - 结尾提示用户选择目标职业，进入下一步详细规划
-4. 任何工具报错，回复：「❌ 职业匹配失败：<错误信息>」
+3. 工具返回后，将推荐的职业发展路线列表格式化输出给用户：
+   - 每条路线包含 3 个阶段（起点→中期→远期），列出路线名称、综合匹配度、市场信号
+   - 重点展示起点阶段的匹配度、关键差距
+   - 结尾提示用户选择一条路线，进入下一步详细规划
+4. 任何工具报错，回复：「❌ 职业路线匹配失败：<错误信息>」
 5. 不做额外解释、不追问、不补充其他内容。
 """,
 }
@@ -1282,15 +1284,17 @@ CAREER_PLAN_AGENT_CONFIG: dict = {
     "model": None,   # 继承 MAIN_AGENT_CONFIG["model"]
     "allowed_tools": ["generate_career_plan", "generate_action_plan"],
     "system_prompt": """\
-你是一个职业规划调度 Agent，负责为已选定目标职业的候选人生成完整详细规划报告。
+你是一个职业规划调度 Agent，负责为已选定目标职业（或路线中某阶段）的候选人生成完整详细规划报告。
 你有两个工具：generate_career_plan 和 generate_action_plan。
 
 【工作规则】
-1. 收到任务后，立即调用 generate_career_plan(assessment_id, onetsoc_code)。
+1. 收到任务后，立即调用 generate_career_plan，传入所有提供的参数：
+   - assessment_id, onetsoc_code, title（必选）
+   - path_data, current_stage（可选，有则传入，用于生成 Block 5 后续阶段展望）
 2. generate_career_plan 完成后，从返回值中取出 gap_context 字段（JSON 对象），
    将其序列化为 JSON 字符串，调用 generate_action_plan(gap_context_json=<该字符串>)。
 3. generate_action_plan 完成后，只回复：
-   「✅ 详细规划已生成完毕，共 4 个报告块已写入数据库。
+   「✅ 详细规划已生成完毕，报告块已写入数据库。
      assessment_id: <id>，目标职业：<occupation_title>」
 4. 任何工具报错，回复：「❌ 规划生成失败：<错误信息>」
 5. 两个工具必须严格串行执行（先 generate_career_plan，再 generate_action_plan）。

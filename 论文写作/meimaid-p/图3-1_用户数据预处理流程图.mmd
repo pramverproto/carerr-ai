@@ -1,0 +1,65 @@
+%% 图3-1 用户数据预处理流程图
+%% Figure 3-1 User Data Preprocessing Flowchart
+
+flowchart TD
+    subgraph Input["用户多源输入"]
+        direction LR
+        R["简历文本<br/>resume_text<br/>(Word 文件)"]
+        S["用户自述补充<br/>supplement<br/>(自由文本)"]
+        T["可选标准化测评<br/>bigfive / riasec /<br/>quiz_abilities"]
+    end
+
+    Doc["python-docx<br/>纯文本提取"]
+    R --> Doc
+
+    Parser["输入解析 Agent<br/>input_parser"]
+    Doc --> Parser
+    S --> Parser
+    T --> Parser
+
+    Mode{"测评数据<br/>是否齐全?"}
+    Parser --> Mode
+
+    Done["done 模式<br/>量化 + 行为联合评估"]
+    Locked["locked 模式<br/>仅基于简历推断<br/>标记『待解锁』"]
+    Mode -->|齐全| Done
+    Mode -->|缺失| Locked
+
+    JSON["标准候选人 JSON<br/>{name, age, education,<br/>skills, experience, ...}"]
+    Done --> JSON
+    Locked --> JSON
+
+    subgraph Crop["字段级数据裁剪"]
+        F1["Skills 子集"]
+        F2["Knowledge 子集"]
+        F3["Abilities 子集"]
+        F4["Work Styles 子集"]
+        F5["Interests 子集"]
+        F6["Work Values 子集"]
+    end
+
+    JSON --> Crop
+
+    A1["技能 Agent"]
+    A2["知识 Agent"]
+    A3["能力 Agent"]
+    A4["工作风格 Agent"]
+    A5["兴趣 Agent"]
+    A6["工作价值观 Agent"]
+
+    F1 --> A1
+    F2 --> A2
+    F3 --> A3
+    F4 --> A4
+    F5 --> A5
+    F6 --> A6
+
+    classDef input fill:#e3f2fd,stroke:#1976d2,stroke-width:1.5px
+    classDef proc fill:#fff3e0,stroke:#f57c00,stroke-width:1.5px
+    classDef mode fill:#fce4ec,stroke:#c2185b,stroke-width:1.5px
+    classDef out fill:#f1f8e9,stroke:#558b2f,stroke-width:2px
+
+    class R,S,T input
+    class Doc,Parser proc
+    class Mode,Done,Locked mode
+    class JSON,F1,F2,F3,F4,F5,F6,A1,A2,A3,A4,A5,A6 out

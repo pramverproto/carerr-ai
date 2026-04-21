@@ -4,6 +4,7 @@ import type {
   ReportResponse,
   CareerMatchResponse,
   CareerPlanResponse,
+  CareerPathProgress,
   PlanSchedule,
   PlanListItem,
   WeeklyPlanResponse,
@@ -81,25 +82,67 @@ export const api = {
   assess: (data: AssessRequest) =>
     apiClient.post<AssessResponse>('/assess', data, { timeout: 300_000 }),
 
-  /** GET /report/{id} */
+  /** GET /report/{id} — 6 个维度块并发生成 LLM 可能较慢，给 5 分钟 */
   getReport: (assessmentId: string) =>
-    apiClient.get<ReportResponse>(`/report/${assessmentId}`, { timeout: 120_000 }),
+    apiClient.get<ReportResponse>(`/report/${assessmentId}`, { timeout: 300_000 }),
 
   /** POST /career/match */
-  matchCareers: (assessmentId: string, force = false) =>
+  matchCareers: (assessmentId: string, force = false, customStart?: string) =>
     apiClient.post<CareerMatchResponse>(
       '/career/match',
-      { assessment_id: assessmentId, force },
+      { assessment_id: assessmentId, force, ...(customStart ? { custom_start: customStart } : {}) },
       { timeout: 120_000 },
     ),
 
   /** POST /career/plan — 超时5分钟 */
-  careerPlan: (assessmentId: string, onetsocCode: string, title?: string) =>
+  careerPlan: (
+    assessmentId: string,
+    onetsocCode: string,
+    title?: string,
+    pathData?: string,
+    currentStage?: number,
+  ) =>
     apiClient.post<CareerPlanResponse>(
       '/career/plan',
-      { assessment_id: assessmentId, onetsoc_code: onetsocCode, ...(title ? { title } : {}) },
+      {
+        assessment_id: assessmentId,
+        onetsoc_code: onetsocCode,
+        ...(title ? { title } : {}),
+        ...(pathData ? { path_data: pathData } : {}),
+        ...(currentStage ? { current_stage: currentStage } : {}),
+      },
       { timeout: 300_000 },
     ),
+
+  /** POST /career/save-path — 保存用户选择的路线 */
+  saveCareerPath: (assessmentId: string, pathCode: string, pathData: string) =>
+    apiClient.post<{ ok: boolean }>('/career/save-path', {
+      assessment_id: assessmentId,
+      path_code: pathCode,
+      path_data: pathData,
+    }),
+
+  /** POST /career/stage-complete — 确认完成当前阶段 */
+  confirmStageComplete: (
+    assessmentId: string,
+    pathCode: string,
+    completedStage: number,
+    userNote?: string,
+  ) =>
+    apiClient.post<{
+      ok: boolean;
+      new_stage: number;
+      next_stage_info: { stage: number; title: string; timeframe: string } | null;
+    }>('/career/stage-complete', {
+      assessment_id: assessmentId,
+      path_code: pathCode,
+      completed_stage: completedStage,
+      user_note: userNote || '',
+    }),
+
+  /** GET /career/path-progress — 获取路线进度 */
+  getPathProgress: (assessmentId: string, pathCode: string) =>
+    apiClient.get<CareerPathProgress>(`/career/path-progress/${assessmentId}/${pathCode}`),
 
   /** POST /plan-schedule/weekly — 生成周计划概览，超时2分钟 */
   createWeeklyPlan: (

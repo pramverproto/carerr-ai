@@ -1,0 +1,62 @@
+%% 图3-3 多Agent协作评估架构图
+%% Figure 3-3 Multi-Agent Collaborative Assessment Architecture Diagram
+
+flowchart TB
+    subgraph Stage1["阶段一 · 数据预处理"]
+        UserData[("用户多源输入<br/>简历 / 自述 / 测评")]
+        IP["输入解析 Agent<br/>input_parser"]
+        Cand["候选人结构化 JSON<br/>(字段级裁剪)"]
+        UserData --> IP --> Cand
+    end
+
+    subgraph Stage2["阶段二 · 六维度并行评估 (asyncio.gather)"]
+        direction LR
+        SK["技能 Agent<br/>skills_agent<br/>4 子维度"]
+        KN["知识 Agent<br/>knowledge_agent<br/>4 子维度"]
+        AB["能力 Agent<br/>abilities_agent<br/>3 子维度"]
+        WS["工作风格 Agent<br/>work_styles_agent<br/>4 子维度 / 21 特质"]
+        IN["兴趣 Agent<br/>interests_agent<br/>RIASEC 6 类型"]
+        WV["工作价值观 Agent<br/>work_values_agent<br/>6 子维度"]
+    end
+
+    Cand --> SK
+    Cand --> KN
+    Cand --> AB
+    Cand --> WS
+    Cand --> IN
+    Cand --> WV
+
+    Score["6 条维度评估结果<br/>overall_score / sub_dimensions /<br/>highlights / focus_areas"]
+    SK --> Score
+    KN --> Score
+    AB --> Score
+    WS --> Score
+    IN --> Score
+    WV --> Score
+
+    subgraph Stage3["阶段三 · 跨维度综合"]
+        Sum["汇总 Agent<br/>summary_agent"]
+        Out1["画像标签<br/>persona_label"]
+        Out2["叙事摘要<br/>narrative_intro"]
+        Out3["核心优势 Top-3<br/>top3_strengths"]
+        Out4["提升方向 Top-3<br/>top3_improvements"]
+        Sum --> Out1
+        Sum --> Out2
+        Sum --> Out3
+        Sum --> Out4
+    end
+
+    Score --> Sum
+
+    DB[("MySQL<br/>assessment_jobs<br/>assessment_dimensions<br/>assessment_summary<br/>assessment_report_blocks")]
+    Stage3 --> DB
+
+    classDef s1 fill:#e3f2fd,stroke:#1976d2,stroke-width:1.5px
+    classDef s2 fill:#fff3e0,stroke:#f57c00,stroke-width:1.5px
+    classDef s3 fill:#f1f8e9,stroke:#558b2f,stroke-width:1.5px
+    classDef db fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+
+    class UserData,IP,Cand s1
+    class SK,KN,AB,WS,IN,WV,Score s2
+    class Sum,Out1,Out2,Out3,Out4 s3
+    class DB db

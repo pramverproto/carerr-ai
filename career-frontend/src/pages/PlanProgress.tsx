@@ -316,10 +316,27 @@ const PlanProgress: React.FC = () => {
   const [dailyPollCount, setDailyPollCount] = useState(0);
 
   // 把所有计划的周扁平化为一个数组，每周记住所属 planId
+  // 全局按 week_number 升序（跨计划），保证展示顺序 1→2→3…
   const flatWeeks = useMemo(
-    () => allPlans.flatMap(p => p.weeks.map(w => ({ ...w, _planId: p.plan_id }))),
+    () =>
+      allPlans
+        .flatMap(p => p.weeks.map(w => ({ ...w, _planId: p.plan_id })))
+        .sort((a, b) => a.week_number - b.week_number),
     [allPlans],
   );
+
+  // 首次加载时，定位到第一个还有未完成任务的周（顺序本身不变）
+  const didAutoJumpRef = React.useRef(false);
+  useEffect(() => {
+    if (didAutoJumpRef.current) return;
+    if (flatWeeks.length === 0) return;
+    const firstPending = flatWeeks.findIndex(w => {
+      const { done, total } = weekProgress(w);
+      return total === 0 || done < total;
+    });
+    setSelectedWeek(firstPending >= 0 ? firstPending : 0);
+    didAutoJumpRef.current = true;
+  }, [flatWeeks]);
 
   // ── 初始化：加载该职业下所有计划（叠加展示） ────────────────────
   useEffect(() => {
@@ -381,7 +398,11 @@ const PlanProgress: React.FC = () => {
           // 没有已完成计划，最新的是草稿 → 让用户继续确认
           try {
             const r = await api.getPlan(latest.plan_id);
-            setWeeklyDraft(r.data.weeks.map(({ days: _d, ...rest }) => rest));
+            setWeeklyDraft(
+              [...r.data.weeks]
+                .sort((a, b) => a.week_number - b.week_number)
+                .map(({ days: _d, ...rest }) => rest),
+            );
             setPendingPlanId(latest.plan_id);
             setStep('weekly_review');
           } catch {
@@ -451,7 +472,7 @@ const PlanProgress: React.FC = () => {
     setStep('weekly_loading');
     try {
       const res = await api.createWeeklyPlan(assessmentId, selectedCareer, durationWeeks, startDate);
-      setWeeklyDraft(res.data.weeks);
+      setWeeklyDraft([...res.data.weeks].sort((a, b) => a.week_number - b.week_number));
       setPendingPlanId(res.data.plan_id);
       setStep('weekly_review');
     } catch (e: unknown) {

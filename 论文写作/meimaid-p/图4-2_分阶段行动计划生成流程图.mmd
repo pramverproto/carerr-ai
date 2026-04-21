@@ -1,0 +1,63 @@
+%% 图4-2 分阶段行动计划生成流程图
+%% Figure 4-2 Phased Action Plan Generation Flowchart
+
+flowchart TD
+    Start(["差距分析结果<br/>gap_context"])
+
+    subgraph Pkg["输入数据包 (gap_context)"]
+        P1["assessment_id"]
+        P2["当前阶段岗位<br/>(O*NET 编码 / path-xxx-s1)"]
+        P3["候选人画像<br/>姓名 / 目标岗 / 工作年限"]
+        P4["匹配评估<br/>verdict / score / narrative"]
+        P5["优先差距列表<br/>priority_gaps (按 severity 排序)"]
+        P6["关键优势列表<br/>key_strengths"]
+    end
+
+    Start --> Pkg
+    Pkg --> Sub["Action Plan Sub-Agent<br/>(独立 LLM 调用)"]
+
+    subgraph Phases["三阶段分期生成 (覆盖 6-12 个月)"]
+        direction TB
+        Ph1["阶段一 · 0-3 个月<br/>补核心短板<br/>优先 severity=high<br/>2-3 个 action"]
+        Ph2["阶段二 · 3-6 个月<br/>实战积累<br/>解决 severity=medium<br/>2-3 个 action"]
+        Ph3["阶段三 · 6-12 个月<br/>求职激活<br/>固定项: 面试 STAR + 简历优化<br/>2-3 个 action"]
+        Ph1 --> Ph2 --> Ph3
+    end
+
+    Sub --> Phases
+
+    subgraph Item["每个 action 的强约束字段"]
+        I1["action: ≤150 字具体做法"]
+        I2["deliverable: ≤100 字可量化产出"]
+        I3["resource: 具体课程名/书名/<br/>工具名/平台名"]
+        I4["item / severity / 关联差距"]
+    end
+
+    Phases --> Item
+
+    Val{"_validate_and_fix<br/>校验<br/>(3 phase, 2-3 action,<br/>必填字段, 固定项)"}
+    Item --> Val
+
+    Retry["最多重试 2 次<br/>强制修正 phase 标识"]
+    Val -->|不合格| Retry
+    Retry --> Sub
+
+    Plan[("Block 4 行动计划 JSON<br/>写入 career_plan_blocks<br/>(block_id = action_plan)")]
+    Val -->|合格| Plan
+
+    NextDay["前端可触发: 拆解为周计划<br/>plan_schedules → plan_weeks → plan_daily_tasks"]
+    Plan --> NextDay
+
+    classDef start fill:#e8eaf6,stroke:#3949ab,stroke-width:2px
+    classDef pkg fill:#e3f2fd,stroke:#1976d2,stroke-width:1.5px
+    classDef sub fill:#fff3e0,stroke:#f57c00,stroke-width:1.5px
+    classDef phase fill:#f1f8e9,stroke:#558b2f,stroke-width:1.5px
+    classDef item fill:#e0f7fa,stroke:#00838f,stroke-width:1.5px
+    classDef out fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+
+    class Start start
+    class P1,P2,P3,P4,P5,P6 pkg
+    class Sub,Retry sub
+    class Ph1,Ph2,Ph3 phase
+    class I1,I2,I3,I4 item
+    class Val,Plan,NextDay out

@@ -16,10 +16,13 @@ from dotenv import load_dotenv
 # 在导入其他模块之前加载 .env，确保 JWT_SECRET 等环境变量可用
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from auth import get_current_user, hash_password, verify_password, create_token
 
@@ -76,13 +79,32 @@ _CREATE_CAREER_PLAN_BLOCKS_SQL = """
 CREATE TABLE IF NOT EXISTS career_plan_blocks (
     id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     assessment_id VARCHAR(32)  NOT NULL,
-    onetsoc_code  VARCHAR(20)  NOT NULL,
+    onetsoc_code  VARCHAR(40)  NOT NULL,
     block_id      VARCHAR(50)  NOT NULL,
     block_json    JSON         NOT NULL,
     generated_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uq_plan_block (assessment_id, onetsoc_code, block_id),
     KEY idx_plan_assessment (assessment_id, onetsoc_code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+"""
+
+_CREATE_CAREER_PATH_PROGRESS_SQL = """
+CREATE TABLE IF NOT EXISTS career_path_progress (
+    id             BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id        VARCHAR(32)  NOT NULL,
+    assessment_id  VARCHAR(32)  NOT NULL,
+    path_code      VARCHAR(20)  NOT NULL,
+    path_data      JSON         NOT NULL,
+    current_stage  INT          NOT NULL DEFAULT 1,
+    stage_history  JSON         DEFAULT NULL,
+    created_at     TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    updated_at     TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_path (assessment_id, path_code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+"""
+
+_ALTER_PLAN_BLOCKS_CODE_LEN = """
+ALTER TABLE career_plan_blocks MODIFY onetsoc_code VARCHAR(40) NOT NULL
 """
 
 _ALTER_JOBS_INPUT_SNAPSHOT = """
@@ -105,10 +127,15 @@ async def lifespan(app: FastAPI):
         async with memory_db._pool.acquire() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(_CREATE_CAREER_PLAN_BLOCKS_SQL)
+                await cur.execute(_CREATE_CAREER_PATH_PROGRESS_SQL)
                 try:
                     await cur.execute(_ALTER_JOBS_INPUT_SNAPSHOT)
                 except Exception:
                     pass  # 列已存在时忽略
+                try:
+                    await cur.execute(_ALTER_PLAN_BLOCKS_CODE_LEN)
+                except Exception:
+                    pass  # 已修改时忽略
     # 初始化 Redis
     try:
         redis_client = aioredis.from_url(REDIS_URL, decode_responses=True)
@@ -121,6 +148,31 @@ async def lifespan(app: FastAPI):
     if redis_client:
         await redis_client.aclose()
     await memory_db.close_pool()
+
+
+# ------------------------------------------------------------------ #
+#  限流：按用户 ID（已登录）或客户端 IP（未登录）计数                       #
+# ------------------------------------------------------------------ #
+
+def _rate_limit_key(request: Request) -> str:
+    """优先按已认证用户限流；未认证或解析失败时退回 IP。"""
+    auth = request.headers.get("authorization", "")
+    if auth.lower().startswith("bearer "):
+        token = auth.split(None, 1)[1].strip()
+        try:
+            import jwt
+            secret = os.getenv("JWT_SECRET", "")
+            if secret:
+                payload = jwt.decode(token, secret, algorithms=["HS256"])
+                uid = payload.get("user_id") or payload.get("sub")
+                if uid:
+                    return f"user:{uid}"
+        except Exception:
+            pass
+    return f"ip:{get_remote_address(request)}"
+
+
+limiter = Limiter(key_func=_rate_limit_key)
 
 
 app = FastAPI(
@@ -157,6 +209,10 @@ app = FastAPI(
         {"name": "成长档案", "description": "历史评估记录查询、成长里程碑统计、档案删除"},
     ],
 )
+
+# 注册限流器与异常处理器
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 # 使用 unpkg CDN（国内可访问）挂载 Swagger UI
@@ -815,7 +871,8 @@ async def resume_extract(file: UploadFile = File(...), user: dict = Depends(get_
 # ------------------------------------------------------------------ #
 
 @app.post("/assess", tags=["评估"], summary="发起六维度职业能力评估")
-async def assess(req: AssessRequest, user: dict = Depends(get_current_user)):
+@limiter.limit("5/hour")
+async def assess(request: Request, req: AssessRequest, user: dict = Depends(get_current_user)):
     """
     接收原始评估输入，执行全流程评估，将结果写入数据库，返回 assessment_id 和摘要。
     流程：InputParser → 6 个维度 Agent (并发) → SummaryAgent
@@ -881,11 +938,14 @@ async def _run_assessment(assessment_id: str, req: AssessRequest) -> dict:
     # 解析各维度结果并写入 DB
     dimension_results: dict[str, dict] = {}
     for agent_name, raw in zip(eval_agents, dimension_results_raw):
+        expected_dim = agent_name.replace("_agent", "")
         if isinstance(raw, Exception):
-            dim_data = {"dimension": agent_name.replace("_agent", ""),
+            dim_data = {"dimension": expected_dim,
                         "status": "error", "error": str(raw)}
         else:
             dim_data = _parse_json_output(raw)
+            # 确保 dimension 字段始终来自 agent_name，避免解析失败时变成 'unknown'
+            dim_data["dimension"] = expected_dim
             _compute_scores(dim_data)
         dimension_results[agent_name] = dim_data
         await _db_upsert_dimension(assessment_id, dim_data)
@@ -1524,7 +1584,8 @@ def _assemble_report(
 
 class CareerMatchRequest(BaseModel):
     assessment_id: str
-    force: bool = False  # 前端传 true 时强制重新匹配
+    force: bool = False          # 前端传 true 时强制重新匹配
+    custom_start: str | None = None  # 用户自定义起始岗位方向
 
 
 def _match_cache_key(assessment_id: str) -> str:
@@ -1532,7 +1593,8 @@ def _match_cache_key(assessment_id: str) -> str:
 
 
 @app.post("/career/match", tags=["职业"], summary="基于评估结果进行职业匹配推荐")
-async def career_match(req: CareerMatchRequest, user: dict = Depends(get_current_user)):
+@limiter.limit("20/hour")
+async def career_match(request: Request, req: CareerMatchRequest, user: dict = Depends(get_current_user)):
     """
     职业推荐接口（Redis 缓存）。
     默认返回缓存结果（秒级响应），force=true 时重新生成。
@@ -1572,7 +1634,8 @@ async def career_match(req: CareerMatchRequest, user: dict = Depends(get_current
         mcp=None,
         session_id=None,
     )
-    task = f"请为评估 ID 为 {req.assessment_id} 的候选人推荐匹配职业。"
+    custom_part = f" 用户期望的起始方向：{req.custom_start}" if req.custom_start else ""
+    task = f"请为评估 ID 为 {req.assessment_id} 的候选人推荐职业发展路线。{custom_part}"
     result_str = await agent.run_once(task)
     elapsed_ms = int((time.perf_counter() - t0) * 1000)
 
@@ -1604,19 +1667,21 @@ async def career_match(req: CareerMatchRequest, user: dict = Depends(get_current
 class CareerPlanRequest(BaseModel):
     assessment_id: str
     onetsoc_code: str
-    title: str | None = None  # JD 直接推荐时必传（jd- 开头的 code）
+    title: str | None = None        # 岗位标题
+    path_data: str | None = None    # 完整路线 JSON（前端传入）
+    current_stage: int = 1          # 当前规划的阶段编号
 
 
 @app.post("/career/plan", tags=["职业"], summary="生成指定职业的详细规划")
 async def career_plan(req: CareerPlanRequest, user: dict = Depends(get_current_user)):
     """
     详细职业规划接口。
-    输入：assessment_id + onetsoc_code（用户从 /career/match 推荐列表中选定的职业）
+    输入：assessment_id + onetsoc_code + 可选 path_data/current_stage
     流程：
       Career Plan Agent
         → generate_career_plan (Block 1/2/3/5，并发模板填充)
         → generate_action_plan (Block 4，Action Plan Sub-Agent 动态规划)
-    输出：4 个报告块 JSON（存入 career_plan_blocks，同时返回给调用方）
+    输出：4-5 个报告块 JSON（存入 career_plan_blocks，同时返回给调用方）
     """
     await _verify_assessment_owner(req.assessment_id, user["user_id"])
     t0 = time.perf_counter()
@@ -1635,14 +1700,16 @@ async def career_plan(req: CareerPlanRequest, user: dict = Depends(get_current_u
         session_id=None,
     )
     title_part = f"（职业标题：{req.title}）" if req.title else ""
+    path_part = f"（路线数据：{req.path_data}）" if req.path_data else ""
+    stage_part = f"（当前阶段：{req.current_stage}）" if req.current_stage > 1 else ""
     task = (
         f"请为评估 ID 为 {req.assessment_id} 的候选人，"
-        f"针对目标职业 {req.onetsoc_code}{title_part} 生成完整详细规划报告。"
+        f"针对目标职业 {req.onetsoc_code}{title_part}{stage_part}{path_part} 生成完整详细规划报告。"
     )
     result_str = await agent.run_once(task)
     elapsed_ms = int((time.perf_counter() - t0) * 1000)
 
-    # 从 DB 读取已写入的 5 个 Block 返回给调用方
+    # 从 DB 读取已写入的 Block 返回给调用方
     blocks = await _db_get_career_plan_blocks(req.assessment_id, req.onetsoc_code)
 
     return {
@@ -1715,6 +1782,128 @@ async def get_planned_codes(assessment_id: str, user: dict = Depends(get_current
             info["verdict"] = ov.get("verdict", "")
         planned[code] = info
     return {"assessment_id": assessment_id, "planned": planned}
+
+
+# ================================================================== #
+#  /career/path-progress — 路线进度管理                                  #
+# ================================================================== #
+
+class SavePathRequest(BaseModel):
+    assessment_id: str
+    path_code: str
+    path_data: str  # JSON 字符串：完整路线数据
+
+
+@app.post("/career/save-path", tags=["职业"], summary="保存用户选择的职业路线")
+async def save_career_path(req: SavePathRequest, user: dict = Depends(get_current_user)):
+    """用户选择路线后，保存到 career_path_progress 表。"""
+    await _verify_assessment_owner(req.assessment_id, user["user_id"])
+    if memory_db._pool is None:
+        raise HTTPException(500, "DB not ready")
+    async with memory_db._pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                """INSERT INTO career_path_progress
+                   (user_id, assessment_id, path_code, path_data, current_stage, stage_history)
+                   VALUES (%s, %s, %s, %s, 1, %s)
+                   ON DUPLICATE KEY UPDATE
+                   path_data=VALUES(path_data), updated_at=NOW()""",
+                (user["user_id"], req.assessment_id, req.path_code, req.path_data,
+                 json.dumps([], ensure_ascii=False)),
+            )
+    return {"ok": True, "path_code": req.path_code, "current_stage": 1}
+
+
+class StageCompleteRequest(BaseModel):
+    assessment_id: str
+    path_code: str
+    completed_stage: int
+    user_note: str = ""
+
+
+@app.post("/career/stage-complete", tags=["职业"], summary="确认完成当前阶段")
+async def confirm_stage_complete(req: StageCompleteRequest, user: dict = Depends(get_current_user)):
+    """
+    用户确认完成当前阶段，更新进度，返回下一阶段信息。
+    """
+    await _verify_assessment_owner(req.assessment_id, user["user_id"])
+    if memory_db._pool is None:
+        raise HTTPException(500, "DB not ready")
+
+    async with memory_db._pool.acquire() as conn:
+        async with conn.cursor(aiomysql.DictCursor) as cur:
+            await cur.execute(
+                """SELECT path_data, current_stage, stage_history
+                   FROM career_path_progress
+                   WHERE assessment_id=%s AND path_code=%s""",
+                (req.assessment_id, req.path_code),
+            )
+            row = await cur.fetchone()
+
+    if not row:
+        raise HTTPException(404, "未找到该路线记录，请先保存路线")
+
+    path_data = json.loads(row["path_data"]) if isinstance(row["path_data"], str) else row["path_data"]
+    stage_history = json.loads(row["stage_history"]) if isinstance(row["stage_history"], str) and row["stage_history"] else []
+    stages = path_data.get("stages", [])
+    total_stages = len(stages)
+
+    if req.completed_stage >= total_stages:
+        return {"ok": True, "message": "已完成全部阶段", "next_stage": None}
+
+    # 记录完成
+    stage_history.append({
+        "stage": req.completed_stage,
+        "completed_at": datetime.datetime.now().isoformat(),
+        "user_note": req.user_note,
+    })
+    next_stage = req.completed_stage + 1
+
+    async with memory_db._pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                """UPDATE career_path_progress
+                   SET current_stage=%s, stage_history=%s, updated_at=NOW()
+                   WHERE assessment_id=%s AND path_code=%s""",
+                (next_stage, json.dumps(stage_history, ensure_ascii=False),
+                 req.assessment_id, req.path_code),
+            )
+
+    # 返回下一阶段信息
+    next_stage_data = stages[next_stage - 1] if next_stage <= total_stages else None
+
+    return {
+        "ok": True,
+        "completed_stage": req.completed_stage,
+        "next_stage": next_stage,
+        "next_stage_data": next_stage_data,
+        "total_stages": total_stages,
+    }
+
+
+@app.get("/career/path-progress/{assessment_id}/{path_code}", tags=["职业"], summary="获取路线进度")
+async def get_path_progress(assessment_id: str, path_code: str, user: dict = Depends(get_current_user)):
+    """获取用户在某条路线上的进度。"""
+    await _verify_assessment_owner(assessment_id, user["user_id"])
+    if memory_db._pool is None:
+        raise HTTPException(500, "DB not ready")
+    async with memory_db._pool.acquire() as conn:
+        async with conn.cursor(aiomysql.DictCursor) as cur:
+            await cur.execute(
+                """SELECT path_code, path_data, current_stage, stage_history
+                   FROM career_path_progress
+                   WHERE assessment_id=%s AND path_code=%s""",
+                (assessment_id, path_code),
+            )
+            row = await cur.fetchone()
+    if not row:
+        raise HTTPException(404, "未找到路线进度")
+    return {
+        "path_code": row["path_code"],
+        "path_data": json.loads(row["path_data"]) if isinstance(row["path_data"], str) else row["path_data"],
+        "current_stage": row["current_stage"],
+        "stage_history": json.loads(row["stage_history"]) if isinstance(row["stage_history"], str) and row["stage_history"] else [],
+    }
 
 
 # ================================================================== #

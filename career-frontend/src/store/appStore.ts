@@ -101,6 +101,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'career-app',
+      version: 2,  // 路线推荐格式变更，旧 localStorage 自动失效
       // cachedPlan 仅存内存，不写 localStorage（数据量大）
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -1,0 +1,43 @@
+%% 图4-3 规划方案五模块生成时序图
+%% Figure 4-3 Sequence Diagram of Five-Block Plan Generation
+
+sequenceDiagram
+    autonumber
+    participant U as 用户
+    participant API as FastAPI<br/>/career/plan
+    participant Orch as 规划编排器
+    participant B1 as Block1<br/>match_overview
+    participant B2 as Block2<br/>jd_recommendations
+    participant B3 as Block3<br/>gap_analysis
+    participant B4 as Block4<br/>action_plan<br/>(Sub-Agent)
+    participant B5 as Block5<br/>future_outlook
+    participant DB as career_plan_blocks
+
+    U->>API: 触发规划生成<br/>(assessment_id, path_code)
+    API->>Orch: 加载评估 + 路线 path_data
+
+    Note over Orch,B5: 第一波并发: B1 / B2 / B5 (B5 仅当存在后续阶段)
+    par 规则评分 + LLM 综合
+        Orch->>B1: 启动匹配评分
+        B1-->>Orch: rule(60%)+LLM(40%)<br/>verdict / score / narrative
+    and JD 检索 + 并发 LLM 解读
+        Orch->>B2: 启动 Top-3 JD 推荐
+        B2-->>Orch: 3 个真实 JD 解读
+    and 路线后续阶段展望
+        Orch->>B5: 启动未来阶段展望
+        B5-->>Orch: 后续阶段 transition_tips
+    end
+
+    Note over Orch,B3: 第二波: B3 (依赖 B1.narrative 作为背景)
+    Orch->>B3: 传入 B1.narrative
+    B3-->>Orch: 3-5 条 priority_gaps<br/>+ 3-5 条 key_strengths
+
+    Note over Orch,B4: 第三波: B4 (依赖 B3 的 gap_context)
+    Orch->>B4: 传入 gap_context
+    B4-->>Orch: 三阶段 action_plan<br/>(0-3 / 3-6 / 6-12 月)
+
+    Note over Orch,DB: 持久化 (block_id 维度 UPSERT)
+    Orch->>DB: 写入 5 个 block_json
+    DB-->>Orch: OK
+    Orch-->>API: 完整规划方案
+    API-->>U: 返回 5 模块 JSON

@@ -1,0 +1,54 @@
+%% 图3-5 多框架融合评分模型架构图
+%% Figure 3-5 Multi-Framework Fusion Scoring Model Architecture
+
+flowchart TB
+    subgraph Sources["多源异构数据"]
+        direction LR
+        D1["Big Five<br/>测评原始分<br/>(0-100)"]
+        D2["RIASEC<br/>测评原始分<br/>(0-100)"]
+        D3["认知测试<br/>quiz_abilities<br/>(百分制)"]
+        D4["简历文本<br/>resume_raw<br/>(自由文本)"]
+        D5["O*NET 标准<br/>锚点 Level<br/>(1-7)"]
+    end
+
+    subgraph Path1["路径 A · 量表数据量化映射"]
+        F1["S = round(R/100 × 6 + 1, 1)<br/>神经质反向: S = 7 - S_raw"]
+    end
+
+    subgraph Path2["路径 B · 固定权重线性组合"]
+        F2["Work Styles 权重矩阵<br/>(基于心理学映射)<br/>例: 合作性 = A×0.6 + E×0.2 + N_R×0.2<br/><br/>S_final = 0.6 × S_量表 + 0.4 × S_简历证据"]
+    end
+
+    subgraph Path3["路径 C · LLM 定性判断"]
+        F3["O*NET 锚点 Prompt<br/>+ 思维链推理<br/>+ 证据强制引用<br/>(教育 &gt; 经历 &gt; 证书)"]
+    end
+
+    D1 --> Path1
+    D2 --> Path1
+    D3 --> Path1
+
+    D1 --> Path2
+    D4 --> Path2
+    D4 --> Path3
+    D5 --> Path3
+
+    Unified[("统一 1-7 分量表<br/>overall_score / sub_dimensions<br/>confidence: 高 / 中 / 低<br/>evidence: 简历原句引用")]
+
+    Path1 --> Unified
+    Path2 --> Unified
+    Path3 --> Unified
+
+    Out["跨维度可比的<br/>能力评估结果"]
+    Unified --> Out
+
+    classDef src fill:#e3f2fd,stroke:#1976d2,stroke-width:1.5px
+    classDef p1 fill:#fff3e0,stroke:#f57c00,stroke-width:1.5px
+    classDef p2 fill:#f1f8e9,stroke:#558b2f,stroke-width:1.5px
+    classDef p3 fill:#e0f7fa,stroke:#00838f,stroke-width:1.5px
+    classDef out fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+
+    class D1,D2,D3,D4,D5 src
+    class F1 p1
+    class F2 p2
+    class F3 p3
+    class Unified,Out out

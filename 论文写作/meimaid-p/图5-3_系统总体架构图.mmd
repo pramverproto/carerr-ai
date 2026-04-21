@@ -1,0 +1,61 @@
+%% 图5-3 系统总体架构图
+%% Figure 5-3 Overall System Architecture Diagram
+
+flowchart TB
+    subgraph L4["展示层 (Presentation Layer)"]
+        direction LR
+        UI["React 18 + TypeScript + Vite<br/>Ant Design / Tailwind CSS"]
+        State["Zustand 全局状态<br/>appStore / taskStore"]
+        Viz["ECharts 雷达图<br/>Framer Motion 动画"]
+        Pages["核心页面: Login / Profile /<br/>Assessment / CareerPlan /<br/>PlanProgress / Archive"]
+    end
+
+    Nginx["Nginx 静态托管 + 反向代理"]
+    L4 --> Nginx
+
+    subgraph L3["应用层 (Application Layer)"]
+        direction LR
+        Fast["FastAPI + Uvicorn (异步)"]
+        JWT["JWT 鉴权 + bcrypt"]
+        Routes["25+ RESTful 端点<br/>/assess /career/match<br/>/career/plan /plan-schedule/*"]
+        SSE["SSE 流式输出<br/>(AI 对话)"]
+    end
+
+    Nginx -->|HTTP/REST/SSE| L3
+
+    subgraph L2["服务层 (Service Layer)"]
+        direction LR
+        LiteLLM["LiteLLM 统一接口<br/>OpenAI / Claude / GLM"]
+        MultiAgent["多 Agent 评估引擎<br/>1+6+1 协作"]
+        Recall["职业路线推荐引擎<br/>双路 JD 召回 + LLM 设计"]
+        PlanGen["规划生成引擎<br/>5 个 Block + 周/日拆解"]
+        Tools["工具注册表<br/>Tool Registry"]
+    end
+
+    L3 --> L2
+
+    subgraph L1["数据层 (Data Layer)"]
+        direction LR
+        MySQL[("MySQL 8.0<br/>users / candidates /<br/>assessment_jobs /<br/>career_plan_blocks /<br/>plan_schedules ...")]
+        Qdrant[("Qdrant 1.17<br/>jobs 集合<br/>onet_occupations 集合<br/>1536 维向量 / HNSW")]
+        Redis[("Redis 缓存<br/>评估结果 / 报告块")]
+    end
+
+    L2 -->|aiomysql| MySQL
+    L2 -->|qdrant-client| Qdrant
+    L2 -->|aioredis| Redis
+
+    LLM_API[("外部 LLM API<br/>GPT-4o / text-embedding-3-small")]
+    LiteLLM <-.HTTPS.-> LLM_API
+
+    classDef l4 fill:#e3f2fd,stroke:#1976d2,stroke-width:1.5px
+    classDef l3 fill:#fff3e0,stroke:#f57c00,stroke-width:1.5px
+    classDef l2 fill:#f1f8e9,stroke:#558b2f,stroke-width:1.5px
+    classDef l1 fill:#fce4ec,stroke:#c2185b,stroke-width:1.5px
+    classDef ext fill:#ede7f6,stroke:#5e35b1,stroke-width:1.5px
+
+    class UI,State,Viz,Pages l4
+    class Fast,JWT,Routes,SSE l3
+    class LiteLLM,MultiAgent,Recall,PlanGen,Tools l2
+    class MySQL,Qdrant,Redis l1
+    class Nginx,LLM_API ext

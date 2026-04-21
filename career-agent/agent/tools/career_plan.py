@@ -9,9 +9,8 @@
 
 生成流程：
   阶段1（并行）：数据加载（dims/candidate/onet）
-  阶段2（并行）：Block1（规则算分+LLM综合） / Block2（JD检索+并发LLM）
-  阶段3（顺序）：Block3（gaps+strengths并发LLM，需Block1 narrative作context）
-  阶段4：写DB，返回 gap_context 供 generate_action_plan 使用
+  阶段2（全并行）：Block1 / Block2 / Block3 / Block5 同时跑
+  阶段3：写DB，返回 gap_context 供 generate_action_plan 使用
 """
 
 import asyncio
@@ -146,17 +145,13 @@ async def _load_candidate(assessment_id: str) -> dict:
     async with memory_db._pool.acquire() as conn:
         async with conn.cursor(aiomysql.DictCursor) as cur:
             await cur.execute(
-                "SELECT session_id FROM assessment_jobs WHERE assessment_id = %s",
+                """SELECT c.name, c.target_role, c.years_of_experience,
+                          c.resume_raw, c.supplement
+                   FROM assessment_jobs aj
+                   JOIN candidates c ON c.id = aj.session_id
+                   WHERE aj.assessment_id = %s
+                   LIMIT 1""",
                 (assessment_id,),
-            )
-            job = await cur.fetchone()
-        if not job:
-            return {}
-        async with conn.cursor(aiomysql.DictCursor) as cur:
-            await cur.execute(
-                """SELECT name, target_role, years_of_experience, resume_raw, supplement
-                   FROM candidates WHERE id = %s""",
-                (job["session_id"],),
             )
             row = await cur.fetchone()
     if not row:
@@ -862,12 +857,13 @@ async def _build_gap_analysis(
 ) -> dict:
     """
     Block 3: 差距与优势分析（2次并发LLM调用）。
-    match_narrative 来自 Block 1，作为分析背景 context。
+    match_narrative 可选；为空时 Block 3 可与 Block 1 完全并行。
     """
     sub_scores = _extract_sub_scores(dims)
     candidate_summary = _summarize_candidate(candidate, dims)
-    # 将 Block 1 的综合判断注入 context，让分析更有整体感
-    candidate_ctx = candidate_summary + f"\n【整体匹配判断】{match_narrative[:200]}"
+    candidate_ctx = candidate_summary
+    if match_narrative:
+        candidate_ctx += f"\n【整体匹配判断】{match_narrative[:200]}"
 
     gaps, strengths = await asyncio.gather(
         _llm_analyze_gaps(candidate_ctx, onet, sub_scores, dims, llm),
@@ -888,6 +884,100 @@ async def _build_gap_analysis(
         "gaps": gaps,
         "strengths": strengths,
         "summary": summary,
+    }
+
+
+# ================================================================== #
+#  Block 5: 后续阶段展望
+# ================================================================== #
+
+async def _build_future_stages_outlook(
+    path_data: dict,
+    current_stage: int,
+    candidate: dict,
+    llm: LLMProvider,
+) -> dict | None:
+    """
+    为当前规划阶段之后的各阶段生成概览与过渡建议（Block 5）。
+    如果当前已是最后一个阶段，返回 None。
+    """
+    stages = path_data.get("stages", [])
+    total_stages = len(stages)
+    if current_stage >= total_stages:
+        return None
+
+    # 当前阶段信息
+    current = stages[current_stage - 1]
+    future = stages[current_stage:]  # 后续阶段列表
+
+    future_desc = "\n".join(
+        f"  阶段{s['stage']}：{s['title']}（{s.get('timeframe','未知')}，薪资 {s.get('salary_range','未知')}）"
+        f"\n    核心技能：{', '.join(s.get('key_skills', []))}"
+        f"\n    从上一阶段过渡：{s.get('transition_from_prev', '无')}"
+        for s in future
+    )
+
+    candidate_name = candidate.get("name", "候选人")
+    candidate_exp = candidate.get("years_of_experience", 0)
+
+    prompt = f"""你是一位资深职业发展顾问。候选人「{candidate_name}」（{candidate_exp}年经验）目前正在规划职业路线的第{current_stage}阶段「{current['title']}」。
+
+该路线的后续阶段如下：
+{future_desc}
+
+请为每个后续阶段生成以下内容：
+1. transition_tips：从上一阶段过渡到该阶段的2-3句具体建议
+2. preparation_now：在当前阶段就可以开始准备的1-2件具体事项
+
+另外，请用2-3句话写一段 path_narrative，概述这条路线的核心发展脉络。
+
+请以 JSON 格式返回，结构如下：
+{{
+  "next_stages": [
+    {{
+      "stage": <阶段编号>,
+      "title": "<阶段标题>",
+      "timeframe": "<时间范围>",
+      "salary_range": "<薪资范围>",
+      "key_skills": ["技能1", "技能2"],
+      "transition_tips": "<过渡建议>",
+      "preparation_now": "<现在就能准备的事>"
+    }}
+  ],
+  "path_narrative": "<路线发展概述>"
+}}
+只返回 JSON，不要有其他内容。"""
+
+    raw = await _llm_fill(prompt, LLM_SYSTEM, llm)
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        m = re.search(r"\{[\s\S]*\}", raw)
+        data = json.loads(m.group()) if m else {"next_stages": [], "path_narrative": ""}
+
+    # 合并 LLM 生成的建议与原始 path_data 中的阶段数据
+    next_stages = []
+    for fs in future:
+        llm_stage = next(
+            (ns for ns in data.get("next_stages", []) if ns.get("stage") == fs["stage"]),
+            {},
+        )
+        next_stages.append({
+            "stage": fs["stage"],
+            "title": fs["title"],
+            "timeframe": fs.get("timeframe", ""),
+            "salary_range": fs.get("salary_range", ""),
+            "key_skills": fs.get("key_skills", []),
+            "transition_tips": llm_stage.get("transition_tips", fs.get("transition_from_prev", "")),
+            "preparation_now": llm_stage.get("preparation_now", ""),
+        })
+
+    return {
+        "block_id": "future_outlook",
+        "current_stage": current_stage,
+        "current_title": current["title"],
+        "next_stages": next_stages,
+        "path_narrative": data.get("path_narrative", ""),
     }
 
 
@@ -923,13 +1013,14 @@ async def _save_blocks(assessment_id: str, onetsoc_code: str, blocks: list[dict]
 
 @tool(
     description=(
-        "为已选定目标职业生成详细职业规划报告（Block 1/2/3）。\n"
+        "为已选定目标职业生成详细职业规划报告（Block 1/2/3 + 可选 Block 5）。\n"
         "Block1 match_overview: 规则算分60%+LLM综合40%的综合匹配评估；\n"
         "Block2 jd_recommendations: 从市场JD中取3个真实岗位，并发LLM生成完整JD+对照分析；\n"
         "Block3 gap_analysis: 差距（3-5项）与优势（3-5项）的LLM驱动深度分析。\n"
-        "结果写入DB，返回3个Block JSON + gap_context（供 generate_action_plan 使用）。\n"
+        "Block5 future_outlook: 后续阶段展望（当有 path_data 且非最后阶段时生成）。\n"
+        "结果写入DB，返回 Block JSON + gap_context（供 generate_action_plan 使用）。\n"
         "必须在 match_careers 完成后，用户已选定目标职业 onetsoc_code 时调用。\n"
-        "当 onetsoc_code 以 'jd-' 开头时，表示 JD 直接匹配推荐，必须同时传入 title。"
+        "当 onetsoc_code 以 'jd-' 或 'path-' 开头时，表示路线推荐，必须同时传入 title。"
     ),
     parameters={
         "type": "object",
@@ -940,21 +1031,44 @@ async def _save_blocks(assessment_id: str, onetsoc_code: str, blocks: list[dict]
             },
             "onetsoc_code": {
                 "type": "string",
-                "description": "目标职业代码。O*NET 代码如 '13-2051.00'，JD 直接推荐为 'jd-xxxxxxxx'",
+                "description": "目标职业代码。O*NET 代码如 '13-2051.00'，JD/路线推荐为 'jd-xxxxxxxx' 或 'path-xxxxxxxx-s1'",
             },
             "title": {
                 "type": "string",
-                "description": "职业标题。当 onetsoc_code 以 'jd-' 开头时必须提供",
+                "description": "职业标题。当 onetsoc_code 以 'jd-' 或 'path-' 开头时必须提供",
+            },
+            "path_data": {
+                "type": "string",
+                "description": "完整职业路线数据 JSON（可选，有则生成 Block 5 后续阶段展望）",
+            },
+            "current_stage": {
+                "type": "integer",
+                "description": "当前阶段编号（默认 1），配合 path_data 使用",
             },
         },
         "required": ["assessment_id", "onetsoc_code"],
     },
 )
-async def generate_career_plan(assessment_id: str, onetsoc_code: str, title: str = "") -> str:
-    """生成职业规划 Block 1/2/3，写入 DB，返回 blocks + gap_context。"""
-    logger.info(f"[generate_career_plan] 开始 assessment_id={assessment_id} onetsoc_code={onetsoc_code} title={title}")
+async def generate_career_plan(
+    assessment_id: str, onetsoc_code: str, title: str = "",
+    path_data: str = "", current_stage: int = 1,
+) -> str:
+    """生成职业规划 Block 1/2/3（+ 可选 Block 5），写入 DB，返回 blocks + gap_context。"""
+    logger.info(
+        f"[generate_career_plan] 开始 assessment_id={assessment_id} "
+        f"onetsoc_code={onetsoc_code} title={title} current_stage={current_stage}"
+    )
 
-    is_jd_direct = onetsoc_code.startswith("jd-")
+    is_jd_direct = onetsoc_code.startswith("jd-") or onetsoc_code.startswith("path-")
+
+    # 解析 path_data JSON
+    parsed_path_data: dict | None = None
+    if path_data:
+        try:
+            parsed_path_data = json.loads(path_data) if isinstance(path_data, str) else path_data
+        except json.JSONDecodeError:
+            logger.warning(f"[generate_career_plan] path_data JSON 解析失败")
+            parsed_path_data = None
 
     # ① 并发加载数据
     dims, candidate = await asyncio.gather(
@@ -996,20 +1110,33 @@ async def generate_career_plan(assessment_id: str, onetsoc_code: str, title: str
         openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL)
 
     try:
-        # ③ 阶段2（并行）：Block 1 / Block 2 互相独立，同时跑
-        (block1, match_narrative), block2 = await asyncio.gather(
+        # ③ 阶段2（全并行）：Block 1 / 2 / 3 / 5 全部并发
+        # 注：Block 3 不再依赖 Block 1 narrative；如缺失会以稍弱 context 运行
+        async def _safe_block5():
+            if not parsed_path_data:
+                return None
+            try:
+                return await _build_future_stages_outlook(
+                    parsed_path_data, current_stage, candidate, llm,
+                )
+            except Exception as e:
+                logger.warning(f"[generate_career_plan] Block 5 生成失败: {e}")
+                return None
+
+        (block1, match_narrative), block2, block3, block5 = await asyncio.gather(
             _build_match_overview(dims, onet, candidate, llm),
             _build_jd_recommendations(onet, candidate, dims, qdrant, openai_client, llm),
+            _build_gap_analysis(dims, onet, candidate, "", llm),
+            _safe_block5(),
         )
 
-        # ④ 阶段3（顺序）：Block 3 需要 Block 1 的 narrative 作 context
-        block3 = await _build_gap_analysis(dims, onet, candidate, match_narrative, llm)
-
-        # ⑤ 写入 DB
+        # ⑥ 写入 DB
         blocks = [block1, block2, block3]
+        if block5:
+            blocks.append(block5)
         await _save_blocks(assessment_id, onetsoc_code, blocks)
 
-        # ⑥ 构建 gap_context（供 generate_action_plan 使用）
+        # ⑦ 构建 gap_context（供 generate_action_plan 使用）
         gap_context = {
             "assessment_id": assessment_id,
             "onetsoc_code": onetsoc_code,
@@ -1044,7 +1171,7 @@ async def generate_career_plan(assessment_id: str, onetsoc_code: str, title: str
             ],
         }
 
-        logger.info(f"[generate_career_plan] 完成，3 个 Block 已写入 DB")
+        logger.info(f"[generate_career_plan] 完成，{len(blocks)} 个 Block 已写入 DB")
         return json.dumps({
             "status": "done",
             "blocks": {b["block_id"]: b for b in blocks},

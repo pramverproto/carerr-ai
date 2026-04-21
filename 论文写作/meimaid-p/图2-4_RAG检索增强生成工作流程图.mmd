@@ -1,0 +1,47 @@
+%% 图2-4 RAG检索增强生成工作流程图
+%% Figure 2-4 RAG (Retrieval-Augmented Generation) Workflow Diagram
+
+flowchart LR
+    subgraph Index["① 索引阶段 Indexing"]
+        direction TB
+        Doc["外部知识文档<br/>(O*NET / JD 数据等)"]
+        Chunk["文本切分<br/>Chunking"]
+        Emb1["嵌入模型<br/>text-embedding-3-small"]
+        Vec1["向量化文本块"]
+        Doc --> Chunk --> Emb1 --> Vec1
+    end
+
+    VDB[("Qdrant 向量数据库<br/>HNSW 索引")]
+    Vec1 -.写入.-> VDB
+
+    subgraph Retrieve["② 检索阶段 Retrieval"]
+        direction TB
+        Q["用户查询 Query"]
+        Emb2["嵌入模型<br/>text-embedding-3-small"]
+        QV["查询向量"]
+        Topk["余弦相似度检索<br/>Top-K 文本块"]
+        Q --> Emb2 --> QV --> Topk
+    end
+
+    VDB -.检索.-> Topk
+
+    subgraph Generate["③ 生成阶段 Generation"]
+        direction TB
+        Prompt["增强提示构造<br/>Query + Top-K Context"]
+        LLM["LLM 生成回答<br/>(GPT-4o)"]
+        Ans(["最终回答<br/>有事实依据 / 可溯源"])
+        Prompt --> LLM --> Ans
+    end
+
+    Topk --> Prompt
+    Q -.原始查询.-> Prompt
+
+    classDef stage1 fill:#e3f2fd,stroke:#1976d2,stroke-width:1.5px
+    classDef stage2 fill:#fff3e0,stroke:#f57c00,stroke-width:1.5px
+    classDef stage3 fill:#f1f8e9,stroke:#558b2f,stroke-width:1.5px
+    classDef vdb fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+
+    class Doc,Chunk,Emb1,Vec1 stage1
+    class Q,Emb2,QV,Topk stage2
+    class Prompt,LLM,Ans stage3
+    class VDB vdb

@@ -1,0 +1,161 @@
+%% 图5-8 概念模型ER图
+%% Figure 5-8 Conceptual Model ER Diagram
+
+erDiagram
+    users ||--|| candidates : "1:1 用户档案"
+    users ||--o{ assessment_jobs : "1:N 多次评估"
+    users ||--o{ career_path_progress : "1:N 选择多条路线"
+    users ||--o{ resume_uploads : "1:N 多次上传简历"
+
+    candidates ||--o{ assessment_jobs : "档案快照"
+    assessment_jobs ||--|{ assessment_dimensions : "1:6 维度"
+    assessment_jobs ||--o| assessment_summary : "1:1 画像汇总"
+    assessment_jobs ||--o{ assessment_report_blocks : "1:N 报告块"
+    assessment_jobs ||--o{ career_plan_blocks : "1:N 规划块"
+    assessment_jobs ||--o{ career_path_progress : "针对评估选路线"
+
+    career_path_progress ||--o{ career_plan_blocks : "路线-阶段-规划"
+    career_path_progress ||--o{ plan_schedules : "拆解执行计划"
+
+    plan_schedules ||--o{ plan_weeks : "1:N 周计划"
+    plan_schedules ||--o{ plan_daily_tasks : "1:N 每日任务"
+    plan_weeks ||--o{ plan_daily_tasks : "周-日层级"
+
+    users ||--o{ messages : "1:N 多会话消息"
+
+    onet_occupations ||--o{ career_plan_blocks : "目标岗位锚定"
+
+    users {
+        bigint id PK
+        varchar username UK
+        varchar password
+        varchar email
+        timestamp created_at
+    }
+
+    candidates {
+        bigint id PK
+        varchar name
+        varchar current_title
+        varchar target_role
+        json resume_raw
+        text supplement
+        json bigfive
+        json riasec
+        json quiz_abilities
+    }
+
+    assessment_jobs {
+        varchar assessment_id PK
+        bigint user_id FK
+        json input_snapshot
+        varchar status
+        json data_flags
+    }
+
+    assessment_dimensions {
+        bigint id PK
+        varchar assessment_id FK
+        varchar dimension
+        float overall_score
+        json sub_dimensions
+        json highlights
+        json focus_areas
+        varchar status
+    }
+
+    assessment_summary {
+        bigint id PK
+        varchar assessment_id FK
+        varchar persona_label
+        text narrative_intro
+        json top3_strengths
+        json top3_improvements
+    }
+
+    assessment_report_blocks {
+        int id PK
+        varchar assessment_id FK
+        varchar block_id
+        longtext block_json
+    }
+
+    career_path_progress {
+        bigint id PK
+        varchar user_id
+        varchar assessment_id FK
+        varchar path_code
+        json path_data
+        int current_stage
+        json stage_history
+    }
+
+    career_plan_blocks {
+        bigint id PK
+        varchar assessment_id FK
+        varchar onetsoc_code FK
+        varchar block_id "match_overview/jd_recommendations/gap_analysis/action_plan/future_outlook"
+        json block_json
+    }
+
+    plan_schedules {
+        bigint id PK
+        varchar plan_id UK
+        varchar assessment_id FK
+        varchar onetsoc_code
+        int duration_weeks
+        date start_date
+        varchar status
+        bigint user_id
+    }
+
+    plan_weeks {
+        bigint id PK
+        varchar plan_id FK
+        int week_number
+        varchar theme
+        text focus
+        json weekly_goals
+        varchar phase_ref
+        tinyint confirmed
+    }
+
+    plan_daily_tasks {
+        bigint id PK
+        varchar plan_id FK
+        int week_number
+        int day_number
+        date date
+        json tasks
+        json completed_ids
+        json task_notes
+    }
+
+    messages {
+        bigint id PK
+        varchar session_id
+        varchar role "user/assistant/tool"
+        longtext content
+        varchar tool_call_id
+        timestamp created_at
+    }
+
+    resume_uploads {
+        bigint id PK
+        varchar upload_id UK
+        bigint user_id FK
+        varchar file_name
+        longtext raw_text
+        json extracted
+    }
+
+    onet_occupations {
+        char onetsoc_code PK
+        varchar title
+        text description
+        decimal dim_skills
+        decimal dim_knowledge
+        decimal dim_abilities
+        decimal dim_work_styles
+        json riasec_json
+    }

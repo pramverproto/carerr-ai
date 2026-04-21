@@ -1,0 +1,57 @@
+%% 图5-1 用户需求用例图
+%% Figure 5-1 User Requirements Use Case Diagram
+
+flowchart LR
+    Student(("👤<br/>求职学生"))
+    Explorer(("👤<br/>职业探索者"))
+    Teacher(("👤<br/>就业指导教师"))
+    System["智能职业发展辅助系统"]
+
+    subgraph UC["核心用例"]
+        direction TB
+        U1(["注册登录与个人档案管理"])
+        U2(["上传简历与智能解析"])
+        U3(["触发能力评估"])
+        U4(["查看六维评估报告"])
+        U5(["浏览职业路线推荐"])
+        U6(["选择目标路线"])
+        U7(["生成规划方案<br/>(5 个 Block)"])
+        U8(["确认周计划与每日任务"])
+        U9(["每日签到与反思"])
+        U10(["上报阶段完成 (stage-complete)"])
+        U11(["AI 顾问多轮对话"])
+        U12(["查看学生评估与规划数据"])
+    end
+
+    Student --- U1
+    Student --- U2
+    Student --- U3
+    Student --- U4
+    Student --- U5
+    Student --- U6
+    Student --- U7
+    Student --- U8
+    Student --- U9
+    Student --- U10
+
+    Explorer --- U11
+    Explorer --- U2
+    Explorer --- U4
+
+    Teacher --- U12
+
+    UC -.- System
+
+    U2 -.《include》.-> U3
+    U3 -.《include》.-> U4
+    U5 -.《include》.-> U6
+    U6 -.《include》.-> U7
+    U7 -.《include》.-> U8
+
+    classDef actor fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef sys fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef uc fill:#f1f8e9,stroke:#558b2f,stroke-width:1.5px
+
+    class Student,Explorer,Teacher actor
+    class System sys
+    class U1,U2,U3,U4,U5,U6,U7,U8,U9,U10,U11,U12 uc

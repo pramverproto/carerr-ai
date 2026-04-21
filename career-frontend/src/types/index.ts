@@ -204,6 +204,7 @@ export interface ReportResponse {
 
 // ── /career/match 响应 ────────────────────────────────────────────────
 
+/** 旧版单岗位推荐（兼容保留） */
 export interface CareerRecommendation {
   onetsoc_code: string;
   title: string;
@@ -216,14 +217,45 @@ export interface CareerRecommendation {
   [key: string]: unknown;
 }
 
+/** 路线中的单个阶段 */
+export interface CareerPathStage {
+  stage: number;
+  title: string;
+  timeframe: string;
+  salary_range: string | null;
+  match_score?: number;          // Stage 1 有
+  key_skills: string[];
+  match_reason?: string;         // Stage 1 有
+  key_gaps?: string[];           // Stage 1 有
+  transition_from_prev?: string; // Stage 2+ 有
+}
+
+/** 一条职业路线推荐 */
+export interface CareerPathRecommendation {
+  path_name: string;
+  path_code: string;             // path-xxxxxxxx
+  path_summary: string;
+  overall_score: number;
+  market_signal: string;
+  stages: CareerPathStage[];
+}
+
 export interface CareerMatchResponse {
   assessment_id: string;
   result: {
-    recommended?: CareerRecommendation[];
-    // 兼容 agent 直接返回数组的情况
+    recommended?: CareerPathRecommendation[];
+    // 兼容旧版 agent 直接返回数组的情况
     [key: string]: unknown;
   };
   elapsed_ms: number;
+}
+
+/** 路线进度 */
+export interface CareerPathProgress {
+  path_code: string;
+  path_data: CareerPathRecommendation;
+  current_stage: number;
+  stage_history: { stage: number; completed_at: string; user_note: string }[];
 }
 
 // ── /career/plan 响应 ─────────────────────────────────────────────────
@@ -339,6 +371,26 @@ export interface ActionPlanBlock {
   phases: ActionPhase[];
 }
 
+// ─── Block 5: future_outlook ──────────────────────────────────────
+
+export interface FutureStageOutlook {
+  stage: number;
+  title: string;
+  timeframe: string;
+  salary_range: string | null;
+  key_skills: string[];
+  transition_tips: string;
+  preparation_now: string;
+}
+
+export interface FutureOutlookBlock {
+  block_id: 'future_outlook';
+  current_stage: number;
+  current_title: string;
+  next_stages: FutureStageOutlook[];
+  path_narrative: string;
+}
+
 // ─── Combined ─────────────────────────────────────────────────────
 
 export interface CareerPlanBlocks {
@@ -346,6 +398,7 @@ export interface CareerPlanBlocks {
   jd_recommendations?: JdRecommendationsBlock;
   gap_analysis?: GapAnalysisBlock;
   action_plan?: ActionPlanBlock;
+  future_outlook?: FutureOutlookBlock;
 }
 
 export interface CareerPlanResponse {

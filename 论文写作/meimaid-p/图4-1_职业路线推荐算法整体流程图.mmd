@@ -1,0 +1,59 @@
+%% 图4-1 职业路线推荐算法整体流程图
+%% Figure 4-1 Overall Flowchart of Career Path Recommendation Algorithm
+
+flowchart TB
+    subgraph In["输入"]
+        Cand["候选人能力画像<br/>(中文画像 + 17 维数值向量)"]
+        Custom["自定义起点<br/>custom_start (可选)"]
+    end
+
+    subgraph Recall["阶段一 · 双路 JD 召回 (并发执行)"]
+        direction LR
+        subgraph PathA["路径 A · 语义向量召回"]
+            EA["text-embedding-3-small<br/>编码中文画像 → 1536 维向量"]
+            QA["Qdrant jobs 集合<br/>余弦相似度 Top-30"]
+            EA --> QA
+        end
+        subgraph PathB["路径 B · 技能关键词分组召回"]
+            SG["技能列表分 3-4 组<br/>第 1 组: 目标岗+Top-5 核心技能"]
+            EB["分组编码 → 1536 维向量"]
+            QB["Qdrant 每组 Top-15<br/>(共 60-90 条)"]
+            SG --> EB --> QB
+        end
+    end
+
+    Cand --> EA
+    Cand --> SG
+    Custom -.锚定.-> EA
+    Custom -.锚定.-> SG
+
+    Merge["阶段二 · 合并去重<br/>按 jd_id 去重<br/>多路命中标记 _multi_hit=true"]
+    QA --> Merge
+    QB --> Merge
+
+    Filter["轻量预过滤<br/>(技能交集非空 OR 语义分≥0.65)<br/>保留最多 30 条候选 JD"]
+    Merge --> Filter
+
+    subgraph Design["阶段三 · LLM 三阶段路线设计"]
+        L1["① 起点 s1 证据化锚定<br/>必须引用真实 JD 索引<br/>_jd_indices, _jd_count<br/>给出 match_reason"]
+        L2["② 中期 s2 · 远期 s3<br/>产业演进规律外推<br/>transition_from_prev"]
+        L3["③ 路线综合评分<br/>overall_score (0-100)<br/>market_signal (热门/一般)"]
+        L1 --> L2 --> L3
+    end
+
+    Filter --> Design
+
+    Out[("输出: 3-4 条职业发展路线<br/>path_code (确定性哈希)<br/>path_name / path_summary<br/>stages = [s1, s2, s3]")]
+    Design --> Out
+
+    classDef in fill:#e3f2fd,stroke:#1976d2,stroke-width:1.5px
+    classDef recall fill:#fff3e0,stroke:#f57c00,stroke-width:1.5px
+    classDef merge fill:#f1f8e9,stroke:#558b2f,stroke-width:1.5px
+    classDef llm fill:#e0f7fa,stroke:#00838f,stroke-width:1.5px
+    classDef out fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+
+    class Cand,Custom in
+    class EA,QA,SG,EB,QB recall
+    class Merge,Filter merge
+    class L1,L2,L3 llm
+    class Out out

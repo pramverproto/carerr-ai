@@ -1,0 +1,67 @@
+%% 图5-6 能力评估流程时序图
+%% Figure 5-6 Sequence Diagram of Capability Assessment Process
+
+sequenceDiagram
+    autonumber
+    actor U as 用户
+    participant FE as 前端 (React)
+    participant API as FastAPI<br/>/assess
+    participant IP as input_parser<br/>Agent
+    participant DAs as 6 个维度 Agent<br/>(并发)
+    participant SA as summary_agent
+    participant DB as MySQL
+    participant RA as 6 个报告 Agent
+
+    U->>FE: 提交简历 + 自述 + (可选)测评
+    FE->>API: POST /assess
+    API->>DB: 创建 assessment_jobs<br/>(status=running)
+    API->>IP: 调用 input_parser
+    IP-->>API: 候选人结构化 JSON
+
+    Note over API,DAs: 字段级裁剪后并发调度<br/>asyncio.gather(*tasks, return_exceptions=True)
+    par 6 个维度 Agent 并发
+        API->>DAs: skills_agent
+        DAs-->>API: 4 子维度 + overall_score
+    and
+        API->>DAs: knowledge_agent
+        DAs-->>API: 4 子维度 + overall_score
+    and
+        API->>DAs: abilities_agent
+        DAs-->>API: 3 子维度 (done/locked)
+    and
+        API->>DAs: work_styles_agent
+        DAs-->>API: 4 子维度 / 21 特质
+    and
+        API->>DAs: interests_agent
+        DAs-->>API: RIASEC 6 类型 + 三字母代码
+    and
+        API->>DAs: work_values_agent
+        DAs-->>API: 6 子维度
+    end
+
+    API->>DB: 写入 assessment_dimensions × 6
+    API->>SA: 调用 summary_agent
+    SA-->>API: persona_label + narrative<br/>+ top3_strengths + top3_improvements
+    API->>DB: 写入 assessment_summary<br/>更新 assessment_jobs (status=done)
+    API-->>FE: 返回 assessment_id
+
+    Note over U,RA: 用户查看报告时按需生成 (惰性 + 缓存)
+    U->>FE: 进入报告页
+    FE->>API: GET /report/{assessment_id}
+    API->>DB: 查 assessment_report_blocks
+    alt 缓存命中
+        DB-->>API: 已有 9-10 条 block_json
+    else 首次生成
+        par 6 个维度报告 Agent 并发
+            API->>RA: render dimension_skills
+            API->>RA: render dimension_knowledge
+            API->>RA: render dimension_abilities
+            API->>RA: render dimension_work_styles
+            API->>RA: render dimension_interests
+            API->>RA: render dimension_work_values
+        end
+        RA-->>API: 第二人称叙述 + 星级评分
+        API->>DB: UPSERT assessment_report_blocks
+    end
+    API-->>FE: 返回报告 JSON
+    FE-->>U: 渲染雷达图 + 维度详情
