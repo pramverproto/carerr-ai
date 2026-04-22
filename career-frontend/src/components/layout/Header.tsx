@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { LogOut, User, Menu, Sun, Moon } from 'lucide-react';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
@@ -7,15 +7,7 @@ import { useLayoutStore } from '@/store/layoutStore';
 
 type Theme = 'light' | 'dark';
 
-const pathMap: Record<string, string> = {
-  '/chat':       'AI 对话',
-  '/profile':    '信息完善',
-  '/assessment': '能力评估',
-  '/career':     '职业规划',
-};
-
 const Header: React.FC = () => {
-  const location = useLocation();
   const navigate = useNavigate();
   const { resetAll } = useAppStore();
   const authUser = useAuthStore((s) => s.user);
@@ -30,8 +22,6 @@ const Header: React.FC = () => {
     navigate('/login', { replace: true });
   };
 
-  const pageTitle = pathMap[location.pathname] || 'Career AI';
-
   return (
     <header className="fixed left-0 lg:left-64 right-0 top-0 h-16 bg-[#1F2937] flex items-center justify-between px-4 lg:px-6 z-40">
       <div className="flex items-center gap-3">
@@ -42,7 +32,6 @@ const Header: React.FC = () => {
         >
           <Menu size={22} />
         </button>
-        <h1 className="text-white text-lg lg:text-xl font-bold">{pageTitle}</h1>
       </div>
 
       <div className="flex items-center gap-2 lg:gap-3">

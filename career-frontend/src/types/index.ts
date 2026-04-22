@@ -460,6 +460,156 @@ export interface WeeklyPlanResponse {
   weeks: Omit<PlanWeek, 'days'>[];
 }
 
+// ── /plan/* 类型（任务计划，新版）────────────────────────────────────
+
+export interface LearnModule {
+  id: string;
+  title: string;
+  weight: number;              // 占 100 的百分比
+  est_hours: number;
+  target_dims: string[];
+  completion_criteria: string;
+}
+
+export interface LearnOutline {
+  modules: LearnModule[];
+  total_weight: number;
+  estimated_weeks: number;
+  reasoning?: string;
+}
+
+export interface LearnMonth {
+  id: number;
+  month_num: number;
+  theme: string;
+  month_goal: string | null;
+  covers_modules: { module_id: string; share: number }[];
+  weight_share: number;
+}
+
+export interface LearnWeek {
+  id: number;
+  month_id: number | null;
+  week_num: number;
+  week_in_month: number;
+  theme: string;
+  week_goal: string | null;
+  covers_modules: { module_id: string; share: number }[];
+  weight_share: number;
+  daily_status: 'skeleton' | 'materializing' | 'ready' | 'error';
+  error_msg: string | null;
+  materialized_at: string | null;
+  total_tasks: number;
+  done_tasks: number;
+}
+
+export interface LearnTask {
+  id: number;
+  week_id: number;
+  module_id: string | null;
+  order_in_queue: number;
+  order_in_week: number;
+  title: string;
+  description: string | null;
+  task_type: 'reading' | 'coding' | 'project' | 'exercise' | 'review';
+  est_minutes: number;
+  target_dims: string[];
+  raw_weight: number | null;
+  actual_contribution: number;
+  completion_criteria: string | null;
+  status: 'pending' | 'done' | 'skipped';
+  week_num: number;
+  week_theme: string;
+}
+
+export interface LearnPlanProgress {
+  plan_id: string;
+  total_pct: number;
+  potential_pct: number;
+  done_count: number;
+  total_count: number;
+}
+
+export interface LearnPlanListItem {
+  plan_id: string;
+  assessment_id: string;
+  stage_code: string;
+  stage_title: string | null;
+  status: 'pending' | 'confirmed' | 'planning' | 'ready' | 'error' | string;
+  total_weeks: number | null;
+  estimated_weeks: number | null;
+  modules_count: number;
+  created_at: string | null;
+  done_count: number;
+  total_count: number;
+  progress_pct: number;
+  current_week_num: number;
+}
+
+export interface RecentDoneTask {
+  id: number;
+  week_id: number;
+  title: string;
+  task_type: string;
+  actual_contribution: number;
+  grade_score: number;
+  grade_comment: string | null;
+  final_contribution: number;
+  reflection: string | null;
+  completed_at: string | null;
+  week_num: number;
+  week_theme: string;
+}
+
+export interface LearnPlanSummary {
+  plan_id: string | null;
+  status?: 'pending' | 'confirmed' | 'planning' | 'ready' | 'error';
+  assessment_id?: string;
+  stage_code?: string;
+  stage_title?: string | null;
+  total_weeks?: number | null;
+  estimated_weeks?: number | null;
+  modules?: LearnModule[];
+}
+
+export interface LearnPlanRoadmap {
+  plan_id: string;
+  status: string;
+  stage_code: string;
+  stage_title: string | null;
+  total_weeks: number | null;
+  modules: LearnModule[];
+  months: LearnMonth[];
+  weeks: LearnWeek[];
+}
+
+export interface GenerateOutlineResponse {
+  plan_id: string;
+  outline: LearnOutline;
+}
+
+export interface ConfirmOutlineResponse {
+  plan_id: string;
+  status: 'ready';
+  total_weeks: number;
+  months: LearnMonth[];
+  weeks: LearnWeek[];
+}
+
+export interface TodayTasksResponse {
+  plan_id: string;
+  tasks: LearnTask[];
+  daily_limit: number;
+}
+
+export interface CompleteTaskResponse {
+  task_id: number;
+  grade_score: number;
+  grade_comment: string;
+  final_contribution: number;
+  progress: LearnPlanProgress;
+}
+
 // ── /archive 类型 ────────────────────────────────────────────────────
 
 export interface ArchiveItem {

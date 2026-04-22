@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FolderOpen, Trash2, ChevronRight, User, BarChart3, Briefcase, CalendarCheck, Clock } from 'lucide-react';
-import { App } from 'antd';
+import { App, Drawer } from 'antd';
 import { useAppStore } from '@/store/appStore';
 import ArchiveSkeleton from '@/components/skeletons/ArchiveSkeleton';
 import { api } from '@/api/client';
-import type { ArchiveItem, ArchiveDetail, Milestone } from '@/types';
+import type {
+  ArchiveItem, ArchiveDetail, Milestone,
+  LearnPlanListItem, LearnPlanRoadmap, RecentDoneTask,
+} from '@/types';
 
 // ── 维度中文名映射 ─────────────────────────────────────────────────
 const DIM_LABELS: Record<string, string> = {
@@ -276,7 +279,7 @@ const Archive: React.FC = () => {
               {activeTab === 'profile' && <ProfileTab detail={detail} />}
               {activeTab === 'dimensions' && <DimensionsTab detail={detail} />}
               {activeTab === 'careers' && <CareersTab detail={detail} />}
-              {activeTab === 'plans' && <PlansTab detail={detail} />}
+              {activeTab === 'plans' && <PlansTab assessmentId={selectedId} />}
             </div>
           </>
         ) : (
@@ -469,49 +472,240 @@ const CareersTab: React.FC<{ detail: ArchiveDetail }> = ({ detail }) => {
 
 // ── Tab: 计划进度 ──────────────────────────────────────────────────
 
-const PlansTab: React.FC<{ detail: ArchiveDetail }> = ({ detail }) => {
-  if (detail.plans.length === 0) {
-    return <p className="text-gray-400 text-sm">暂无计划进度记录</p>;
+const PLAN_STATUS_META: Record<string, { color: string; bg: string; label: string }> = {
+  pending: { color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30', label: '待确认' },
+  planning: { color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30', label: '规划中' },
+  ready: { color: 'text-green-600 dark:text-green-400', bg: 'bg-green-100 dark:bg-green-900/30', label: '进行中' },
+  error: { color: 'text-red-600 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-900/30', label: '生成失败' },
+};
+
+function formatRelTime(iso: string | null): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  const diffDays = Math.floor((Date.now() - d.getTime()) / 86400_000);
+  if (diffDays === 0) return '今天';
+  if (diffDays === 1) return '昨天';
+  if (diffDays < 7) return `${diffDays} 天前`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} 周前`;
+  return d.toLocaleDateString('zh-CN');
+}
+
+const PlansTab: React.FC<{ assessmentId: string | null }> = ({ assessmentId }) => {
+  const [plans, setPlans] = useState<LearnPlanListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedPlan, setSelectedPlan] = useState<LearnPlanListItem | null>(null);
+
+  useEffect(() => {
+    if (!assessmentId) return;
+    setLoading(true);
+    api.learnList(assessmentId)
+      .then((res) => setPlans(res.data.plans))
+      .catch(() => setPlans([]))
+      .finally(() => setLoading(false));
+  }, [assessmentId]);
+
+  if (loading) {
+    return <p className="text-gray-400 text-sm">加载中...</p>;
+  }
+  if (plans.length === 0) {
+    return <p className="text-gray-400 text-sm">暂无学习计划</p>;
   }
 
   return (
-    <div className="space-y-3 max-w-2xl">
-      {detail.plans.map(p => {
-        const pct = p.total_tasks > 0 ? Math.round((p.completed_tasks / p.total_tasks) * 100) : 0;
-        return (
-          <div key={p.plan_id} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+    <>
+      <div className="space-y-3 max-w-3xl">
+        {plans.map((p) => {
+          const status = PLAN_STATUS_META[p.status] || PLAN_STATUS_META.pending;
+          const pct = Math.min(100, p.progress_pct);
+          return (
+            <button
+              key={p.plan_id}
+              onClick={() => setSelectedPlan(p)}
+              className="w-full text-left border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
+            >
+              <div className="flex items-center justify-between mb-2 gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">
+                    🎯 {p.stage_title || p.stage_code}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {p.total_weeks ? `${p.total_weeks} 周` : `~${p.estimated_weeks} 周`}
+                    · {p.modules_count} 模块
+                    · 生成于 {formatRelTime(p.created_at)}
+                  </p>
+                </div>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded shrink-0 ${status.bg} ${status.color}`}>
+                  {status.label}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-blue-500 to-green-500 rounded-full transition-all"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+                <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 w-28 text-right">
+                  {p.done_count}/{p.total_count} 任务 · {pct.toFixed(1)}%
+                </span>
+              </div>
+              {p.status === 'ready' && p.total_count > 0 && (
+                <p className="text-xs text-gray-400 mt-2">
+                  当前 Week {p.current_week_num}
+                </p>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {selectedPlan && (
+        <PlanDetailDrawer
+          plan={selectedPlan}
+          open={!!selectedPlan}
+          onClose={() => setSelectedPlan(null)}
+        />
+      )}
+    </>
+  );
+};
+
+const PlanDetailDrawer: React.FC<{
+  plan: LearnPlanListItem;
+  open: boolean;
+  onClose: () => void;
+}> = ({ plan, open, onClose }) => {
+  const [roadmap, setRoadmap] = useState<LearnPlanRoadmap | null>(null);
+  const [doneTasks, setDoneTasks] = useState<RecentDoneTask[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!open) return;
+    setLoading(true);
+    Promise.all([
+      api.learnRoadmap(plan.plan_id),
+      api.learnRecentDone(plan.plan_id, 365),  // 档案页看全量历史
+    ])
+      .then(([road, done]) => {
+        setRoadmap(road.data);
+        setDoneTasks(done.data.tasks);
+      })
+      .catch(() => {
+        setRoadmap(null);
+        setDoneTasks([]);
+      })
+      .finally(() => setLoading(false));
+  }, [open, plan.plan_id]);
+
+  return (
+    <Drawer
+      title={plan.stage_title || plan.stage_code}
+      placement="right"
+      width={640}
+      open={open}
+      onClose={onClose}
+    >
+      {loading ? (
+        <p className="text-gray-400 text-sm">加载中...</p>
+      ) : (
+        <div className="space-y-6">
+          {/* 进度摘要 */}
+          <div className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <div>
-                <p className="text-sm font-medium text-gray-800 dark:text-gray-100">
-                  {p.duration_weeks} 周计划
-                </p>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  {p.start_date || '—'} · {p.onetsoc_code}
+                <p className="text-xs text-gray-400">总进度</p>
+                <p className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
+                  {plan.progress_pct.toFixed(1)}%
                 </p>
               </div>
-              <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                p.status === 'daily_ready' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
-                p.status === 'generating_daily' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400' :
-                'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
-              }`}>
-                {p.status === 'daily_ready' ? '进行中' : p.status === 'generating_daily' ? '生成中' : p.status}
-              </span>
+              <div className="text-right">
+                <p className="text-xs text-gray-400">已完成 / 共计</p>
+                <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
+                  {plan.done_count} / {plan.total_count}
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-blue-500 rounded-full transition-all"
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
-              <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
-                {p.completed_tasks}/{p.total_tasks} ({pct}%)
-              </span>
+            <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-blue-500 to-green-500"
+                style={{ width: `${Math.min(100, plan.progress_pct)}%` }}
+              />
             </div>
           </div>
-        );
-      })}
-    </div>
+
+          {/* 周度进度 */}
+          {roadmap && (
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
+                周度进度（共 {roadmap.total_weeks} 周）
+              </h4>
+              <div className="space-y-2">
+                {roadmap.weeks.map((w) => {
+                  const done = w.done_tasks;
+                  const total = w.total_tasks;
+                  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+                  const isCompleted = total > 0 && done >= total;
+                  const isActive = total > 0 && done > 0 && done < total;
+                  return (
+                    <div key={w.week_num} className="flex items-center gap-3 text-sm">
+                      <span className={`w-14 shrink-0 text-xs ${
+                        isCompleted ? 'text-green-600' : isActive ? 'text-blue-600' : 'text-gray-400'
+                      }`}>
+                        Week {w.week_num}
+                      </span>
+                      <span className={`flex-1 truncate ${isCompleted ? 'line-through text-gray-400' : 'text-gray-700 dark:text-gray-200'}`}>
+                        {w.theme}
+                      </span>
+                      <span className="text-xs text-gray-400 w-16 text-right shrink-0">
+                        {total > 0 ? `${done}/${total} · ${pct}%` : '未展开'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* 完成历史 */}
+          <div>
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
+              完成历史（{doneTasks.length} 个任务）
+            </h4>
+            {doneTasks.length === 0 ? (
+              <p className="text-gray-400 text-sm">尚无已完成任务</p>
+            ) : (
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {doneTasks.map((t) => (
+                  <div key={t.id} className="border border-gray-200 dark:border-gray-600 rounded p-3 text-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-800 dark:text-gray-100 truncate">
+                          {t.title}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          W{t.week_num} · {t.task_type} · {t.completed_at ? formatRelTime(t.completed_at) : '—'}
+                        </p>
+                        {t.grade_comment && (
+                          <p className="text-xs text-gray-500 mt-1">💬 {t.grade_comment}</p>
+                        )}
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-semibold text-green-600">
+                          +{t.final_contribution.toFixed(2)}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {Math.round(t.grade_score * 100)}%
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </Drawer>
   );
 };
 

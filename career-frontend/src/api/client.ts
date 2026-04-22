@@ -11,6 +11,16 @@ import type {
   ArchiveItem,
   ArchiveDetail,
   Milestone,
+  GenerateOutlineResponse,
+  ConfirmOutlineResponse,
+  TodayTasksResponse,
+  CompleteTaskResponse,
+  LearnPlanProgress,
+  LearnPlanListItem,
+  LearnPlanRoadmap,
+  LearnPlanSummary,
+  LearnTask,
+  RecentDoneTask,
 } from '@/types';
 import { useAuthStore } from '@/store/authStore';
 
@@ -257,4 +267,85 @@ export const api = {
   /** DELETE /archive/{id} — 删除单次评估及所有关联数据 */
   archiveDelete: (assessmentId: string) =>
     apiClient.delete<{ ok: boolean; assessment_id: string }>(`/archive/${assessmentId}`),
+
+  // ── Learn Plan（任务计划，新版）─────────────────────────────────────
+
+  /** POST /plan/generate — 生成学习大纲，超时 90s */
+  learnGenerate: (assessmentId: string, stageCode: string, userPreference?: string) =>
+    apiClient.post<GenerateOutlineResponse>(
+      '/plan/generate',
+      { assessment_id: assessmentId, stage_code: stageCode, user_preference: userPreference || null },
+      { timeout: 90_000 },
+    ),
+
+  /** POST /plan/{id}/regenerate-outline — 重新生成大纲 */
+  learnRegenerateOutline: (planId: string, userPreference?: string) =>
+    apiClient.post<GenerateOutlineResponse>(
+      `/plan/${planId}/regenerate-outline`,
+      { user_preference: userPreference || null },
+      { timeout: 90_000 },
+    ),
+
+  /** POST /plan/{id}/confirm-outline — 确认大纲，触发 roadmap + Week1 物化，超时 3 分钟 */
+  learnConfirmOutline: (planId: string) =>
+    apiClient.post<ConfirmOutlineResponse>(
+      `/plan/${planId}/confirm-outline`,
+      {},
+      { timeout: 180_000 },
+    ),
+
+  /** GET /plan/current — 当前用户最新的学习计划摘要 */
+  learnCurrent: () =>
+    apiClient.get<LearnPlanSummary>('/plan/current'),
+
+  /** GET /plan/list — 用户所有学习计划列表（可按 assessment_id 过滤） */
+  learnList: (assessmentId?: string) =>
+    apiClient.get<{ plans: LearnPlanListItem[] }>(
+      assessmentId ? `/plan/list?assessment_id=${assessmentId}` : '/plan/list',
+    ),
+
+  /** GET /plan/{id}/roadmap — 完整路线图 */
+  learnRoadmap: (planId: string) =>
+    apiClient.get<LearnPlanRoadmap>(`/plan/${planId}/roadmap`),
+
+  /** GET /plan/{id}/today — 今日任务（前 N 个 pending） */
+  learnToday: (planId: string) =>
+    apiClient.get<TodayTasksResponse>(`/plan/${planId}/today`),
+
+  /** POST /plan/{id}/more — 再来一批（exclude_ids 是已展示过的 task id） */
+  learnMore: (planId: string, excludeIds: number[], limit?: number) =>
+    apiClient.post<{ plan_id: string; tasks: LearnTask[] }>(
+      `/plan/${planId}/more`,
+      { exclude_ids: excludeIds, limit },
+    ),
+
+  /** POST /plan/task/{id}/complete — 完成任务 + grader 打分 */
+  learnCompleteTask: (taskId: number, reflection: string | null) =>
+    apiClient.post<CompleteTaskResponse>(
+      `/plan/task/${taskId}/complete`,
+      { reflection },
+      { timeout: 60_000 },
+    ),
+
+  /** GET /plan/{id}/progress — 进度条数据 */
+  learnProgress: (planId: string) =>
+    apiClient.get<LearnPlanProgress>(`/plan/${planId}/progress`),
+
+  /** GET /plan/{id}/recent-done — 最近完成的任务 */
+  learnRecentDone: (planId: string, days = 7) =>
+    apiClient.get<{ plan_id: string; days: number; tasks: RecentDoneTask[] }>(
+      `/plan/${planId}/recent-done?days=${days}`,
+    ),
+
+  /** POST /plan/{id}/week/{n}/retry — 重试某周物化 */
+  learnRetryWeek: (planId: string, weekNum: number) =>
+    apiClient.post<{ ok: boolean; week_num: number }>(
+      `/plan/${planId}/week/${weekNum}/retry`,
+      {},
+      { timeout: 120_000 },
+    ),
+
+  /** DELETE /plan/{id} — 删除整个学习计划 */
+  learnDeletePlan: (planId: string) =>
+    apiClient.delete<{ ok: boolean; plan_id: string }>(`/plan/${planId}`),
 };

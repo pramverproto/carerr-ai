@@ -31,11 +31,13 @@ from agent.agent_config import (
     MAIN_AGENT_CONFIG, SUB_AGENT_CONFIGS, REPORT_AGENT_CONFIGS,
     ASSESSMENT_AGENT_CONFIG, CAREER_AGENT_CONFIG, CAREER_PLAN_AGENT_CONFIG,
     RESUME_EXTRACT_AGENT_CONFIG, DB_CONFIG,
+    LEARN_PLAN_AGENT_CONFIGS,
 )
 from agent.logger import get_logger
 from agent.providers.llm import LLMProvider
 from agent.tools.mcp import MCPClient
 import agent.memory.db as memory_db
+from agent.learn_plan_schema import ALL_CREATE_SQLS as LEARN_PLAN_CREATE_SQLS
 
 logger = get_logger("api")
 import agent.tools.career       # 注册 match_careers
@@ -128,6 +130,8 @@ async def lifespan(app: FastAPI):
             async with conn.cursor() as cur:
                 await cur.execute(_CREATE_CAREER_PLAN_BLOCKS_SQL)
                 await cur.execute(_CREATE_CAREER_PATH_PROGRESS_SQL)
+                for sql in LEARN_PLAN_CREATE_SQLS:
+                    await cur.execute(sql)
                 try:
                     await cur.execute(_ALTER_JOBS_INPUT_SNAPSHOT)
                 except Exception:
@@ -2928,3 +2932,632 @@ async def archive_delete(assessment_id: str, user: dict = Depends(get_current_us
     logger.info(f"[Archive] 删除评估 assessment_id={assessment_id}，含 {len(plan_ids)} 个计划")
     return {"ok": True, "assessment_id": assessment_id}
 
+
+# ============================================================ #
+#  Learn Plan（任务计划）路由                                       #
+#  四 agent 链路：outline → roadmap → daily → grader               #
+#  四张表：learn_outlines / learn_months / learn_weeks / learn_tasks #
+# ============================================================ #
+
+from agent.learn_plan_helpers import (
+    SUGGESTED_DAILY_TASKS, MIN_WEEKS, MAX_WEEKS,
+    BASE_GRADE_SCORE, REFLECTION_MIN_LEN,
+    apply_default_grade, clamp_grade, compute_progress as _helper_compute_progress,
+    extract_json as _learn_extract_json,
+    normalize_task_contributions, should_invoke_grader, should_materialize_next_week,
+    validate_daily_tasks, validate_outline, validate_roadmap,
+)
+import agent.learn_plan_db as lpdb
+
+
+async def _call_learn_agent(agent_name: str, task: str) -> str:
+    """调用 LEARN_PLAN_AGENT_CONFIGS 中注册的 agent，返回字符串。"""
+    config = LEARN_PLAN_AGENT_CONFIGS[agent_name]
+    model = config["model"] or MAIN_AGENT_CONFIG["model"]
+    llm = LLMProvider(
+        model=model,
+        api_key=MAIN_AGENT_CONFIG["api_key"],
+        base_url=MAIN_AGENT_CONFIG["base_url"],
+    )
+    agent = Agent(
+        llm=llm,
+        system_prompt=config["system_prompt"],
+        allowed_tools=config["allowed_tools"],
+        mcp=None,
+        session_id=None,
+    )
+    return await agent.run_once(task)
+
+
+async def _verify_plan_owner(plan_id: str, user_id: int) -> dict:
+    outline = await lpdb.get_outline(plan_id)
+    if not outline:
+        raise HTTPException(status_code=404, detail=f"plan_id={plan_id} not found")
+    if outline["user_id"] != user_id:
+        raise HTTPException(status_code=403, detail="无权访问该计划")
+    return outline
+
+
+# ------------------------------------------------------------------ #
+#  Step 1: 生成大纲                                                    #
+# ------------------------------------------------------------------ #
+
+class GenerateOutlineRequest(BaseModel):
+    assessment_id: str
+    stage_code: str
+    user_preference: str | None = None
+
+
+@app.post("/plan/generate", tags=["任务计划"], summary="生成学习大纲（新）")
+@limiter.limit("10/hour")
+async def plan_generate(
+    request: Request, req: GenerateOutlineRequest,
+    user: dict = Depends(get_current_user),
+):
+    """基于能力画像 + 目标 Stage 生成学习大纲。
+
+    返回 plan_id 和 outline，用户确认后才进入 roadmap 阶段。
+    """
+    await _verify_assessment_owner(req.assessment_id, user["user_id"])
+
+    # 读画像 + path progress 里的 Stage 信息
+    dims = await _db_get_dimensions(req.assessment_id)
+    summary = await _db_get_summary(req.assessment_id)
+    if not dims:
+        raise HTTPException(status_code=404, detail="评估数据未找到")
+
+    stage_info = await _fetch_stage_info(req.assessment_id, req.stage_code)
+
+    # 取 career_plan_blocks（如果有）作为 career_plan_context
+    plan_context = await _fetch_career_plan_context(req.assessment_id, req.stage_code)
+
+    # 组装 agent 输入
+    agent_input = json.dumps({
+        "candidate_profile": _build_profile_brief(dims, summary),
+        "target_stage": stage_info,
+        "career_plan_context": plan_context,
+        "user_preference": req.user_preference or "",
+    }, ensure_ascii=False, indent=2)
+
+    try:
+        raw = await _call_learn_agent("plan_outline_agent", agent_input)
+        data = _learn_extract_json(raw)
+        outline = validate_outline(data)
+    except Exception as e:
+        logger.warning(f"[Plan/generate] outline 生成失败: {e}")
+        raise HTTPException(status_code=500, detail=f"大纲生成失败：{e}")
+
+    plan_id = uuid.uuid4().hex
+    await lpdb.insert_outline(
+        plan_id=plan_id,
+        user_id=user["user_id"],
+        assessment_id=req.assessment_id,
+        stage_code=req.stage_code,
+        stage_title=stage_info.get("title") if isinstance(stage_info, dict) else None,
+        modules=outline["modules"],
+        total_weight=outline["total_weight"],
+        estimated_weeks=outline["estimated_weeks"],
+        user_preference=req.user_preference,
+        status="pending",
+    )
+
+    logger.info(f"[Plan/generate] plan_id={plan_id} modules={len(outline['modules'])} "
+                f"est_weeks={outline['estimated_weeks']}")
+    return {
+        "plan_id": plan_id,
+        "outline": outline,
+    }
+
+
+@app.post("/plan/{plan_id}/regenerate-outline", tags=["任务计划"], summary="重新生成大纲")
+async def plan_regenerate_outline(
+    plan_id: str, payload: dict | None = None,
+    user: dict = Depends(get_current_user),
+):
+    outline_row = await _verify_plan_owner(plan_id, user["user_id"])
+    if outline_row["status"] not in ("pending", "ready", "error"):
+        raise HTTPException(status_code=400, detail=f"当前状态 {outline_row['status']} 不可重新生成")
+
+    preference = (payload or {}).get("user_preference") or outline_row.get("user_preference")
+    stage_info = await _fetch_stage_info(outline_row["assessment_id"], outline_row["stage_code"])
+    plan_context = await _fetch_career_plan_context(
+        outline_row["assessment_id"], outline_row["stage_code"]
+    )
+    dims = await _db_get_dimensions(outline_row["assessment_id"])
+    summary = await _db_get_summary(outline_row["assessment_id"])
+
+    agent_input = json.dumps({
+        "candidate_profile": _build_profile_brief(dims, summary),
+        "target_stage": stage_info,
+        "career_plan_context": plan_context,
+        "user_preference": preference or "",
+    }, ensure_ascii=False, indent=2)
+
+    try:
+        raw = await _call_learn_agent("plan_outline_agent", agent_input)
+        data = _learn_extract_json(raw)
+        outline = validate_outline(data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"重新生成失败：{e}")
+
+    # 清除旧计划所有已有结构
+    await lpdb.delete_plan(plan_id)
+    await lpdb.insert_outline(
+        plan_id=plan_id,
+        user_id=user["user_id"],
+        assessment_id=outline_row["assessment_id"],
+        stage_code=outline_row["stage_code"],
+        stage_title=outline_row.get("stage_title"),
+        modules=outline["modules"],
+        total_weight=outline["total_weight"],
+        estimated_weeks=outline["estimated_weeks"],
+        user_preference=preference,
+        status="pending",
+    )
+    return {"plan_id": plan_id, "outline": outline}
+
+
+# ------------------------------------------------------------------ #
+#  Step 2: 确认大纲 → 同步生成 roadmap + Week1 日任务                   #
+# ------------------------------------------------------------------ #
+
+@app.post("/plan/{plan_id}/confirm-outline", tags=["任务计划"], summary="确认大纲并生成路线图")
+async def plan_confirm_outline(
+    plan_id: str,
+    user: dict = Depends(get_current_user),
+):
+    outline_row = await _verify_plan_owner(plan_id, user["user_id"])
+    if outline_row["status"] == "ready":
+        return {"plan_id": plan_id, "status": "ready", "message": "该计划已就绪"}
+    if outline_row["status"] not in ("pending", "error"):
+        raise HTTPException(status_code=400, detail=f"当前状态 {outline_row['status']} 不可确认")
+
+    # 生成 roadmap
+    await lpdb.update_outline(plan_id=plan_id, status="planning")
+
+    try:
+        agent_input = json.dumps({
+            "modules": outline_row["modules"],
+            "total_weeks_hint": outline_row.get("estimated_weeks") or 8,
+            "suggested_daily_tasks": SUGGESTED_DAILY_TASKS,
+            "user_preference": outline_row.get("user_preference") or "",
+        }, ensure_ascii=False, indent=2)
+        raw = await _call_learn_agent("plan_roadmap_agent", agent_input)
+        data = _learn_extract_json(raw)
+        module_ids = {m["id"] for m in outline_row["modules"]}
+        roadmap = validate_roadmap(data, module_ids)
+    except Exception as e:
+        await lpdb.update_outline(plan_id=plan_id, status="error", error_msg=str(e))
+        raise HTTPException(status_code=500, detail=f"路线图生成失败：{e}")
+
+    # 落库 months / weeks
+    month_id_map = await lpdb.insert_months(plan_id, roadmap["months"])
+    week_id_map = await lpdb.insert_weeks(plan_id, roadmap["weeks"], month_id_map)
+    await lpdb.update_outline(plan_id=plan_id, total_weeks=roadmap["total_weeks"])
+
+    # 物化 Week 1 的 daily 任务
+    try:
+        await _materialize_week_sync(plan_id, week_num=1)
+    except Exception as e:
+        logger.warning(f"[Plan/confirm] Week 1 物化失败（继续返回路线图）: {e}")
+
+    await lpdb.update_outline(plan_id=plan_id, status="ready")
+
+    # 返回完整路线图
+    months = await lpdb.list_months(plan_id)
+    weeks = await lpdb.list_weeks(plan_id)
+    logger.info(f"[Plan/confirm] plan_id={plan_id} total_weeks={roadmap['total_weeks']}")
+    return {
+        "plan_id": plan_id,
+        "status": "ready",
+        "total_weeks": roadmap["total_weeks"],
+        "months": months,
+        "weeks": weeks,
+    }
+
+
+# ------------------------------------------------------------------ #
+#  单周物化                                                            #
+# ------------------------------------------------------------------ #
+
+async def _materialize_week_sync(plan_id: str, week_num: int) -> None:
+    """物化某一周的 daily 任务。
+
+    使用 CAS 幂等：如果已在 materializing/ready，立即返回。
+    """
+    claimed = await lpdb.try_claim_week_for_materialize(plan_id, week_num)
+    if not claimed:
+        return
+
+    try:
+        outline_row = await lpdb.get_outline(plan_id)
+        week = await lpdb.get_week(plan_id, week_num)
+        prev_week = await lpdb.get_week(plan_id, week_num - 1) if week_num > 1 else None
+
+        # 找到本周覆盖的模块详情
+        covered_ids = {c["module_id"] for c in (week.get("covers_modules") or [])}
+        modules_detail = [m for m in outline_row["modules"] if m["id"] in covered_ids]
+
+        agent_input = json.dumps({
+            "week": {
+                "week_num": week["week_num"],
+                "theme": week["theme"],
+                "week_goal": week["week_goal"],
+                "covers_modules": week.get("covers_modules") or [],
+                "weight_share": week["weight_share"],
+            },
+            "modules_detail": modules_detail,
+            "suggested_daily_tasks": SUGGESTED_DAILY_TASKS,
+            "previous_week_tasks": _summarize_prev_tasks(plan_id, prev_week) if prev_week else [],
+        }, ensure_ascii=False, indent=2)
+
+        raw = await _call_learn_agent("plan_daily_agent", agent_input)
+        data = _learn_extract_json(raw)
+        tasks = validate_daily_tasks(data, week_num=week_num)
+
+        # 按本周内覆盖的主模块给 task 分配 module_id（取第一个）
+        main_module_id = next(iter(covered_ids), None)
+        for t in tasks:
+            t["module_id"] = main_module_id
+
+        normalize_task_contributions(tasks, week_weight_share=week["weight_share"])
+
+        start_order = await lpdb.get_max_order_in_queue(plan_id)
+        await lpdb.insert_tasks(plan_id, week["id"], tasks, start_order=start_order)
+        await lpdb.mark_week_ready(plan_id, week_num)
+        logger.info(f"[Plan/materialize] plan_id={plan_id} week={week_num} tasks={len(tasks)}")
+    except Exception as e:
+        logger.warning(f"[Plan/materialize] plan_id={plan_id} week={week_num} 失败: {e}")
+        await lpdb.mark_week_error(plan_id, week_num, str(e))
+        raise
+
+
+def _summarize_prev_tasks(plan_id: str, prev_week: dict) -> list[dict]:
+    """只是给 agent 看的简要（不查 DB，传 theme/goal 即可）。"""
+    if not prev_week:
+        return []
+    return [{"theme": prev_week.get("theme"), "week_goal": prev_week.get("week_goal")}]
+
+
+@app.post("/plan/{plan_id}/week/{week_num}/retry", tags=["任务计划"], summary="重试某周物化")
+async def plan_retry_week(
+    plan_id: str, week_num: int,
+    user: dict = Depends(get_current_user),
+):
+    await _verify_plan_owner(plan_id, user["user_id"])
+    await lpdb.reset_week_to_skeleton(plan_id, week_num)
+    try:
+        await _materialize_week_sync(plan_id, week_num)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"重试失败：{e}")
+    return {"ok": True, "week_num": week_num}
+
+
+# ------------------------------------------------------------------ #
+#  今日任务 / 再来一批 / 完成任务                                       #
+# ------------------------------------------------------------------ #
+
+@app.get("/plan/{plan_id}/today", tags=["任务计划"], summary="今日任务（前 N 个 pending）")
+async def plan_today(
+    plan_id: str,
+    user: dict = Depends(get_current_user),
+):
+    outline_row = await _verify_plan_owner(plan_id, user["user_id"])
+    if outline_row["status"] != "ready":
+        raise HTTPException(status_code=400, detail=f"计划未就绪（status={outline_row['status']}）")
+    tasks = await lpdb.get_today_tasks(plan_id, limit=SUGGESTED_DAILY_TASKS)
+    return {"plan_id": plan_id, "tasks": tasks, "daily_limit": SUGGESTED_DAILY_TASKS}
+
+
+class MoreTasksRequest(BaseModel):
+    exclude_ids: list[int] = Field(default_factory=list)
+    limit: int | None = None
+
+
+@app.post("/plan/{plan_id}/more", tags=["任务计划"], summary="再来一批任务")
+async def plan_more(
+    plan_id: str, req: MoreTasksRequest,
+    user: dict = Depends(get_current_user),
+):
+    await _verify_plan_owner(plan_id, user["user_id"])
+    limit = req.limit or SUGGESTED_DAILY_TASKS
+    tasks = await lpdb.get_more_tasks(plan_id, req.exclude_ids, limit=limit)
+    return {"plan_id": plan_id, "tasks": tasks}
+
+
+class CompleteTaskRequest(BaseModel):
+    reflection: str | None = None
+
+
+@app.post("/plan/task/{task_id}/complete", tags=["任务计划"], summary="完成任务 + 打分")
+async def plan_complete_task(
+    task_id: int, req: CompleteTaskRequest,
+    user: dict = Depends(get_current_user),
+):
+    task = await lpdb.get_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail=f"task_id={task_id} not found")
+    outline_row = await _verify_plan_owner(task["plan_id"], user["user_id"])
+    if task["status"] == "done":
+        raise HTTPException(status_code=400, detail="任务已完成")
+
+    reflection = (req.reflection or "").strip() or None
+
+    if should_invoke_grader(reflection):
+        try:
+            agent_input = json.dumps({
+                "task_title": task["title"],
+                "task_description": task.get("description") or "",
+                "completion_criteria": task.get("completion_criteria") or "",
+                "reflection": reflection,
+            }, ensure_ascii=False, indent=2)
+            raw = await _call_learn_agent("learn_grader_agent", agent_input)
+            data = _learn_extract_json(raw)
+            score = clamp_grade(data.get("score"))
+            comment = (data.get("comment") or "").strip()[:200] or "已记录"
+        except Exception as e:
+            logger.warning(f"[Plan/complete] grader 失败，用默认分: {e}")
+            score = BASE_GRADE_SCORE
+            comment = "打分失败，已按默认记录"
+    else:
+        score, comment = apply_default_grade(reflection)
+
+    ac = float(task.get("actual_contribution") or 0)
+    final_contribution = round(ac * score, 3)
+
+    await lpdb.mark_task_done(
+        task_id=task_id,
+        reflection=reflection,
+        grade_score=score,
+        grade_comment=comment,
+        final_contribution=final_contribution,
+    )
+
+    # 触发下一周物化（倒数第 2 天规则）
+    current_week_pending = await lpdb.count_week_pending(task["plan_id"], task["week_id"])
+    next_week = await lpdb.get_week(task["plan_id"], task["week_num"] + 1)
+    if next_week and should_materialize_next_week(
+        current_week_pending,
+        next_week.get("daily_status"),
+    ):
+        asyncio.create_task(_materialize_week_safe(task["plan_id"], task["week_num"] + 1))
+
+    progress = await lpdb.compute_plan_progress(task["plan_id"])
+
+    return {
+        "task_id": task_id,
+        "grade_score": score,
+        "grade_comment": comment,
+        "final_contribution": final_contribution,
+        "progress": progress,
+    }
+
+
+async def _materialize_week_safe(plan_id: str, week_num: int) -> None:
+    """异步触发物化的 wrapper，捕获异常避免污染事件循环。"""
+    try:
+        await _materialize_week_sync(plan_id, week_num)
+    except Exception as e:
+        logger.warning(f"[Plan/materialize/async] plan_id={plan_id} week={week_num} 失败: {e}")
+
+
+# ------------------------------------------------------------------ #
+#  路线图 / 进度 / 当前计划                                              #
+# ------------------------------------------------------------------ #
+
+@app.get("/plan/{plan_id}/roadmap", tags=["任务计划"], summary="完整路线图")
+async def plan_roadmap(
+    plan_id: str,
+    user: dict = Depends(get_current_user),
+):
+    outline_row = await _verify_plan_owner(plan_id, user["user_id"])
+    # 兼容历史数据：如果 stage_title 缺失，或者等于 stage_code（早期 bug 导致写错），
+    # 临时从 career_path_progress 回填并更新 DB
+    stage_title = outline_row.get("stage_title")
+    stage_code = outline_row["stage_code"]
+    if not stage_title or stage_title == stage_code:
+        stage_info = await _fetch_stage_info(
+            outline_row["assessment_id"], stage_code
+        )
+        resolved = stage_info.get("title") if isinstance(stage_info, dict) else None
+        if resolved and resolved != stage_code:
+            stage_title = resolved
+            # 顺手回写 DB，下次不再重查
+            try:
+                async with memory_db._pool.acquire() as conn:
+                    async with conn.cursor() as cur:
+                        await cur.execute(
+                            "UPDATE learn_outlines SET stage_title=%s WHERE plan_id=%s",
+                            (resolved, plan_id),
+                        )
+            except Exception:
+                pass
+    months = await lpdb.list_months(plan_id)
+    weeks = await lpdb.list_weeks(plan_id)
+    return {
+        "plan_id": plan_id,
+        "status": outline_row["status"],
+        "stage_code": outline_row["stage_code"],
+        "stage_title": stage_title,
+        "total_weeks": outline_row.get("total_weeks"),
+        "modules": outline_row["modules"],
+        "months": months,
+        "weeks": weeks,
+    }
+
+
+@app.get("/plan/{plan_id}/progress", tags=["任务计划"], summary="进度条数据")
+async def plan_progress(
+    plan_id: str,
+    user: dict = Depends(get_current_user),
+):
+    await _verify_plan_owner(plan_id, user["user_id"])
+    progress = await lpdb.compute_plan_progress(plan_id)
+    return {"plan_id": plan_id, **progress}
+
+
+@app.get("/plan/{plan_id}/recent-done", tags=["任务计划"], summary="最近完成的任务")
+async def plan_recent_done(
+    plan_id: str,
+    days: int = 7,
+    user: dict = Depends(get_current_user),
+):
+    await _verify_plan_owner(plan_id, user["user_id"])
+    days = max(1, min(30, days))
+    tasks = await lpdb.list_recent_done_tasks(plan_id, days=days)
+    return {"plan_id": plan_id, "days": days, "tasks": tasks}
+
+
+@app.get("/plan/list", tags=["任务计划"], summary="用户所有学习计划列表（含进度）")
+async def plan_list(
+    assessment_id: str | None = None,
+    user: dict = Depends(get_current_user),
+):
+    plans = await lpdb.list_user_plans(user["user_id"], assessment_id=assessment_id)
+    return {"plans": plans}
+
+
+@app.get("/plan/current", tags=["任务计划"], summary="当前用户最新的 learn plan")
+async def plan_current(user: dict = Depends(get_current_user)):
+    outline = await lpdb.get_latest_outline_for_user(user["user_id"])
+    if not outline:
+        return {"plan_id": None}
+    return {
+        "plan_id": outline["plan_id"],
+        "status": outline["status"],
+        "assessment_id": outline["assessment_id"],
+        "stage_code": outline["stage_code"],
+        "stage_title": outline.get("stage_title"),
+        "total_weeks": outline.get("total_weeks"),
+        "estimated_weeks": outline.get("estimated_weeks"),
+        "modules": outline["modules"],
+    }
+
+
+@app.delete("/plan/{plan_id}", tags=["任务计划"], summary="删除计划")
+async def plan_delete(
+    plan_id: str,
+    user: dict = Depends(get_current_user),
+):
+    await _verify_plan_owner(plan_id, user["user_id"])
+    await lpdb.delete_plan(plan_id)
+    return {"ok": True, "plan_id": plan_id}
+
+
+# ------------------------------------------------------------------ #
+#  Stage 信息 / career_plan 上下文提取（给 outline agent 用）            #
+# ------------------------------------------------------------------ #
+
+async def _fetch_stage_info(assessment_id: str, stage_code: str) -> dict:
+    """从 career_path_progress 里找到对应 stage_code 的 stage 信息。
+
+    stage_code 格式：{path_code}-s{stage_num}，如 "path-609b4c23-s1"。
+    """
+    path_code = stage_code
+    target_stage_num: int | None = None
+    m = re.match(r"^(.+)-s(\d+)$", stage_code)
+    if m:
+        path_code = m.group(1)
+        target_stage_num = int(m.group(2))
+
+    if memory_db._pool is None:
+        return {"code": stage_code}
+    async with memory_db._pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                """SELECT path_data, current_stage FROM career_path_progress
+                   WHERE assessment_id=%s AND path_code=%s""",
+                (assessment_id, path_code),
+            )
+            row = await cur.fetchone()
+    if not row:
+        return await _fetch_stage_info_by_stage_code(assessment_id, stage_code)
+    path_data = json.loads(row[0]) if row[0] else {}
+    current_stage_db = row[1] or 1
+    stages = path_data.get("stages") or []
+    pick_stage = target_stage_num or current_stage_db
+    target = next((s for s in stages if s.get("stage") == pick_stage),
+                  stages[0] if stages else {})
+    return {
+        "code": stage_code,
+        "title": target.get("title"),
+        "timeframe": target.get("timeframe"),
+        "salary_range": target.get("salary_range"),
+        "key_skills": target.get("key_skills") or [],
+        "transition_from_prev": target.get("transition_from_prev") or "",
+        "match_score": target.get("match_score"),
+        "match_reason": target.get("match_reason"),
+        "key_gaps": target.get("key_gaps") or [],
+    }
+
+
+async def _fetch_stage_info_by_stage_code(assessment_id: str, stage_code: str) -> dict:
+    if memory_db._pool is None:
+        return {"code": stage_code}
+    async with memory_db._pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                "SELECT path_data FROM career_path_progress WHERE assessment_id=%s",
+                (assessment_id,),
+            )
+            rows = await cur.fetchall()
+    for r in rows:
+        data = json.loads(r[0]) if r[0] else {}
+        for s in data.get("stages") or []:
+            # stage 对象里可能有 "code" 字段（与 path_code 不同）
+            if s.get("code") == stage_code or s.get("title") == stage_code:
+                return {
+                    "code": stage_code,
+                    "title": s.get("title"),
+                    "key_skills": s.get("key_skills") or [],
+                    "timeframe": s.get("timeframe"),
+                    "transition_from_prev": s.get("transition_from_prev") or "",
+                }
+    return {"code": stage_code, "title": stage_code}
+
+
+async def _fetch_career_plan_context(assessment_id: str, stage_code: str) -> dict:
+    """读取 career_plan_blocks 里该 stage 对应的计划块作为上下文。"""
+    if memory_db._pool is None:
+        return {}
+    async with memory_db._pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                """SELECT block_id, block_json FROM career_plan_blocks
+                   WHERE assessment_id=%s AND onetsoc_code=%s""",
+                (assessment_id, stage_code),
+            )
+            rows = await cur.fetchall()
+    result: dict[str, Any] = {}
+    for block_id, block_json in rows:
+        try:
+            result[block_id] = json.loads(block_json) if block_json else {}
+        except Exception:
+            continue
+    return result
+
+
+def _build_profile_brief(dims: dict, summary: dict) -> dict:
+    """把 6 维度 + summary 压缩成 agent 输入用的简要画像。"""
+    brief = {"dimensions": {}, "summary": None}
+    for dim_name, dim_data in dims.items():
+        brief["dimensions"][dim_name] = {
+            "overall_score": dim_data.get("overall_score"),
+            "confidence": dim_data.get("confidence"),
+            "dimension_summary": (dim_data.get("dimension_summary") or "")[:300],
+            "sub_dimensions": [
+                {
+                    "id": s.get("id"),
+                    "name": s.get("name"),
+                    "score": s.get("score"),
+                }
+                for s in (dim_data.get("sub_dimensions") or [])[:10]
+            ],
+        }
+    if summary:
+        brief["summary"] = {
+            "overall_persona": summary.get("overall_persona"),
+            "strengths": summary.get("strengths") or [],
+            "gaps": summary.get("gaps") or [],
+        }
+    return brief
