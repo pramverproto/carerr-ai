@@ -2,6 +2,7 @@ services:
 
   # ── 前端（Nginx + React 静态文件）────────────────────────────────
   frontend:
+    image: ghcr.io/${GHCR_REPO:-jonysing/g-projeact}/frontend:${TAG:-latest}
     build:
       context: ./career-frontend
       args:
@@ -14,6 +15,7 @@ services:
 
   # ── 主后端（career-agent FastAPI）───────────────────────────────
   backend:
+    image: ghcr.io/${GHCR_REPO:-jonysing/g-projeact}/backend:${TAG:-latest}
     build:
       context: ./career-agent
     env_file:
