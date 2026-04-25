@@ -934,23 +934,21 @@ async def _run_assessment(assessment_id: str, req: AssessRequest) -> dict:
     ]
 
     tasks = [
-        _call_eval_agent(agent_name, assessment_id, candidate_json)
+        _eval_agent_with_retry(agent_name, assessment_id, candidate_json)
         for agent_name in eval_agents
     ]
     dimension_results_raw = await asyncio.gather(*tasks, return_exceptions=True)
 
-    # 解析各维度结果并写入 DB
+    # 写入 DB（_eval_agent_with_retry 已经返回解析后的 dim_data）
     dimension_results: dict[str, dict] = {}
-    for agent_name, raw in zip(eval_agents, dimension_results_raw):
+    for agent_name, result in zip(eval_agents, dimension_results_raw):
         expected_dim = agent_name.replace("_agent", "")
-        if isinstance(raw, Exception):
+        if isinstance(result, Exception):
             dim_data = {"dimension": expected_dim,
-                        "status": "error", "error": str(raw)}
+                        "status": "error", "error": str(result)}
         else:
-            dim_data = _parse_json_output(raw)
-            # 确保 dimension 字段始终来自 agent_name，避免解析失败时变成 'unknown'
+            dim_data = result
             dim_data["dimension"] = expected_dim
-            _compute_scores(dim_data)
         dimension_results[agent_name] = dim_data
         await _db_upsert_dimension(assessment_id, dim_data)
 
@@ -994,6 +992,37 @@ async def _call_eval_agent(agent_name: str, assessment_id: str, candidate_json: 
         f"=== O*NET 参考数据 ===\n{onet_text}"
     )
     return await _call_sub_agent(agent_name=agent_name, task=task)
+
+
+async def _eval_agent_with_retry(
+    agent_name: str,
+    assessment_id: str,
+    candidate_json: str,
+    max_retries: int = 2,
+) -> dict:
+    """评估 Agent + JSON 解析失败时自动重试。
+
+    返回解析后的 dim_data（含 _compute_scores 处理后的 overall_score）。
+    全部尝试失败时返回 {status: 'parse_error', raw_output: ...}。
+    """
+    last_dim_data: dict = {}
+    last_raw: str = ""
+    for attempt in range(max_retries + 1):
+        try:
+            raw = await _call_eval_agent(agent_name, assessment_id, candidate_json)
+            last_raw = raw
+            dim_data = _parse_json_output(raw)
+            if dim_data.get("status") != "parse_error":
+                _compute_scores(dim_data)
+                return dim_data
+            last_dim_data = dim_data
+            logger.warning(f"[Eval/{agent_name}] parse_error，重试 {attempt + 1}/{max_retries}")
+        except Exception as e:
+            logger.warning(f"[Eval/{agent_name}] 调用异常 {attempt + 1}/{max_retries}：{e}")
+            if attempt == max_retries:
+                raise
+    # 所有重试都失败
+    return last_dim_data or {"status": "parse_error", "raw_output": last_raw[:500]}
 
 
 def _extract_tool_result(messages: list, tool_name: str) -> dict:
@@ -1359,6 +1388,70 @@ async def _pre_generate_report(assessment_id: str) -> None:
 # ------------------------------------------------------------------ #
 #  /report 路由                                                        #
 # ------------------------------------------------------------------ #
+
+@app.post("/assess/{assessment_id}/dimension/{dim_name}/retry",
+          tags=["评估"], summary="单独重试某个评估维度")
+async def assess_retry_dimension(
+    assessment_id: str, dim_name: str,
+    user: dict = Depends(get_current_user),
+):
+    """对历史 assessment 中失败的维度单独重跑（不需要整个重做）。
+
+    场景：knowledge 维度因为 LLM 输出 JSON 解析失败显示 error。
+    """
+    await _verify_assessment_owner(assessment_id, user["user_id"])
+    valid = {"skills", "knowledge", "abilities",
+             "work_styles", "interests", "work_values"}
+    if dim_name not in valid:
+        raise HTTPException(status_code=400, detail=f"非法维度：{dim_name}")
+    agent_name = f"{dim_name}_agent"
+
+    # 拉原始评估输入（从 assessment_jobs.input_snapshot）
+    if memory_db._pool is None:
+        raise HTTPException(status_code=503, detail="DB 不可用")
+    async with memory_db._pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                "SELECT input_snapshot FROM assessment_jobs WHERE assessment_id=%s",
+                (assessment_id,),
+            )
+            row = await cur.fetchone()
+    if not row or not row[0]:
+        raise HTTPException(status_code=404,
+                            detail="找不到该评估的原始输入快照，无法重跑")
+    snapshot = json.loads(row[0]) if isinstance(row[0], str) else row[0]
+    candidate_json = json.dumps(snapshot, ensure_ascii=False, indent=2)
+
+    # 重跑该维度（含自动重试）
+    try:
+        dim_data = await _eval_agent_with_retry(
+            agent_name=agent_name,
+            assessment_id=assessment_id,
+            candidate_json=candidate_json,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"重跑失败：{e}")
+
+    dim_data["dimension"] = dim_name
+    await _db_upsert_dimension(assessment_id, dim_data)
+
+    # 该维度的 report_block 缓存清掉，下次打开报告页会重新生成
+    async with memory_db._pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                "DELETE FROM assessment_report_blocks WHERE assessment_id=%s AND block_id=%s",
+                (assessment_id, dim_name),
+            )
+
+    logger.info(f"[Assess/RetryDim] assessment_id={assessment_id} dim={dim_name} "
+                f"status={dim_data.get('status', 'done')}")
+    return {
+        "ok": True,
+        "dimension": dim_name,
+        "status": dim_data.get("status", "done"),
+        "overall_score": dim_data.get("overall_score"),
+    }
+
 
 @app.get("/report/{assessment_id}", tags=["评估"], summary="获取评估报告详情")
 async def get_report(assessment_id: str, user: dict = Depends(get_current_user)):

@@ -468,9 +468,14 @@ const PlanProgress: React.FC = () => {
     if (a.status !== b.status) return a.status === 'done' ? 1 : -1;
     return a.order_in_queue - b.order_in_queue;
   });
+  // 当前周定位：优先用今日列表里 pending 任务所在的周；否则用第一个未完成的 ready 周；
+  // 最后兜底是最早一个 ready 周
   const currentWeek = roadmap.weeks.find((w) =>
     todayTasks.some((t) => t.week_num === w.week_num && t.status === 'pending')
-  ) || roadmap.weeks.find((w) => w.daily_status === 'ready');
+  )
+    || roadmap.weeks.find((w) => w.daily_status === 'ready' && w.done_tasks < w.total_tasks)
+    || roadmap.weeks.find((w) => w.daily_status === 'materializing')
+    || roadmap.weeks.find((w) => w.daily_status === 'ready');
 
   // 优先用 matchData 里的岗位名；没有再用后端回填的 stage_title；最后兜底 code
   const liveStageTitle = resolveStageTitleFromMatch(roadmap.stage_code)

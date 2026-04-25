@@ -96,6 +96,14 @@ export const api = {
   getReport: (assessmentId: string) =>
     apiClient.get<ReportResponse>(`/report/${assessmentId}`, { timeout: 300_000 }),
 
+  /** POST /assess/{id}/dimension/{dim}/retry — 单独重试某个评估维度 */
+  assessRetryDimension: (assessmentId: string, dimName: string) =>
+    apiClient.post<{ ok: boolean; dimension: string; status: string; overall_score: number | null }>(
+      `/assess/${assessmentId}/dimension/${dimName}/retry`,
+      {},
+      { timeout: 120_000 },
+    ),
+
   /** POST /career/match */
   matchCareers: (assessmentId: string, force = false, customStart?: string) =>
     apiClient.post<CareerMatchResponse>(

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, Tag, Spin, Alert, Collapse, Progress } from 'antd';
+import { Button, Tag, Spin, Alert, Collapse, Progress, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import ReactECharts from 'echarts-for-react';
 import { useAppStore } from '@/store/appStore';
@@ -73,8 +73,31 @@ const Assessment: React.FC = () => {
   const theme = useLayoutStore((s) => s.theme);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [retryingDim, setRetryingDim] = useState<string | null>(null);
   const mainRef = useRef<HTMLDivElement>(null);
   const fetchingRef = useRef(false);
+
+  const handleRetryDimension = async (dimId: string) => {
+    if (!assessmentId) return;
+    setRetryingDim(dimId);
+    try {
+      const res = await api.assessRetryDimension(assessmentId, dimId);
+      if (res.data.status === 'parse_error') {
+        message.warning(`${dimId} 维度重试 3 次仍解析失败，请稍后再试`);
+      } else {
+        message.success(`${dimId} 维度已重新评估`);
+      }
+      // 刷新报告
+      const reportRes = await api.getReport(assessmentId);
+      setReportData(reportRes.data);
+    } catch (e: unknown) {
+      const msg = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+        || '重试失败';
+      message.error(msg);
+    } finally {
+      setRetryingDim(null);
+    }
+  };
 
   useEffect(() => {
     if (!assessmentId) return;
@@ -201,6 +224,16 @@ const Assessment: React.FC = () => {
                       <Tag color={d.status === 'done' ? 'green' : d.status === 'locked' ? 'default' : 'red'}>
                         {d.status === 'done' ? '完成' : d.status === 'locked' ? '锁定' : d.status}
                       </Tag>
+                      {(d.status === 'error' || d.status === 'parse_error') && assessmentId && (
+                        <Button
+                          size="small"
+                          type="link"
+                          loading={retryingDim === d.id}
+                          onClick={() => handleRetryDimension(d.id)}
+                        >
+                          重试
+                        </Button>
+                      )}
                     </td>
                   </tr>
                 ))}

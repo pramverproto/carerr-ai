@@ -408,9 +408,10 @@ async def insert_tasks(plan_id: str, week_id: int, tasks: list[dict], start_orde
 
 
 async def get_today_tasks(plan_id: str, limit: int) -> list[dict]:
-    """返回"今日焦点"：
-       - 前 limit 个 pending 任务（按 order_in_queue）
-       - 加上今天已完成的任务（保留满足感的展示）
+    """返回"今日焦点"：今日 done + 最多 (limit - done_count) 个 pending。
+
+    保证总数不超过 limit，避免刷新时悄悄塞入新任务。
+    用户想要更多可以点"+ 新增任务"主动追加（走 /more 接口）。
     """
     async with memory_db._pool.acquire() as conn:
         async with conn.cursor() as cur:
@@ -428,20 +429,21 @@ async def get_today_tasks(plan_id: str, limit: int) -> list[dict]:
                 (plan_id,),
             )
             done_rows = await cur.fetchall()
-            # 前 N 个 pending
-            await cur.execute(
-                """SELECT t.id, t.week_id, t.module_id, t.order_in_queue, t.order_in_week,
-                          t.title, t.description, t.task_type, t.est_minutes, t.target_dims,
-                          t.raw_weight, t.actual_contribution, t.completion_criteria, t.status,
-                          w.week_num, w.theme
-                   FROM learn_tasks t
-                   JOIN learn_weeks w ON w.id = t.week_id
-                   WHERE t.plan_id=%s AND t.status='pending'
-                   ORDER BY t.order_in_queue ASC LIMIT %s""",
-                (plan_id, limit),
-            )
-            pending_rows = await cur.fetchall()
-    # 前端会根据 status 再排序（pending 在前 / done 沉底），这里顺序无所谓
+            pending_limit = max(0, limit - len(done_rows))
+            pending_rows: tuple = ()
+            if pending_limit > 0:
+                await cur.execute(
+                    """SELECT t.id, t.week_id, t.module_id, t.order_in_queue, t.order_in_week,
+                              t.title, t.description, t.task_type, t.est_minutes, t.target_dims,
+                              t.raw_weight, t.actual_contribution, t.completion_criteria, t.status,
+                              w.week_num, w.theme
+                       FROM learn_tasks t
+                       JOIN learn_weeks w ON w.id = t.week_id
+                       WHERE t.plan_id=%s AND t.status='pending'
+                       ORDER BY t.order_in_queue ASC LIMIT %s""",
+                    (plan_id, pending_limit),
+                )
+                pending_rows = await cur.fetchall()
     return [_row_to_task(r) for r in pending_rows] + [_row_to_task(r) for r in done_rows]
 
 
