@@ -13,6 +13,7 @@ interface AppState {
   planData: CareerPlanResponse | null;
   selectedCareer: string | null;
   assessStatus: AssessStatus;
+  assessStartedAt: number | null;  // 评估开始的时间戳，用于刷新后基于时间还原进度
   assessError: string | null;
   matchLoading: boolean;
   matchError: string | null;
@@ -49,6 +50,7 @@ export const useAppStore = create<AppState>()(
       planData: null,
       selectedCareer: null,
       assessStatus: 'idle',
+      assessStartedAt: null,
       assessError: null,
       matchLoading: false,
       matchError: null,
@@ -60,7 +62,12 @@ export const useAppStore = create<AppState>()(
       setAssessmentId: (id) => set({ assessmentId: id }),
       setProfileDraft: (draft) => set({ profileDraft: draft }),
       setAssessStatus: (status, error) =>
-        set({ assessStatus: status, assessError: error ?? null }),
+        set({
+          assessStatus: status,
+          assessError: error ?? null,
+          // 进入 loading 时记录开始时间；其它状态清空
+          assessStartedAt: status === 'loading' ? (Date.now()) : null,
+        }),
       setReportData: (data) => set({ reportData: data }),
       setMatchData: (data) => set({ matchData: data }),
       setSelectedCareer: (code) => set({ selectedCareer: code }),

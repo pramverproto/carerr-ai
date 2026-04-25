@@ -275,7 +275,7 @@ function FutureOutlookSection({
 //  主页面
 // ================================================================== //
 
-type Step = 'match_loading' | 'select' | 'plan_loading' | 'report';
+type Step = 'idle' | 'match_loading' | 'select' | 'plan_loading' | 'report';
 
 const PLAN_BLOCK_ANCHORS = [
   { id: 'match_overview',     label: '综合评估' },
@@ -297,16 +297,16 @@ const CareerPlan: React.FC = () => {
   } = useAppStore();
 
   // ── 从 store 推导初始 step（避免导航返回时闪烁） ────────
+  // 没有 matchData 时进入 idle 态，等用户点击按钮才发起匹配请求
   const [step, setStep] = useState<Step>(() => {
     if (planLoading) return 'plan_loading';
     if (matchLoading) return 'match_loading';
     if (planData && selectedCareer) return 'report';
     if (matchData) return 'select';
-    return 'match_loading';
+    return 'idle';
   });
   const [planStep, setPlanStep] = useState(0);
   const [plannedCodes, setPlannedCodes] = useState<Record<string, PlannedInfo>>({});
-  const [customStart, setCustomStart] = useState('');
   // 当前选中的路线数据（用于传给规划接口）
   const [selectedPath, setSelectedPath] = useState<CareerPathRecommendation | null>(null);
   const [currentStage, setCurrentStage] = useState(1);
@@ -324,13 +324,14 @@ const CareerPlan: React.FC = () => {
     if (!assessmentId) return;
     if (planLoading) { setStep('plan_loading'); return; }
     if (matchLoading) { setStep('match_loading'); return; }
-    // loading 完成后，根据前一状态决定下一视图
+    // loading 完成后，根据前一状态和已有数据决定下一视图；
+    // 没有任何数据时保持 idle，等待用户点击按钮触发
     setStep(prev => {
       if (prev === 'plan_loading' && planData) return 'report';
       if (prev === 'match_loading' && matchData) return 'select';
       if (prev === 'report' && planData) return 'report';
       if (matchData) return 'select';
-      return 'match_loading';
+      return 'idle';
     });
   }, [assessmentId, matchData, matchLoading, planLoading, planData]);
 
@@ -350,11 +351,10 @@ const CareerPlan: React.FC = () => {
       .finally(() => setMatchLoading(false));
   };
 
-  // ── 初始化（不重复触发已进行中的请求） ───────────────────
+  // ── 初始化：只拉已规划的职业代码（轻量），匹配请求改由用户点击触发 ───
   useEffect(() => {
     if (!assessmentId) return;
     fetchPlannedCodes();
-    if (!matchData && !matchLoading) fetchMatch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [assessmentId]);
 
@@ -472,6 +472,10 @@ const CareerPlan: React.FC = () => {
     );
   }
 
+  if (step === 'idle') {
+    return <IdleEntry onAiRecommend={() => fetchMatch()} navigate={navigate} setSelectedCareer={setSelectedCareer} />;
+  }
+
   if (step === 'match_loading') {
     return <CareerMatchSkeleton />;
   }
@@ -497,6 +501,12 @@ const CareerPlan: React.FC = () => {
     const plannedCount = Object.keys(plannedCodes).length;
     return (
       <div>
+        <button
+          onClick={() => { setMatchData(null); setStep('idle'); }}
+          className="text-sm text-gray-400 hover:text-gray-600 mb-3 flex items-center gap-1"
+        >
+          ← 返回选择方式（AI 推荐 / 自己输入）
+        </button>
         <div className="mb-6 flex items-start justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">为您推荐的职业发展路线</h2>
@@ -515,37 +525,11 @@ const CareerPlan: React.FC = () => {
           </Button>
         </div>
 
-        {/* 自定义起点输入 */}
-        <div className="mb-5 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 px-4 py-3">
-          <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
-            你也可以自己选择起始方向，系统将据此生成定制路线
-          </p>
-          <div className="flex gap-2">
-            <Input
-              placeholder={'输入岗位方向，如"产品经理"、"数据分析师"'}
-              value={customStart}
-              onChange={(e) => setCustomStart(e.target.value)}
-              onPressEnter={() => {
-                if (customStart.trim()) fetchMatch(true, customStart.trim());
-              }}
-              className="flex-1"
-            />
-            <Button
-              type="primary"
-              disabled={!customStart.trim()}
-              loading={matchLoading}
-              onClick={() => fetchMatch(true, customStart.trim())}
-            >
-              生成定制路线
-            </Button>
-          </div>
-        </div>
-
         {recs.length === 0 ? (
           <Alert
             type="warning"
             message="暂无推荐结果"
-            description="点击右上方按钮重新匹配，或输入自定义起始方向。"
+            description="点击右上方「重新匹配」再试一次，或返回上一步选择「自己输入目标岗位」。"
             showIcon
           />
         ) : (
@@ -697,6 +681,105 @@ const CareerPlan: React.FC = () => {
   }
 
   return null;
+};
+
+// ────────────────────────────────────────────────────────────────────
+//  入口选择：AI 推荐 vs 自己输入目标岗位
+// ────────────────────────────────────────────────────────────────────
+
+const IdleEntry: React.FC<{
+  onAiRecommend: () => void;
+  navigate: ReturnType<typeof useNavigate>;
+  setSelectedCareer: (code: string | null) => void;
+}> = ({ onAiRecommend, navigate, setSelectedCareer }) => {
+  const [mode, setMode] = useState<'choose' | 'manual'>('choose');
+  const [manualTitle, setManualTitle] = useState('');
+
+  if (mode === 'manual') {
+    return (
+      <div className="max-w-xl mx-auto mt-12">
+        <button
+          onClick={() => setMode('choose')}
+          className="text-sm text-gray-400 hover:text-gray-600 mb-4 flex items-center gap-1"
+        >
+          ← 返回选择
+        </button>
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
+          输入你的目标岗位
+        </h2>
+        <p className="text-gray-500 mb-6">
+          已经有明确目标？输入岗位名称，跳过推荐直接进入学习计划生成
+        </p>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-5 space-y-4">
+          <input
+            type="text"
+            value={manualTitle}
+            onChange={(e) => setManualTitle(e.target.value)}
+            placeholder="例如：AI Agent 开发工程师 / 前端架构师 / 数据分析师"
+            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 focus:outline-none focus:border-blue-500"
+            maxLength={50}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && manualTitle.trim()) {
+                setSelectedCareer(`manual:${manualTitle.trim()}`);
+                navigate('/plan');
+              }
+            }}
+          />
+          <Button
+            type="primary"
+            size="large"
+            block
+            disabled={!manualTitle.trim()}
+            onClick={() => {
+              setSelectedCareer(`manual:${manualTitle.trim()}`);
+              navigate('/plan');
+            }}
+          >
+            进入学习计划
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto mt-12">
+      <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2 text-center">
+        如何确定你的发展方向？
+      </h2>
+      <p className="text-gray-500 mb-8 text-center">两种方式，按需选择</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <button
+          onClick={onAiRecommend}
+          className="text-left p-6 bg-white dark:bg-gray-800 rounded-xl border-2 border-blue-200 dark:border-blue-800 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-md transition-all"
+        >
+          <div className="text-2xl mb-3">🎯</div>
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
+            AI 推荐路线
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+            基于能力画像，AI 推荐若干条最匹配的发展路线，每条含 3 个递进阶段。
+            适合还在探索、想看更多可能性。
+          </p>
+          <p className="text-xs text-blue-500 mt-3">推荐生成 ≈ 30 秒</p>
+        </button>
+        <button
+          onClick={() => setMode('manual')}
+          className="text-left p-6 bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 hover:shadow-md transition-all"
+        >
+          <div className="text-2xl mb-3">✍️</div>
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
+            自己输入目标岗位
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+            已经有清晰目标？跳过推荐，直接为你目标岗位生成学习计划。
+            适合方向已定、想立刻开始学习。
+          </p>
+          <p className="text-xs text-gray-400 mt-3">直接进入下一步</p>
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export default CareerPlan;

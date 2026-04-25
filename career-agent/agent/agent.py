@@ -161,7 +161,7 @@ class Agent:
             })
             await self._persist("tool", str(result), tool_call_id=tool_call.id)
 
-        return self.llm.chat(self.messages, tools=all_tools)
+        return await self.llm.achat(self.messages, tools=all_tools)
 
     # ------------------------------------------------------------------ #
     #  run_once — sub_agent entry point                                     #
@@ -182,7 +182,7 @@ class Agent:
         # trace: run_start
         await self._trace(trace_id, "run_start", name="run_once", input={"task": task})
 
-        response, elapsed_ms, usage = self.llm.chat(self.messages, tools=all_tools)
+        response, elapsed_ms, usage = await self.llm.achat(self.messages, tools=all_tools)
 
         # trace: first llm_call
         await self._trace(
@@ -403,7 +403,7 @@ class Agent:
                 # trace: run_start
                 await self._trace(trace_id, "run_start", name="run", input={"user_input": user_input})
 
-                response, elapsed_ms, usage = self.llm.chat(self.messages, tools=all_tools)
+                response, elapsed_ms, usage = await self.llm.achat(self.messages, tools=all_tools)
 
                 # trace: first llm_call
                 await self._trace(

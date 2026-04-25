@@ -67,15 +67,56 @@ function buildRadarOption(blocks: ReportBlocks, isDark = false) {
   };
 }
 
+/** 评估流程的步骤定义 + DB 状态映射 */
+const DIM_LABELS: Record<string, string> = {
+  skills: '技能画像', knowledge: '知识储备', abilities: '认知能力',
+  work_styles: '工作特质', interests: '职业兴趣', work_values: '工作价值观',
+};
+const DIM_ORDER = ['skills', 'knowledge', 'abilities', 'work_styles', 'interests', 'work_values'];
+
+interface AssessProgress {
+  status: string;
+  error: string | null;
+  completedDims: Set<string>;
+  summaryDone: boolean;
+  completedBlocks: number;
+}
+
 const Assessment: React.FC = () => {
   const navigate = useNavigate();
-  const { assessmentId, reportData, setReportData } = useAppStore();
+  const {
+    assessmentId, reportData, setReportData,
+    profileDraft, setAssessmentId, resetDownstream,
+    assessStatus, assessError, setAssessStatus,
+  } = useAppStore();
   const theme = useLayoutStore((s) => s.theme);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryingDim, setRetryingDim] = useState<string | null>(null);
+  const [starting, setStarting] = useState(false);
   const mainRef = useRef<HTMLDivElement>(null);
   const fetchingRef = useRef(false);
+
+  /** 直接发起评估：若有缓存的个人资料就用它，否则跳转信息完善页 */
+  const handleStartAssessment = () => {
+    if (!profileDraft || Object.keys(profileDraft).length === 0) {
+      message.info('请先完善个人信息');
+      navigate('/profile');
+      return;
+    }
+    resetDownstream();
+    setAssessStatus('loading');
+    api.assess(profileDraft as Parameters<typeof api.assess>[0])
+      .then((res) => {
+        setAssessmentId(res.data.assessment_id);
+        // 拿到 id 后 loading 状态结束，剩下的进度由轮询接管
+      })
+      .catch((e: unknown) => {
+        const msg = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+          || '评估发起失败';
+        setAssessStatus('error', msg);
+      });
+  };
 
   const handleRetryDimension = async (dimId: string) => {
     if (!assessmentId) return;
@@ -99,30 +140,198 @@ const Assessment: React.FC = () => {
     }
   };
 
+  // 轮询评估真实进度
+  const [progress, setProgress] = useState<AssessProgress | null>(null);
+  // 是否已启动加载/轮询（默认 false，用户点击按钮才开始；submit 流转过来 status=loading 时自动开）
+  const [pollingEnabled, setPollingEnabled] = useState(false);
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // 用户刚提交评估、status=loading 时自动启用轮询；其余进入页面需点击触发
   useEffect(() => {
+    if (assessStatus === 'loading') setPollingEnabled(true);
+  }, [assessStatus]);
+
+  useEffect(() => {
+    if (!pollingEnabled) return;
     if (!assessmentId) return;
     // 缓存命中检查
     if (reportData?.assessment_id === assessmentId) return;
-    // 已有请求进行中，不重复发起
-    if (fetchingRef.current) return;
-    fetchingRef.current = true;
-    setLoading(true);
-    setError(null);
-    api.getReport(assessmentId)
-      .then((res) => { setReportData(res.data); })
-      .catch((err) => {
-        setError(err?.response?.data?.detail || err?.message || '获取报告失败');
-      })
-      .finally(() => { setLoading(false); fetchingRef.current = false; });
-  }, [assessmentId]);
+
+    let cancelled = false;
+    const stopPoll = () => {
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current);
+        pollTimerRef.current = null;
+      }
+    };
+
+    const fetchReport = async () => {
+      if (fetchingRef.current) return;
+      fetchingRef.current = true;
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await api.getReport(assessmentId);
+        if (!cancelled) setReportData(res.data);
+      } catch (err: unknown) {
+        if (!cancelled) {
+          const e = err as { response?: { data?: { detail?: string } }; message?: string };
+          setError(e?.response?.data?.detail || e?.message || '获取报告失败');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+        fetchingRef.current = false;
+      }
+    };
+
+    const pollOnce = async () => {
+      try {
+        const res = await api.assessStatus(assessmentId);
+        if (cancelled) return;
+        const data = res.data;
+        setProgress({
+          status: data.status,
+          error: data.error,
+          completedDims: new Set(data.completed_dimensions),
+          summaryDone: data.summary_done,
+          completedBlocks: data.completed_report_blocks.length,
+        });
+        if (data.status === 'done') {
+          stopPoll();
+          fetchReport();
+        } else if (data.status === 'failed') {
+          stopPoll();
+          setError(data.error || '评估失败');
+        }
+      } catch (err: unknown) {
+        // 偶尔失败不致命，继续轮询
+        console.warn('assessStatus poll error', err);
+      }
+    };
+
+    // 立刻拉一次再开始定时
+    pollOnce();
+    pollTimerRef.current = setInterval(pollOnce, 3000);
+
+    return () => {
+      cancelled = true;
+      stopPoll();
+    };
+  }, [pollingEnabled, assessmentId, reportData?.assessment_id, setReportData]);
+
+  // 评估请求刚发出但 assessment_id 还没拿到：占位
+  if (assessStatus === 'loading' && !assessmentId) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-3">
+        <Spin size="large" />
+        <p className="text-gray-500">正在提交评估请求...</p>
+      </div>
+    );
+  }
+
+  // 评估发起失败
+  if (assessStatus === 'error' && !assessmentId) {
+    return (
+      <div className="max-w-xl mx-auto mt-12">
+        <Alert
+          type="error" showIcon
+          message="评估发起失败"
+          description={assessError || '未知错误'}
+          action={
+            <Button onClick={handleStartAssessment} loading={starting}>重试</Button>
+          }
+        />
+      </div>
+    );
+  }
 
   if (!assessmentId) {
+    const hasProfile = profileDraft && Object.keys(profileDraft).length > 0;
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-gray-500">暂无评估记录</p>
-        <Button type="primary" onClick={() => navigate('/profile')}>
-          开始评估
-        </Button>
+        <p className="text-gray-500">
+          {hasProfile ? '已检测到个人资料，可直接发起评估' : '尚未填写个人资料'}
+        </p>
+        <div className="flex gap-2">
+          <Button
+            type="primary"
+            loading={starting}
+            onClick={handleStartAssessment}
+          >
+            开始评估
+          </Button>
+          {hasProfile && (
+            <Button onClick={() => navigate('/profile')}>编辑个人资料</Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // 评估进行中（含未拿到首次 poll 的初始态）：显示进度 UI 而非 spinner
+  if (
+    assessmentId &&
+    !reportData &&
+    pollingEnabled &&
+    (!progress || (progress.status !== 'done' && progress.status !== 'failed'))
+  ) {
+    const totalSteps = DIM_ORDER.length + 2;
+    const doneSteps = progress
+      ? DIM_ORDER.filter((d) => progress.completedDims.has(d)).length
+        + (progress.summaryDone ? 1 : 0)
+        + (progress.completedBlocks >= 6 ? 1 : 0)
+      : 0;
+    const pct = Math.round((doneSteps / totalSteps) * 100);
+    const completedDims = progress?.completedDims || new Set<string>();
+    const summaryDone = progress?.summaryDone || false;
+    const completedBlocks = progress?.completedBlocks || 0;
+
+    return (
+      <div className="max-w-xl mx-auto mt-8 space-y-6">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">正在生成你的能力评估</h2>
+          <p className="text-gray-500 mt-1">每个维度由独立 Agent 评估，全程约 2-3 分钟</p>
+        </div>
+        <Progress percent={pct} status="active" />
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-5 space-y-3">
+          {DIM_ORDER.map((dim) => {
+            const done = completedDims.has(dim);
+            return (
+              <div key={dim} className="flex items-center gap-3">
+                <span className={`w-5 ${done ? 'text-green-500' : 'text-gray-300'}`}>
+                  {done ? '✓' : '○'}
+                </span>
+                <span className={done ? 'text-gray-800 dark:text-gray-100' : 'text-gray-400'}>
+                  {DIM_LABELS[dim]}
+                </span>
+                {!done && completedDims.size < DIM_ORDER.length && (
+                  <Spin size="small" />
+                )}
+              </div>
+            );
+          })}
+          <div className="flex items-center gap-3 border-t pt-3 mt-3 dark:border-gray-700">
+            <span className={`w-5 ${summaryDone ? 'text-green-500' : 'text-gray-300'}`}>
+              {summaryDone ? '✓' : '○'}
+            </span>
+            <span className={summaryDone ? 'text-gray-800 dark:text-gray-100' : 'text-gray-400'}>
+              综合画像生成
+            </span>
+            {!summaryDone && completedDims.size >= DIM_ORDER.length && <Spin size="small" />}
+          </div>
+          <div className="flex items-center gap-3">
+            <span className={`w-5 ${completedBlocks >= 6 ? 'text-green-500' : 'text-gray-300'}`}>
+              {completedBlocks >= 6 ? '✓' : '○'}
+            </span>
+            <span className={completedBlocks >= 6 ? 'text-gray-800 dark:text-gray-100' : 'text-gray-400'}>
+              报告内容生成（{completedBlocks}/6）
+            </span>
+            {completedBlocks < 6 && summaryDone && <Spin size="small" />}
+          </div>
+        </div>
+        <p className="text-xs text-gray-400 text-center">
+          可以放心刷新页面或先去做别的，进度会保留。
+        </p>
       </div>
     );
   }
@@ -147,7 +356,32 @@ const Assessment: React.FC = () => {
     );
   }
 
-  if (!reportData) return null;
+  // 有 assessmentId 但没启动轮询、也无 reportData：显示按钮等待用户点击
+  if (assessmentId && !reportData && !pollingEnabled) {
+    return (
+      <div className="max-w-2xl mx-auto mt-12 text-center">
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
+          能力评估报告
+        </h2>
+        <p className="text-gray-500 mb-6">
+          点击下方按钮加载你的最新评估报告
+        </p>
+        <Button type="primary" size="large" onClick={() => setPollingEnabled(true)}>
+          查看评估报告
+        </Button>
+      </div>
+    );
+  }
+
+  // 已启动加载但还没拿到 progress / reportData：显示加载占位
+  if (!reportData) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-3">
+        <Spin size="large" />
+        <p className="text-gray-500">正在加载评估状态...</p>
+      </div>
+    );
+  }
 
   const { blocks } = reportData;
 

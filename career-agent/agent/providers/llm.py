@@ -1,3 +1,4 @@
+import asyncio
 import time
 import litellm
 from agent.logger import get_logger
@@ -54,3 +55,13 @@ class LLMProvider:
             tools=tools or None,
             stream=True,
         )
+
+    async def achat(self, messages: list, tools: list | None = None):
+        """async 包装：用 asyncio.to_thread 把同步 LLM 调用扔到线程池，
+        避免阻塞 FastAPI 事件循环。
+        """
+        return await asyncio.to_thread(self.chat, messages, tools)
+
+    async def achat_stream(self, messages: list, tools: list | None = None):
+        """async 包装的流式调用。注意流迭代仍是同步的，但启动调用不阻塞。"""
+        return await asyncio.to_thread(self.chat_stream, messages, tools)

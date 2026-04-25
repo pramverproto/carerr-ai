@@ -20,7 +20,8 @@ const { Paragraph, Text, Title } = Typography;
 const { TextArea } = Input;
 
 type Phase =
-  | 'loading'          // 初始拉 /plan/current
+  | 'idle'             // 进入页面默认态：等用户点击「查看任务计划」
+  | 'loading'          // 拉 /plan/current 中
   | 'no_career'        // 用户还没在 CareerPlan 页选 stage
   | 'empty'            // 有 stage 还没生成 plan
   | 'outline_confirm'  // 大纲已生成等用户确认
@@ -47,7 +48,7 @@ const PlanProgress: React.FC = () => {
   const navigate = useNavigate();
   const { assessmentId, selectedCareer, matchData } = useAppStore();
 
-  const [phase, setPhase] = useState<Phase>('loading');
+  const [phase, setPhase] = useState<Phase>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
   const [planId, setPlanId] = useState<string | null>(null);
@@ -66,8 +67,6 @@ const PlanProgress: React.FC = () => {
   const [dialogReflection, setDialogReflection] = useState('');
   const [dialogSubmitting, setDialogSubmitting] = useState(false);
   const [lastConfirmResult, setLastConfirmResult] = useState<ConfirmResult | null>(null);
-
-  const loadedOnce = useRef(false);
 
   // ─── 加载已就绪态的完整数据 ─────────────────────────────────────────
   const loadReady = useCallback(async (pid: string) => {
@@ -123,11 +122,7 @@ const PlanProgress: React.FC = () => {
     }
   }, [selectedCareer, loadReady]);
 
-  useEffect(() => {
-    if (loadedOnce.current) return;
-    loadedOnce.current = true;
-    loadCurrent();
-  }, [loadCurrent]);
+  // 进入页面不再自动 loadCurrent；用户点击「查看任务计划」按钮才加载
 
   // ─── 生成大纲 ─────────────────────────────────────────────────────
   const handleGenerate = async () => {
@@ -315,6 +310,22 @@ const PlanProgress: React.FC = () => {
   };
 
   // ─── 渲染各阶段 ─────────────────────────────────────────────────────
+  if (phase === 'idle') {
+    return (
+      <div className="max-w-2xl mx-auto mt-12 text-center">
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
+          任务计划
+        </h2>
+        <p className="text-gray-500 mb-6">
+          点击下方按钮查看你的学习任务进度，或基于已选职业路线生成新计划
+        </p>
+        <Button type="primary" size="large" onClick={loadCurrent}>
+          查看任务计划
+        </Button>
+      </div>
+    );
+  }
+
   if (phase === 'loading') {
     return <div className="flex items-center justify-center h-96"><Spin size="large" /></div>;
   }
@@ -332,9 +343,14 @@ const PlanProgress: React.FC = () => {
     );
   }
 
-  // 从 matchData 里按 selectedCareer (= "path-xxx-sN") 查对应 stage 的 title
+  // 从 selectedCareer 解析 stage 名：
+  //   - "manual:用户输入" → 直接取 ":" 后面的字符串
+  //   - "path-xxx-sN" → 从 matchData 里查 stage.title
   const resolveStageTitleFromMatch = (code: string | null): string | undefined => {
     if (!code) return undefined;
+    if (code.startsWith('manual:')) {
+      return code.slice('manual:'.length).trim() || undefined;
+    }
     const m = /^(.+)-s(\d+)$/.exec(code);
     if (!m) return undefined;
     const [, pathCode, stageStr] = m;

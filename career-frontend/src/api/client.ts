@@ -88,9 +88,20 @@ export const api = {
 
   // ── Business ─────────────────────────────────────────────────────
 
-  /** POST /assess — 同步，超时5分钟 */
+  /** POST /assess — 立即返回 assessment_id，后台执行 */
   assess: (data: AssessRequest) =>
-    apiClient.post<AssessResponse>('/assess', data, { timeout: 300_000 }),
+    apiClient.post<AssessResponse>('/assess', data, { timeout: 30_000 }),
+
+  /** GET /assess/{id}/status — 查询评估真实进度 */
+  assessStatus: (assessmentId: string) =>
+    apiClient.get<{
+      assessment_id: string;
+      status: 'pending' | 'running' | 'done' | 'failed' | string;
+      error: string | null;
+      completed_dimensions: string[];
+      summary_done: boolean;
+      completed_report_blocks: string[];
+    }>(`/assess/${assessmentId}/status`),
 
   /** GET /report/{id} — 6 个维度块并发生成 LLM 可能较慢，给 5 分钟 */
   getReport: (assessmentId: string) =>

@@ -201,15 +201,19 @@ const Profile: React.FC = () => {
           current_title: values.current_title as string | undefined,
           years_of_experience: values.years_of_experience as number | undefined,
         },
-        experiences: experiences.map((exp) => ({
-          company: exp.company as string,
-          title: exp.title as string,
-          duration: exp.duration as string,
-          responsibilities: ((exp.responsibilities as string) || '')
-            .split('\n')
-            .map((s: string) => s.trim())
-            .filter(Boolean),
-        })),
+        experiences: experiences.map((exp) => {
+          // responsibilities 可能是字符串（用户在 TextArea 输入）或数组（LLM 解析返回）
+          const raw = exp.responsibilities;
+          const lines: string[] = Array.isArray(raw)
+            ? (raw as unknown[]).map((s) => String(s))
+            : String(raw || '').split('\n');
+          return {
+            company: exp.company as string,
+            title: exp.title as string,
+            duration: exp.duration as string,
+            responsibilities: lines.map((s) => s.trim()).filter(Boolean),
+          };
+        }),
         skills,
         certifications: certifications.length ? certifications : undefined,
       },
@@ -239,24 +243,22 @@ const Profile: React.FC = () => {
       };
     }
 
-    // 保存草稿
+    // 保存草稿 + 进入 loading 态（持久化），立即跳转到能力评估页
     setProfileDraft(requestBody);
     setAssessStatus('loading');
-    setStepIndex(0);
+    resetDownstream();
+    navigate('/assessment');
 
-    try {
-      const res = await api.assess(requestBody);
-      const { assessment_id } = res.data;
-      resetDownstream();
-      setAssessmentId(assessment_id);
-      setAssessStatus('done');
-      message.success('评估完成，正在加载报告...');
-      navigate('/assessment');
-    } catch (err: unknown) {
-      const errMsg = (err as { response?: { data?: { detail?: string } }; message?: string })
-        ?.response?.data?.detail || (err as { message?: string })?.message || '评估失败，请重试';
-      setAssessStatus('error', errMsg);
-    }
+    // /assess 现在立即返回 assessment_id，进度由 Assessment 页轮询 /assess/{id}/status
+    api.assess(requestBody)
+      .then((res) => {
+        useAppStore.getState().setAssessmentId(res.data.assessment_id);
+      })
+      .catch((err: unknown) => {
+        const errMsg = (err as { response?: { data?: { detail?: string } }; message?: string })
+          ?.response?.data?.detail || (err as { message?: string })?.message || '评估发起失败';
+        useAppStore.getState().setAssessStatus('error', errMsg);
+      });
   };
 
   return (
@@ -300,13 +302,9 @@ const Profile: React.FC = () => {
 
       {isLoading ? (
         <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-8 text-center">
-          <p className="text-blue-700 dark:text-blue-300 font-medium text-lg mb-6">正在为您生成能力评估报告（约2-3分钟）...</p>
-          <Steps
-            current={stepIndex}
-            direction="vertical"
-            size="small"
-            items={ASSESS_STEPS.map((title) => ({ title }))}
-          />
+          <p className="text-blue-700 dark:text-blue-300 font-medium">
+            正在生成评估，请前往「能力评估」页查看进度
+          </p>
         </div>
       ) : (
         <Form

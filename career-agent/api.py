@@ -772,7 +772,11 @@ async def resume_extract(file: UploadFile = File(...), user: dict = Depends(get_
         mime == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         or (file.filename and file.filename.lower().endswith(".docx"))
     )
-    if not (mime.startswith("image/") or mime == "application/pdf" or is_docx):
+    is_pdf = (
+        mime == "application/pdf"
+        or (file.filename and file.filename.lower().endswith(".pdf"))
+    )
+    if not (mime.startswith("image/") or is_pdf or is_docx):
         raise HTTPException(status_code=400, detail=f"不支持的文件类型：{mime}")
 
     upload_id = uuid.uuid4().hex[:16]
@@ -790,8 +794,28 @@ async def resume_extract(file: UploadFile = File(...), user: dict = Depends(get_
             raise HTTPException(status_code=422, detail=f"Word 文件解析失败：{e}")
         if not ocr_text.strip():
             raise HTTPException(status_code=422, detail="Word 文件内容为空")
+    elif is_pdf:
+        # PDF 直接抽取文本，避开视觉模型不支持 PDF 的限制
+        import io
+        from pypdf import PdfReader
+        try:
+            reader = PdfReader(io.BytesIO(raw_bytes))
+            pages_text = []
+            for page in reader.pages:
+                t = page.extract_text() or ""
+                if t.strip():
+                    pages_text.append(t.strip())
+            ocr_text = "\n".join(pages_text)
+        except Exception as e:
+            logger.error(f"[ResumeExtract] PDF 解析失败: {e}")
+            raise HTTPException(status_code=422, detail=f"PDF 文件解析失败：{e}")
+        if not ocr_text.strip():
+            raise HTTPException(
+                status_code=422,
+                detail="PDF 内未提取到文本，可能是扫描版/图片版 PDF。请上传图片格式（PNG/JPG）或 Word 文件",
+            )
     else:
-        # 图片/PDF → 多模态 OCR
+        # 图片 → 多模态 OCR
         b64 = base64.b64encode(raw_bytes).decode("ascii")
         data_url = f"data:{mime};base64,{b64}"
         import litellm
@@ -874,39 +898,76 @@ async def resume_extract(file: UploadFile = File(...), user: dict = Depends(get_
 #  /assess 路由                                                        #
 # ------------------------------------------------------------------ #
 
-@app.post("/assess", tags=["评估"], summary="发起六维度职业能力评估")
+@app.post("/assess", tags=["评估"], summary="发起六维度职业能力评估（立即返回，后台执行）")
 @limiter.limit("5/hour")
 async def assess(request: Request, req: AssessRequest, user: dict = Depends(get_current_user)):
     """
-    接收原始评估输入，执行全流程评估，将结果写入数据库，返回 assessment_id 和摘要。
-    流程：InputParser → 6 个维度 Agent (并发) → SummaryAgent
+    立即返回 assessment_id，后台异步执行 6 维度 Agent + SummaryAgent + 报告预生成。
+    前端通过 GET /assess/{id}/status 轮询真实进度。
     """
-    assessment_id = uuid.uuid4().hex  # 32位无连字符，适配 VARCHAR(32)
-    t0 = time.perf_counter()
-
+    assessment_id = uuid.uuid4().hex
     await _db_insert_job(
         assessment_id, req.session_id, "running",
         input_snapshot=req.model_dump(exclude={"session_id"}, exclude_none=True),
         user_id=user["user_id"],
     )
-
-    try:
-        result = await _run_assessment(assessment_id, req)
-    except Exception as exc:
-        await _db_update_job(assessment_id, "failed", str(exc))
-        raise HTTPException(status_code=500, detail=str(exc))
-
-    await _db_update_job(assessment_id, "done")
-
-    # 预生成报告块（后台），避免用户打开报告页再等一轮 LLM
-    asyncio.create_task(_pre_generate_report(assessment_id))
-
-    elapsed_ms = int((time.perf_counter() - t0) * 1000)
+    asyncio.create_task(_run_assessment_bg(assessment_id, req))
     return {
         "assessment_id": assessment_id,
-        "status": "done",
-        "elapsed_ms": elapsed_ms,
-        "summary": result.get("summary"),
+        "status": "running",
+        "elapsed_ms": 0,
+    }
+
+
+async def _run_assessment_bg(assessment_id: str, req: AssessRequest) -> None:
+    """后台运行评估全流程：6 维 Agent → SummaryAgent → 报告预生成。失败标记 failed。"""
+    try:
+        await _run_assessment(assessment_id, req)
+        await _db_update_job(assessment_id, "done")
+        # 报告预生成（继续后台跑，独立失败也无所谓）
+        asyncio.create_task(_pre_generate_report(assessment_id))
+    except Exception as exc:
+        logger.error(f"[Assess/bg] assessment_id={assessment_id} 失败: {exc}")
+        await _db_update_job(assessment_id, "failed", str(exc))
+
+
+@app.get("/assess/{assessment_id}/status", tags=["评估"], summary="查询评估真实进度")
+async def assess_status(assessment_id: str, user: dict = Depends(get_current_user)):
+    """返回评估 job 状态 + 已完成的维度/汇总/报告块，前端据此渲染进度。"""
+    await _verify_assessment_owner(assessment_id, user["user_id"])
+    if memory_db._pool is None:
+        raise HTTPException(status_code=503, detail="DB 不可用")
+    async with memory_db._pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                "SELECT status, error FROM assessment_jobs WHERE assessment_id=%s",
+                (assessment_id,),
+            )
+            job_row = await cur.fetchone()
+            await cur.execute(
+                "SELECT dimension FROM assessment_dimensions WHERE assessment_id=%s",
+                (assessment_id,),
+            )
+            dims = sorted({r[0] for r in await cur.fetchall()})
+            await cur.execute(
+                "SELECT 1 FROM assessment_summary WHERE assessment_id=%s LIMIT 1",
+                (assessment_id,),
+            )
+            summary_done = bool(await cur.fetchone())
+            await cur.execute(
+                "SELECT block_id FROM assessment_report_blocks WHERE assessment_id=%s",
+                (assessment_id,),
+            )
+            blocks = sorted({r[0] for r in await cur.fetchall()})
+    if not job_row:
+        raise HTTPException(status_code=404, detail=f"assessment_id={assessment_id} 不存在")
+    return {
+        "assessment_id": assessment_id,
+        "status": job_row[0],
+        "error": job_row[1],
+        "completed_dimensions": dims,
+        "summary_done": summary_done,
+        "completed_report_blocks": blocks,
     }
 
 
@@ -3544,8 +3605,22 @@ async def plan_delete(
 async def _fetch_stage_info(assessment_id: str, stage_code: str) -> dict:
     """从 career_path_progress 里找到对应 stage_code 的 stage 信息。
 
-    stage_code 格式：{path_code}-s{stage_num}，如 "path-609b4c23-s1"。
+    支持两种 stage_code 格式：
+    - AI 推荐：{path_code}-s{stage_num}，如 "path-609b4c23-s1"
+    - 自己输入：manual:{用户输入的目标岗位}，如 "manual:AI 工程师"
     """
+    # 自己输入的目标岗位：直接用 stage_code 中的 title 部分
+    if stage_code.startswith("manual:"):
+        title = stage_code[len("manual:"):].strip() or "自定目标岗位"
+        return {
+            "code": stage_code,
+            "title": title,
+            "key_skills": [],
+            "transition_from_prev": "",
+            "match_reason": "用户自定义目标岗位，按此岗位规划学习路径",
+            "key_gaps": [],
+        }
+
     path_code = stage_code
     target_stage_num: int | None = None
     m = re.match(r"^(.+)-s(\d+)$", stage_code)
