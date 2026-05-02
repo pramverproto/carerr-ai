@@ -275,8 +275,6 @@ function FutureOutlookSection({
 //  主页面
 // ================================================================== //
 
-type Step = 'idle' | 'match_loading' | 'select' | 'plan_loading' | 'report';
-
 const PLAN_BLOCK_ANCHORS = [
   { id: 'match_overview',     label: '综合评估' },
   { id: 'jd_recommendations', label: '岗位推荐' },
@@ -293,23 +291,15 @@ const CareerPlan: React.FC = () => {
     matchLoading, matchError,
     setPlanData, setPlanLoading, setPlanError,
     planLoading, planError,
-    setSelectedCareer, resetPlan,
+    setSelectedCareer,
+    careerStep: step, setCareerStep: setStep,
+    selectedPath, setSelectedPath,
+    currentStage, setCurrentStage,
+    planningStartedAt, setPlanningStartedAt,
   } = useAppStore();
 
-  // ── 从 store 推导初始 step（避免导航返回时闪烁） ────────
-  // 没有 matchData 时进入 idle 态，等用户点击按钮才发起匹配请求
-  const [step, setStep] = useState<Step>(() => {
-    if (planLoading) return 'plan_loading';
-    if (matchLoading) return 'match_loading';
-    if (planData && selectedCareer) return 'report';
-    if (matchData) return 'select';
-    return 'idle';
-  });
   const [planStep, setPlanStep] = useState(0);
   const [plannedCodes, setPlannedCodes] = useState<Record<string, PlannedInfo>>({});
-  // 当前选中的路线数据（用于传给规划接口）
-  const [selectedPath, setSelectedPath] = useState<CareerPathRecommendation | null>(null);
-  const [currentStage, setCurrentStage] = useState(1);
 
   // ── 获取已规划的职业代码 ─────────────────────────────────
   const fetchPlannedCodes = () => {
@@ -333,7 +323,7 @@ const CareerPlan: React.FC = () => {
       if (matchData) return 'select';
       return 'idle';
     });
-  }, [assessmentId, matchData, matchLoading, planLoading, planData]);
+  }, [assessmentId, matchData, matchLoading, planLoading, planData, setStep]);
 
   // ── 获取职业匹配 ─────────────────────────────────────────
   const fetchMatch = (force = false, customStartVal?: string) => {
@@ -361,11 +351,13 @@ const CareerPlan: React.FC = () => {
   // ── plan_loading 步骤动画 ────────────────────────────────
   useEffect(() => {
     if (step !== 'plan_loading') { setPlanStep(0); return; }
+    const elapsed = planningStartedAt ? Date.now() - planningStartedAt : 0;
+    setPlanStep(Math.min(Math.floor(elapsed / 35_000), PLAN_STEPS.length - 1));
     const timer = setInterval(() => {
       setPlanStep((s) => Math.min(s + 1, PLAN_STEPS.length - 1));
     }, 35_000);
     return () => clearInterval(timer);
-  }, [step]);
+  }, [step, planningStartedAt]);
 
   // ── 查看已有规划（GET 读缓存，快速） ─────────────────────
   const handleViewPlan = (code: string) => {
@@ -378,14 +370,15 @@ const CareerPlan: React.FC = () => {
     setSelectedCareer(code);
     setPlanLoading(true);
     setPlanError(null);
+    setPlanningStartedAt(Date.now());
     setStep('plan_loading');
     api.getCareerPlanCached(assessmentId, code)
-      .then((res) => { setPlanData(res.data); setStep('report'); })
+      .then((res) => { setPlanData(res.data); setPlanningStartedAt(null); setStep('report'); })
       .catch((err) => {
         setPlanError(err?.response?.data?.detail || err?.message || '加载规划失败');
         setStep('select');
       })
-      .finally(() => setPlanLoading(false));
+      .finally(() => { setPlanningStartedAt(null); setPlanLoading(false); });
   };
 
   // ── 生成/重新生成规划（POST 走 Agent，慢） ───────────────
@@ -402,6 +395,7 @@ const CareerPlan: React.FC = () => {
     setCurrentStage(stageNum);
     setPlanLoading(true);
     setPlanError(null);
+    setPlanningStartedAt(Date.now());
     setStep('plan_loading');
 
     api.careerPlan(
@@ -430,7 +424,7 @@ const CareerPlan: React.FC = () => {
         setPlanError(err?.response?.data?.detail || err?.message || '规划生成失败');
         setStep('select');
       })
-      .finally(() => setPlanLoading(false));
+      .finally(() => { setPlanningStartedAt(null); setPlanLoading(false); });
   };
 
   // ── 阶段完成确认 → 触发下一阶段规划 ──────────────────────

@@ -108,12 +108,39 @@ CREATE TABLE IF NOT EXISTS users (
     username   VARCHAR(50)  NOT NULL UNIQUE,
     password   VARCHAR(255) NOT NULL,
     email      VARCHAR(255) DEFAULT NULL,
+    is_admin   BOOLEAN      NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+"""
+
+_CREATE_CANDIDATES_TABLE_SQL = """
+CREATE TABLE IF NOT EXISTS candidates (
+    id                   BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id              BIGINT NOT NULL,
+    name                 VARCHAR(100),
+    age                  INT,
+    city                 VARCHAR(50),
+    education            VARCHAR(50),
+    current_title        VARCHAR(200),
+    target_role          VARCHAR(200),
+    years_of_experience  INT DEFAULT 0,
+    resume_raw           JSON,
+    supplement           TEXT,
+    bigfive              JSON,
+    riasec               JSON,
+    quiz_abilities       JSON,
+    quiz_knowledge       JSON,
+    third_party          JSON,
+    created_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_user (user_id),
+    INDEX idx_cand_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 """
 
 # 为核心表追加 user_id 字段（列已存在时 1060 Duplicate column 可忽略）
 _ALTER_ADD_USER_ID_SQLS = [
+    "ALTER TABLE users ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT FALSE",
     "ALTER TABLE assessment_jobs ADD COLUMN user_id BIGINT DEFAULT NULL",
     "ALTER TABLE plan_schedules ADD COLUMN user_id BIGINT DEFAULT NULL",
     "ALTER TABLE resume_uploads ADD COLUMN user_id BIGINT DEFAULT NULL",
@@ -156,6 +183,7 @@ async def init_pool(host: str, port: int, user: str, password: str, db: str,
             await cur.execute(_CREATE_PLAN_DAILY_TASKS_TABLE_SQL)
             await cur.execute(_CREATE_RESUME_UPLOADS_TABLE_SQL)
             await cur.execute(_CREATE_USERS_TABLE_SQL)
+            await cur.execute(_CREATE_CANDIDATES_TABLE_SQL)
             # 旧库迁移：为已有 plan_daily_tasks 增加 task_notes 列；列已存在时 1060 可忽略
             try:
                 await cur.execute(_ALTER_PLAN_DAILY_TASKS_ADD_NOTES_SQL)

@@ -11,6 +11,7 @@ import CareerPlan from '@/pages/CareerPlan';
 import PlanProgress from '@/pages/PlanProgress';
 import Archive from '@/pages/Archive';
 import Chat from '@/pages/Chat';
+import Admin from '@/pages/Admin';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.token);
@@ -51,6 +52,7 @@ const AppInner: React.FC = () => {
               <Route path="career" element={<CareerPlan />} />
               <Route path="plan" element={<PlanProgress />} />
               <Route path="archive" element={<Archive />} />
+              <Route path="admin" element={<Admin />} />
               <Route path="*" element={<Navigate to="/profile" replace />} />
             </Route>
           </Routes>

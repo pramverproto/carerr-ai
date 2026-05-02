@@ -24,11 +24,11 @@ import aiomysql
 # ------------------------------------------------------------------ #
 #  配置
 # ------------------------------------------------------------------ #
-SQL_DIR = Path(__file__).parent.parent / "能力评估相关-temp-use" / "db_30_2_mysql"
+SQL_DIR = Path("/Users/jonysing/Downloads/G_Projeact/db_30_2_mysql")
 
-DB_HOST = "115.120.251.185"
+DB_HOST = "127.0.0.1"
 DB_PORT = 3306
-DB_USER = "user01"
+DB_USER = "root"
 DB_PASS = "187423"
 DB_NAME = "career_agent"
 

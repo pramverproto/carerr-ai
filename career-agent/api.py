@@ -73,6 +73,15 @@ def _load_onet_data() -> None:
 _load_onet_data()
 
 
+def _configured_admin_usernames() -> set[str]:
+    raw = os.getenv("ADMIN_USERNAMES", "")
+    return {name.strip() for name in raw.split(",") if name.strip()}
+
+
+def _is_configured_admin(username: str | None) -> bool:
+    return bool(username and username in _configured_admin_usernames())
+
+
 # ------------------------------------------------------------------ #
 #  Lifespan：startup / shutdown                                         #
 # ------------------------------------------------------------------ #
@@ -211,6 +220,7 @@ app = FastAPI(
         {"name": "职业", "description": "基于评估结果的职业匹配推荐与详细职业规划生成"},
         {"name": "计划", "description": "行动计划创建、周/日任务管理、打卡进度与感悟记录"},
         {"name": "成长档案", "description": "历史评估记录查询、成长里程碑统计、档案删除"},
+        {"name": "后台运维", "description": "管理员查看用户、评估任务、数据资源与异常状态"},
     ],
 )
 
@@ -422,12 +432,13 @@ async def auth_register(req: RegisterRequest):
         raise HTTPException(503, "数据库未初始化")
 
     hashed = hash_password(req.password)
+    is_admin = _is_configured_admin(req.username)
     async with memory_db._pool.acquire() as conn:
         async with conn.cursor() as cur:
             try:
                 await cur.execute(
-                    "INSERT INTO users (username, password, email) VALUES (%s, %s, %s)",
-                    (req.username, hashed, req.email),
+                    "INSERT INTO users (username, password, email, is_admin) VALUES (%s, %s, %s, %s)",
+                    (req.username, hashed, req.email, is_admin),
                 )
                 user_id = cur.lastrowid
             except Exception as e:
@@ -445,7 +456,7 @@ async def auth_register(req: RegisterRequest):
                 )
 
     token = create_token(user_id, req.username)
-    return {"user_id": user_id, "username": req.username, "token": token}
+    return {"user_id": user_id, "username": req.username, "token": token, "is_admin": is_admin}
 
 
 @app.post("/auth/login", tags=["认证"], summary="用户登录")
@@ -457,7 +468,7 @@ async def auth_login(req: LoginRequest):
     async with memory_db._pool.acquire() as conn:
         async with conn.cursor() as cur:
             await cur.execute(
-                "SELECT id, username, password FROM users WHERE username=%s",
+                "SELECT id, username, password, is_admin FROM users WHERE username=%s",
                 (req.username,),
             )
             row = await cur.fetchone()
@@ -478,7 +489,8 @@ async def auth_login(req: LoginRequest):
                 )
 
     token = create_token(user_id, row[1])
-    return {"user_id": user_id, "username": row[1], "token": token}
+    is_admin = bool(row[3]) or _is_configured_admin(row[1])
+    return {"user_id": user_id, "username": row[1], "token": token, "is_admin": is_admin}
 
 
 @app.get("/auth/me", tags=["认证"], summary="获取当前登录用户信息")
@@ -490,17 +502,275 @@ async def auth_me(user: dict = Depends(get_current_user)):
     async with memory_db._pool.acquire() as conn:
         async with conn.cursor() as cur:
             await cur.execute(
-                "SELECT id, username, email FROM users WHERE id=%s",
+                "SELECT id, username, email, is_admin FROM users WHERE id=%s",
                 (user["user_id"],),
             )
             row = await cur.fetchone()
 
     if not row:
         raise HTTPException(404, "用户不存在")
-    return {"user_id": row[0], "username": row[1], "email": row[2]}
+    return {"user_id": row[0], "username": row[1], "email": row[2], "is_admin": bool(row[3]) or _is_configured_admin(row[1])}
 
 
 # ── Auth 辅助函数 ────────────────────────────────────────────────────
+
+async def get_current_admin(user: dict = Depends(get_current_user)) -> dict:
+    """管理员认证依赖：支持 users.is_admin，也支持 ADMIN_USERNAMES 环境变量兜底。"""
+    if memory_db._pool is None:
+        raise HTTPException(503, "数据库未初始化")
+
+    async with memory_db._pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                "SELECT username, is_admin FROM users WHERE id=%s",
+                (user["user_id"],),
+            )
+            row = await cur.fetchone()
+
+    if not row:
+        raise HTTPException(404, "用户不存在")
+    if not (bool(row[1]) or _is_configured_admin(row[0])):
+        raise HTTPException(403, "需要管理员权限")
+    return {"user_id": user["user_id"], "username": row[0], "is_admin": True}
+
+
+def _snapshot_profile(snapshot: object) -> dict:
+    if isinstance(snapshot, str):
+        try:
+            snapshot = json.loads(snapshot)
+        except (json.JSONDecodeError, TypeError):
+            snapshot = {}
+    if not isinstance(snapshot, dict):
+        snapshot = {}
+    candidate = snapshot.get("resume", {}).get("candidate", {})
+    return {
+        "name": candidate.get("name", ""),
+        "current_title": candidate.get("current_title", ""),
+        "education": candidate.get("education", ""),
+    }
+
+
+async def _admin_table_count(cur, table_name: str) -> int:
+    try:
+        await cur.execute(f"SELECT COUNT(*) AS cnt FROM {table_name}")
+        row = await cur.fetchone()
+        return int(row["cnt"] if isinstance(row, dict) else row[0])
+    except Exception:
+        return 0
+
+
+@app.get("/admin/overview", tags=["后台运维"], summary="后台运维总览")
+async def admin_overview(admin: dict = Depends(get_current_admin)):
+    """返回管理员首页所需的全局统计、任务状态分布和最近失败任务。"""
+    if memory_db._pool is None:
+        raise HTTPException(503, "数据库未初始化")
+
+    async with memory_db._pool.acquire() as conn:
+        async with conn.cursor(aiomysql.DictCursor) as cur:
+            total_users = await _admin_table_count(cur, "users")
+            total_assessments = await _admin_table_count(cur, "assessment_jobs")
+            total_plans = await _admin_table_count(cur, "plan_schedules")
+            total_career_blocks = await _admin_table_count(cur, "career_plan_blocks")
+
+            await cur.execute(
+                "SELECT status, COUNT(*) AS cnt FROM assessment_jobs GROUP BY status"
+            )
+            status_rows = await cur.fetchall()
+
+            await cur.execute(
+                """SELECT j.assessment_id, j.user_id, u.username, j.status, j.error,
+                          j.created_at, j.updated_at, j.input_snapshot
+                   FROM assessment_jobs j
+                   LEFT JOIN users u ON u.id = j.user_id
+                   WHERE j.status='failed' OR j.error IS NOT NULL
+                   ORDER BY COALESCE(j.updated_at, j.created_at) DESC
+                   LIMIT 8"""
+            )
+            failed_rows = await cur.fetchall()
+
+            await cur.execute(
+                """SELECT DATE(created_at) AS day, COUNT(*) AS cnt
+                   FROM assessment_jobs
+                   WHERE created_at >= DATE_SUB(CURRENT_DATE, INTERVAL 6 DAY)
+                   GROUP BY DATE(created_at)
+                   ORDER BY day ASC"""
+            )
+            daily_rows = await cur.fetchall()
+
+    return {
+        "metrics": {
+            "users": total_users,
+            "assessments": total_assessments,
+            "plans": total_plans,
+            "career_plan_blocks": total_career_blocks,
+        },
+        "assessment_status": {r["status"] or "unknown": int(r["cnt"]) for r in status_rows},
+        "recent_failed": [
+            {
+                "assessment_id": r["assessment_id"],
+                "user_id": r["user_id"],
+                "username": r["username"],
+                "status": r["status"],
+                "error": r["error"],
+                "created_at": str(r["created_at"]) if r["created_at"] else None,
+                "updated_at": str(r["updated_at"]) if r["updated_at"] else None,
+                **_snapshot_profile(r["input_snapshot"]),
+            }
+            for r in failed_rows
+        ],
+        "daily_assessments": [
+            {"date": str(r["day"]), "count": int(r["cnt"])}
+            for r in daily_rows
+        ],
+    }
+
+
+@app.get("/admin/users", tags=["后台运维"], summary="用户运行数据列表")
+async def admin_users(limit: int = 100, admin: dict = Depends(get_current_admin)):
+    """查看用户账号、管理员标识、评估次数、计划次数和最近活跃时间。"""
+    if memory_db._pool is None:
+        raise HTTPException(503, "数据库未初始化")
+
+    safe_limit = max(1, min(int(limit), 500))
+    async with memory_db._pool.acquire() as conn:
+        async with conn.cursor(aiomysql.DictCursor) as cur:
+            await cur.execute(
+                f"""SELECT u.id, u.username, u.email, u.is_admin, u.created_at,
+                          COUNT(DISTINCT j.assessment_id) AS assessment_count,
+                          COUNT(DISTINCT p.plan_id) AS plan_count,
+                          MAX(j.created_at) AS last_assessment_at
+                   FROM users u
+                   LEFT JOIN assessment_jobs j ON j.user_id = u.id
+                   LEFT JOIN plan_schedules p ON p.user_id = u.id
+                   GROUP BY u.id, u.username, u.email, u.is_admin, u.created_at
+                   ORDER BY u.created_at DESC
+                   LIMIT {safe_limit}"""
+            )
+            rows = await cur.fetchall()
+
+    return {
+        "items": [
+            {
+                "user_id": r["id"],
+                "username": r["username"],
+                "email": r["email"],
+                "is_admin": bool(r["is_admin"]) or _is_configured_admin(r["username"]),
+                "created_at": str(r["created_at"]) if r["created_at"] else None,
+                "assessment_count": int(r["assessment_count"] or 0),
+                "plan_count": int(r["plan_count"] or 0),
+                "last_assessment_at": str(r["last_assessment_at"]) if r["last_assessment_at"] else None,
+            }
+            for r in rows
+        ]
+    }
+
+
+@app.get("/admin/assessments", tags=["后台运维"], summary="评估任务监控列表")
+async def admin_assessments(
+    status: str | None = None,
+    limit: int = 100,
+    admin: dict = Depends(get_current_admin),
+):
+    """查看全局评估任务，可按状态过滤，用于排查运行和失败任务。"""
+    if memory_db._pool is None:
+        raise HTTPException(503, "数据库未初始化")
+
+    safe_limit = max(1, min(int(limit), 500))
+    where = ""
+    params: list[object] = []
+    if status:
+        where = "WHERE j.status=%s"
+        params.append(status)
+
+    async with memory_db._pool.acquire() as conn:
+        async with conn.cursor(aiomysql.DictCursor) as cur:
+            await cur.execute(
+                f"""SELECT j.assessment_id, j.session_id, j.user_id, u.username,
+                          j.status, j.error, j.created_at, j.updated_at, j.input_snapshot,
+                          COUNT(DISTINCT d.dimension) AS dimension_count,
+                          COUNT(DISTINCT p.plan_id) AS plan_count
+                   FROM assessment_jobs j
+                   LEFT JOIN users u ON u.id = j.user_id
+                   LEFT JOIN assessment_dimensions d ON d.assessment_id = j.assessment_id
+                   LEFT JOIN plan_schedules p ON p.assessment_id = j.assessment_id
+                   {where}
+                   GROUP BY j.assessment_id, j.session_id, j.user_id, u.username,
+                            j.status, j.error, j.created_at, j.updated_at, j.input_snapshot
+                   ORDER BY j.created_at DESC
+                   LIMIT {safe_limit}""",
+                params,
+            )
+            rows = await cur.fetchall()
+
+    return {
+        "items": [
+            {
+                "assessment_id": r["assessment_id"],
+                "session_id": r["session_id"],
+                "user_id": r["user_id"],
+                "username": r["username"],
+                "status": r["status"],
+                "error": r["error"],
+                "created_at": str(r["created_at"]) if r["created_at"] else None,
+                "updated_at": str(r["updated_at"]) if r["updated_at"] else None,
+                "dimension_count": int(r["dimension_count"] or 0),
+                "plan_count": int(r["plan_count"] or 0),
+                **_snapshot_profile(r["input_snapshot"]),
+            }
+            for r in rows
+        ]
+    }
+
+
+@app.get("/admin/resources", tags=["后台运维"], summary="数据资源状态")
+async def admin_resources(admin: dict = Depends(get_current_admin)):
+    """查看系统依赖的数据表规模、O*NET 文件加载状态和缓存服务状态。"""
+    if memory_db._pool is None:
+        raise HTTPException(503, "数据库未初始化")
+
+    table_names = [
+        "assessment_jobs",
+        "assessment_dimensions",
+        "career_plan_blocks",
+        "career_path_progress",
+        "plan_schedules",
+        "plan_daily_tasks",
+        "resume_uploads",
+        "messages",
+        "traces",
+    ]
+    async with memory_db._pool.acquire() as conn:
+        async with conn.cursor(aiomysql.DictCursor) as cur:
+            tables = [
+                {"name": name, "count": await _admin_table_count(cur, name)}
+                for name in table_names
+            ]
+
+    redis_ok = False
+    if redis_client is not None:
+        try:
+            redis_ok = bool(await redis_client.ping())
+        except Exception:
+            redis_ok = False
+
+    return {
+        "tables": tables,
+        "onet_files": [
+            {
+                "agent": agent_name,
+                "file": filename,
+                "loaded": agent_name in _ONET_DATA,
+                "characters": len(_ONET_DATA.get(agent_name, "")),
+            }
+            for agent_name, filename in _ONET_FILES.items()
+        ],
+        "services": {
+            "mysql": True,
+            "redis": redis_ok,
+            "vector_index": bool(os.getenv("QDRANT_URL") or os.getenv("QDRANT_HOST")),
+        },
+    }
+
 
 async def _verify_assessment_owner(assessment_id: str, user_id: int) -> None:
     """验证 assessment_id 属于当前用户，不属于则抛 403。"""
@@ -887,6 +1157,19 @@ async def resume_extract(file: UploadFile = File(...), user: dict = Depends(get_
     elapsed_ms = int((time.perf_counter() - t0) * 1000)
     logger.info(f"[ResumeExtract] upload_id={upload_id}  耗时 {elapsed_ms}ms")
 
+    # 更新候选人画像（姓名、学历、当前职位等）
+    cand = extracted.get("candidate", {}) if isinstance(extracted, dict) else {}
+    await _upsert_candidate(
+        user["user_id"],
+        name=cand.get("name"),
+        age=cand.get("age"),
+        city=cand.get("city"),
+        education=cand.get("education"),
+        current_title=cand.get("current_title"),
+        years_of_experience=cand.get("years_of_experience"),
+        resume_raw=extracted,
+    )
+
     return {
         "upload_id": upload_id,
         "extracted": extracted,
@@ -911,7 +1194,7 @@ async def assess(request: Request, req: AssessRequest, user: dict = Depends(get_
         input_snapshot=req.model_dump(exclude={"session_id"}, exclude_none=True),
         user_id=user["user_id"],
     )
-    asyncio.create_task(_run_assessment_bg(assessment_id, req))
+    asyncio.create_task(_run_assessment_bg(assessment_id, req, user["user_id"]))
     return {
         "assessment_id": assessment_id,
         "status": "running",
@@ -919,11 +1202,24 @@ async def assess(request: Request, req: AssessRequest, user: dict = Depends(get_
     }
 
 
-async def _run_assessment_bg(assessment_id: str, req: AssessRequest) -> None:
+async def _run_assessment_bg(assessment_id: str, req: AssessRequest, user_id: int) -> None:
     """后台运行评估全流程：6 维 Agent → SummaryAgent → 报告预生成。失败标记 failed。"""
     try:
         await _run_assessment(assessment_id, req)
         await _db_update_job(assessment_id, "done")
+        # 评估完成后更新候选人画像（测评数据）
+        cand = req.resume.candidate if req.resume else {}
+        await _upsert_candidate(
+            user_id,
+            name=cand.get("name"),
+            target_role=cand.get("target_role"),
+            supplement=req.supplement,
+            bigfive=req.bigfive.model_dump() if req.bigfive else None,
+            riasec=req.riasec.model_dump() if req.riasec else None,
+            quiz_abilities=req.quiz_abilities.model_dump() if req.quiz_abilities else None,
+            quiz_knowledge=req.quiz_knowledge.model_dump() if req.quiz_knowledge else None,
+            third_party=req.third_party.model_dump() if req.third_party else None,
+        )
         # 报告预生成（继续后台跑，独立失败也无所谓）
         asyncio.create_task(_pre_generate_report(assessment_id))
     except Exception as exc:
@@ -1225,6 +1521,32 @@ def _build_summary_input(assessment_id: str, dimension_results: dict) -> str:
 # ------------------------------------------------------------------ #
 #  DB 写入辅助                                                         #
 # ------------------------------------------------------------------ #
+
+async def _upsert_candidate(user_id: int, **fields) -> None:
+    """INSERT OR UPDATE candidates 行，只更新非 None 的字段。"""
+    if memory_db._pool is None:
+        return
+    json_fields = {"resume_raw", "bigfive", "riasec", "quiz_abilities", "quiz_knowledge", "third_party"}
+    cols, vals = [], []
+    for k, v in fields.items():
+        if v is None:
+            continue
+        cols.append(k)
+        vals.append(json.dumps(v, ensure_ascii=False) if k in json_fields and not isinstance(v, str) else v)
+    if not cols:
+        return
+    set_clause = ", ".join(f"{c}=VALUES({c})" for c in cols)
+    col_str = ", ".join(cols)
+    placeholder = ", ".join(["%s"] * len(cols))
+    async with memory_db._pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                f"""INSERT INTO candidates (user_id, {col_str})
+                    VALUES (%s, {placeholder})
+                    ON DUPLICATE KEY UPDATE {set_clause}""",
+                (user_id, *vals),
+            )
+
 
 async def _db_insert_job(assessment_id: str, session_id: str | None, status: str,
                          input_snapshot: dict | None = None,

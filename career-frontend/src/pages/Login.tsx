@@ -51,7 +51,12 @@ const Login: React.FC = () => {
     setLoading(true);
     try {
       const { data } = await api.authLogin(values);
-      setAuth(data.token, { user_id: data.user_id, username: data.username });
+      setAuth(data.token, {
+        user_id: data.user_id,
+        username: data.username,
+        email: data.email,
+        is_admin: data.is_admin,
+      });
       message.success('登录成功');
       // restoreSession 是可选的状态恢复，fire-and-forget 不阻塞导航
       restoreSession().catch(() => { /* 失败不影响登录 */ });
@@ -68,7 +73,12 @@ const Login: React.FC = () => {
     setLoading(true);
     try {
       const { data } = await api.authRegister(values);
-      setAuth(data.token, { user_id: data.user_id, username: data.username });
+      setAuth(data.token, {
+        user_id: data.user_id,
+        username: data.username,
+        email: data.email,
+        is_admin: data.is_admin,
+      });
       message.success('注册成功，已自动登录');
       restoreSession().catch(() => { /* 新用户 archiveList 通常空，恢复也无意义 */ });
       navigate('/', { replace: true });

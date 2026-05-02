@@ -86,30 +86,29 @@ async def _load_assessment(assessment_id: str) -> dict | None:
 
 
 async def _load_candidate_basic(assessment_id: str) -> dict:
-    """从 assessment_jobs 拿 candidate_id，再从 candidates 读基本信息。"""
+    """通过 assessment_jobs.user_id 关联 candidates，读取候选人基本信息。"""
     if memory_db._pool is None:
         return {}
     async with memory_db._pool.acquire() as conn:
         async with conn.cursor(aiomysql.DictCursor) as cur:
             await cur.execute(
-                "SELECT session_id FROM assessment_jobs WHERE assessment_id = %s",
+                "SELECT user_id FROM assessment_jobs WHERE assessment_id = %s",
                 (assessment_id,),
             )
             job_row = await cur.fetchone()
-        if not job_row:
+        if not job_row or not job_row["user_id"]:
             return {}
-        candidate_id = job_row["session_id"]
         async with conn.cursor(aiomysql.DictCursor) as cur:
             await cur.execute(
-                "SELECT name, target_role, years_of_experience, riasec FROM candidates WHERE id = %s",
-                (candidate_id,),
+                "SELECT name, target_role, years_of_experience, riasec FROM candidates WHERE user_id = %s",
+                (job_row["user_id"],),
             )
             row = await cur.fetchone()
     if not row:
         return {}
     riasec = row["riasec"]
     return {
-        "name": row["name"],
+        "name": row["name"] or "",
         "target_role": row["target_role"] or "",
         "years_of_experience": row["years_of_experience"] or 0,
         "riasec": json.loads(riasec) if isinstance(riasec, str) and riasec else {},
@@ -117,11 +116,12 @@ async def _load_candidate_basic(assessment_id: str) -> dict:
 
 
 async def _load_resume_skills(assessment_id: str) -> list[str]:
-    """从 resume_uploads.extracted 加载候选人的技能列表。"""
+    """从 resume_uploads.extracted 加载技能列表，不存在时回退到 candidates.resume_raw。"""
     if memory_db._pool is None:
         return []
     async with memory_db._pool.acquire() as conn:
         async with conn.cursor() as cur:
+            # 优先读 resume_uploads.extracted（agent 提取后写入）
             await cur.execute(
                 """SELECT ru.extracted FROM resume_uploads ru
                    JOIN assessment_jobs aj ON aj.user_id = ru.user_id
@@ -130,10 +130,24 @@ async def _load_resume_skills(assessment_id: str) -> list[str]:
                 (assessment_id,),
             )
             row = await cur.fetchone()
-    if not row or not row[0]:
-        return []
-    extracted = json.loads(row[0]) if isinstance(row[0], str) else row[0]
-    return extracted.get("skills", [])
+        if row and row[0]:
+            extracted = json.loads(row[0]) if isinstance(row[0], str) else row[0]
+            skills = extracted.get("skills", [])
+            if skills:
+                return skills
+        # 回退：从 candidates.resume_raw 读
+        async with conn.cursor() as cur:
+            await cur.execute(
+                """SELECT c.resume_raw FROM candidates c
+                   JOIN assessment_jobs aj ON aj.user_id = c.user_id
+                   WHERE aj.assessment_id = %s LIMIT 1""",
+                (assessment_id,),
+            )
+            row2 = await cur.fetchone()
+        if not row2 or not row2[0]:
+            return []
+        resume_raw = json.loads(row2[0]) if isinstance(row2[0], str) else row2[0]
+        return resume_raw.get("skills", [])
 
 
 def _extract_candidate_skills(resume_skills: list, candidate: dict) -> set[str]:
@@ -354,10 +368,10 @@ def _prefilter(jds: list[dict], candidate_skills: set[str]) -> list[dict]:
         jd["_skill_overlap"] = len(overlap)
         jd["_skill_overlap_names"] = list(overlap)
         # 保留：有技能交集 或 语义分够高
-        if overlap or jd["_score"] >= 0.65:
+        if overlap or jd["_score"] >= 0.45:
             result.append(jd)
 
-    logger.info(f"[预过滤] {len(jds)} → {len(result)} 条（有技能交集或语义分 ≥ 0.65）")
+    logger.info(f"[预过滤] {len(jds)} → {len(result)} 条（有技能交集或语义分 ≥ 0.45）")
     return result[:PREFILTER_MAX]
 
 

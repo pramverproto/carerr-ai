@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FileText, Award, BookOpen, Target, CalendarCheck, FolderOpen, MessageSquare, X } from 'lucide-react';
+import { FileText, Award, BookOpen, Target, CalendarCheck, FolderOpen, MessageSquare, X, ShieldCheck } from 'lucide-react';
 import { useLayoutStore } from '@/store/layoutStore';
+import { useAuthStore } from '@/store/authStore';
 
 interface MenuItem {
   key: string;
@@ -23,6 +24,10 @@ const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { sidebarOpen, closeSidebar } = useLayoutStore();
+  const isAdmin = useAuthStore((s) => Boolean(s.user?.is_admin));
+  const visibleItems = isAdmin
+    ? [...menuItems, { key: 'admin', label: '后台运维', icon: <ShieldCheck size={20} />, path: '/admin' }]
+    : menuItems;
 
   const isActive = (path: string): boolean =>
     location.pathname === path || location.pathname.startsWith(path + '/');
@@ -70,7 +75,7 @@ const Sidebar: React.FC = () => {
         {/* Navigation */}
         <nav className="flex-1 py-6 overflow-y-auto">
           <ul className="space-y-1">
-            {menuItems.map((item) => {
+            {visibleItems.map((item) => {
               const active = isActive(item.path);
               return (
                 <li key={item.key}>

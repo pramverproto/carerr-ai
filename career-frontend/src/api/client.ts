@@ -69,6 +69,53 @@ export interface LoginResponse {
   user_id: number;
   username: string;
   token: string;
+  email?: string;
+  is_admin?: boolean;
+}
+
+export interface AdminOverview {
+  metrics: {
+    users: number;
+    assessments: number;
+    plans: number;
+    career_plan_blocks: number;
+  };
+  assessment_status: Record<string, number>;
+  recent_failed: AdminAssessmentItem[];
+  daily_assessments: { date: string; count: number }[];
+}
+
+export interface AdminUserItem {
+  user_id: number;
+  username: string;
+  email?: string | null;
+  is_admin: boolean;
+  created_at?: string | null;
+  assessment_count: number;
+  plan_count: number;
+  last_assessment_at?: string | null;
+}
+
+export interface AdminAssessmentItem {
+  assessment_id: string;
+  session_id?: string | null;
+  user_id?: number | null;
+  username?: string | null;
+  status: string;
+  error?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  dimension_count?: number;
+  plan_count?: number;
+  name?: string;
+  current_title?: string;
+  education?: string;
+}
+
+export interface AdminResources {
+  tables: { name: string; count: number }[];
+  onet_files: { agent: string; file: string; loaded: boolean; characters: number }[];
+  services: { mysql: boolean; redis: boolean; vector_index: boolean };
 }
 
 export const api = {
@@ -84,7 +131,23 @@ export const api = {
 
   /** GET /auth/me */
   authMe: () =>
-    apiClient.get<{ user_id: number; username: string; email?: string }>('/auth/me'),
+    apiClient.get<{ user_id: number; username: string; email?: string; is_admin?: boolean }>('/auth/me'),
+
+  // ── Admin ────────────────────────────────────────────────────────
+
+  adminOverview: () =>
+    apiClient.get<AdminOverview>('/admin/overview'),
+
+  adminUsers: () =>
+    apiClient.get<{ items: AdminUserItem[] }>('/admin/users'),
+
+  adminAssessments: (status?: string) =>
+    apiClient.get<{ items: AdminAssessmentItem[] }>(
+      status ? `/admin/assessments?status=${encodeURIComponent(status)}` : '/admin/assessments',
+    ),
+
+  adminResources: () =>
+    apiClient.get<AdminResources>('/admin/resources'),
 
   // ── Business ─────────────────────────────────────────────────────
 

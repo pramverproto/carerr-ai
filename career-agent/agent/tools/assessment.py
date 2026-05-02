@@ -405,8 +405,8 @@ def _aggregate_results(all_results: list[dict]) -> dict:
 #  工具注册                                                             #
 # ------------------------------------------------------------------ #
 
-async def _load_candidate_from_db(candidate_id: int) -> dict | None:
-    """从 candidates 表读取候选人完整数据，组装为评估所需格式。"""
+async def _load_candidate_from_db(user_id: int) -> dict | None:
+    """从 candidates 表读取候选人完整数据（通过 user_id），组装为评估所需格式。"""
     if memory_db._pool is None:
         return None
     async with memory_db._pool.acquire() as conn:
@@ -415,8 +415,8 @@ async def _load_candidate_from_db(candidate_id: int) -> dict | None:
                 """SELECT name, age, city, current_title, target_role,
                           years_of_experience, education, resume_raw, supplement,
                           bigfive, riasec, quiz_abilities, quiz_knowledge, third_party
-                   FROM candidates WHERE id = %s""",
-                (candidate_id,),
+                   FROM candidates WHERE user_id = %s""",
+                (user_id,),
             )
             row = await cur.fetchone()
     if not row:
