@@ -95,6 +95,7 @@ jobs:
     needs: [build-frontend, build-backend]
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       packages: read
     steps:
       - uses: actions/checkout@v4
