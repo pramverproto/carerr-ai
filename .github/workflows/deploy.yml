@@ -119,6 +119,16 @@ jobs:
           script: |
             set -e
             cd /root/career-ai
+
+            # 写入 .env 文件（内容来自 GitHub Secrets，不进 git）
+            mkdir -p career-agent career-db-service
+            cat > career-agent/.env << 'ENVEOF'
+            ${{ secrets.BACKEND_ENV }}
+            ENVEOF
+            cat > career-db-service/.env << 'DBENVEOF'
+            ${{ secrets.DB_SERVICE_ENV }}
+            DBENVEOF
+
             REPO=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')
             export TAG='${{ github.sha }}'
             export GHCR_REPO="$REPO"
@@ -137,7 +147,7 @@ jobs:
                 docker compose exec -T backend python -c "
 import asyncio, redis.asyncio as r
 async def flush():
-    c = r.from_url('redis://127.0.0.1:6379/0')
+    c = r.from_url('redis://host.docker.internal:6379/0')
     keys = await c.keys('career:match:*')
     if keys:
         await c.delete(*keys)
