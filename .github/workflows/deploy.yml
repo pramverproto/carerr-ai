@@ -134,14 +134,25 @@ jobs:
             export TAG='${{ github.sha }}'
             export GHCR_REPO="$REPO"
 
-            # 登录 GHCR（用 GITHUB_TOKEN 即可拉私有镜像）
+            # 登录 GHCR（NJU 镜像加速 + 原站备用）
             echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
+            echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.nju.edu.cn -u '${{ github.actor }}' --password-stdin || true
 
-            docker compose pull backend frontend
+            # 先用 NJU 镜像拉取（国内速度快），失败回退到直连 GHCR
+            REPO=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')
+            for svc in backend frontend; do
+              IMG="ghcr.io/${REPO}/${svc}:${TAG}"
+              NJU_IMG="ghcr.nju.edu.cn/${REPO}/${svc}:${TAG}"
+              docker pull "$NJU_IMG" && docker tag "$NJU_IMG" "$IMG" || docker pull "$IMG"
+            done
+
+            # 停掉旧 systemd 服务（如有残留），再起 compose
+            systemctl stop career-agent.service career-db-service.service 2>/dev/null || true
+
             docker compose up -d backend frontend
 
-            # 健康检查（最多 30 秒）
-            for i in $(seq 1 15); do
+            # 健康检查（最多 60 秒）
+            for i in $(seq 1 30); do
               if curl -fsS http://localhost:8000/health >/dev/null; then
                 echo "✅ backend healthy"
                 exit 0
