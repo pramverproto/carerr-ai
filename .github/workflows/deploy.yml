@@ -31,6 +31,8 @@ jobs:
 
       - name: Build frontend dist
         working-directory: career-frontend
+        env:
+          VITE_API_BASE: /api
         run: |
           npm ci
           npm run build
