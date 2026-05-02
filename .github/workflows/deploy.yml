@@ -94,6 +94,8 @@ jobs:
   deploy:
     needs: [build-frontend, build-backend]
     runs-on: ubuntu-latest
+    permissions:
+      packages: read
     steps:
       - uses: actions/checkout@v4
 
@@ -131,6 +133,18 @@ jobs:
             for i in $(seq 1 15); do
               if curl -fsS http://localhost:8000/health >/dev/null; then
                 echo "✅ backend healthy"
+                # 清除旧的职业匹配缓存（避免旧空结果残留）
+                docker compose exec -T backend python -c "
+import asyncio, redis.asyncio as r
+async def flush():
+    c = r.from_url('redis://127.0.0.1:6379/0')
+    keys = await c.keys('career:match:*')
+    if keys:
+        await c.delete(*keys)
+        print(f'cleared {len(keys)} match cache keys')
+    await c.aclose()
+asyncio.run(flush())
+" 2>/dev/null || true
                 exit 0
               fi
               sleep 2
