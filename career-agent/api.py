@@ -790,8 +790,8 @@ async def _verify_assessment_owner(assessment_id: str, user_id: int) -> None:
         raise HTTPException(403, "无权访问此评估")
 
 
-async def _verify_plan_owner(plan_id: str, user_id: int) -> None:
-    """验证 plan_id 属于当前用户。"""
+async def _verify_schedule_owner(plan_id: str, user_id: int) -> None:
+    """验证 plan_schedules 里的 plan_id 属于当前用户。"""
     if memory_db._pool is None:
         return
     async with memory_db._pool.acquire() as conn:
@@ -2653,7 +2653,7 @@ async def create_weekly_plan(req: PlanWeeklyRequest, user: dict = Depends(get_cu
 @app.post("/plan-schedule/{plan_id}/confirm", tags=["计划"], summary="确认计划并触发每日任务生成")
 async def confirm_plan(plan_id: str, user: dict = Depends(get_current_user)):
     """确认周计划，触发后台每日任务生成。"""
-    await _verify_plan_owner(plan_id, user["user_id"])
+    await _verify_schedule_owner(plan_id, user["user_id"])
     if memory_db._pool is None:
         raise HTTPException(status_code=503, detail="数据库未初始化")
 
@@ -2681,7 +2681,7 @@ async def confirm_plan(plan_id: str, user: dict = Depends(get_current_user)):
 @app.post("/plan-schedule/{plan_id}/retry-daily", tags=["计划"], summary="重试每日任务生成")
 async def retry_daily_tasks(plan_id: str, user: dict = Depends(get_current_user)):
     """重新生成每日任务（用于 daily_failed 状态的计划）。"""
-    await _verify_plan_owner(plan_id, user["user_id"])
+    await _verify_schedule_owner(plan_id, user["user_id"])
     if memory_db._pool is None:
         raise HTTPException(status_code=503, detail="数据库未初始化")
 
@@ -2858,7 +2858,7 @@ async def list_plans(assessment_id: str, onetsoc_code: str, user: dict = Depends
 @app.get("/plan-schedule/{plan_id}", tags=["计划"], summary="获取完整计划详情与进度")
 async def get_plan(plan_id: str, user: dict = Depends(get_current_user)):
     """获取完整计划数据（含每周+每日任务+打卡进度）。"""
-    await _verify_plan_owner(plan_id, user["user_id"])
+    await _verify_schedule_owner(plan_id, user["user_id"])
     if memory_db._pool is None:
         raise HTTPException(status_code=503, detail="数据库未初始化")
 
@@ -2929,7 +2929,7 @@ async def update_day_progress(
     user: dict = Depends(get_current_user),
 ):
     """更新某天的打卡进度。"""
-    await _verify_plan_owner(plan_id, user["user_id"])
+    await _verify_schedule_owner(plan_id, user["user_id"])
     if memory_db._pool is None:
         raise HTTPException(status_code=503, detail="数据库未初始化")
 
@@ -2957,7 +2957,7 @@ async def update_task_note(
     user: dict = Depends(get_current_user),
 ):
     """保存或删除某任务的完成感悟（note 为空字符串则删除）。"""
-    await _verify_plan_owner(plan_id, user["user_id"])
+    await _verify_schedule_owner(plan_id, user["user_id"])
     if memory_db._pool is None:
         raise HTTPException(status_code=503, detail="数据库未初始化")
 
@@ -2990,7 +2990,7 @@ async def update_task_note(
 @app.delete("/plan-schedule/{plan_id}", tags=["计划"], summary="删除计划（级联清理所有周/日任务）")
 async def delete_plan(plan_id: str, user: dict = Depends(get_current_user)):
     """删除某个计划及其全部周/每日任务。级联清理 plan_schedules + plan_weeks + plan_daily_tasks。"""
-    await _verify_plan_owner(plan_id, user["user_id"])
+    await _verify_schedule_owner(plan_id, user["user_id"])
     if memory_db._pool is None:
         raise HTTPException(status_code=503, detail="数据库未初始化")
 
@@ -3019,7 +3019,7 @@ async def delete_plan_week(plan_id: str, week_number: int, user: dict = Depends(
     如果删除后该计划已无任何周，则级联删除整个 plan_schedules。
     返回字段 plan_deleted 标识此情形，前端可据此清空 currentPlanId。
     """
-    await _verify_plan_owner(plan_id, user["user_id"])
+    await _verify_schedule_owner(plan_id, user["user_id"])
     if memory_db._pool is None:
         raise HTTPException(status_code=503, detail="数据库未初始化")
 

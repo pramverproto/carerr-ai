@@ -5,8 +5,6 @@ services:
     image: ghcr.io/${GHCR_REPO:-jonysing/g-projeact}/frontend:${TAG:-latest}
     build:
       context: ./career-frontend
-      args:
-        VITE_API_BASE: /api
     ports:
       - "80:80"
     depends_on:
