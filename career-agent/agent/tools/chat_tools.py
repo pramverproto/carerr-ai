@@ -160,7 +160,7 @@ async def query_today_tasks() -> str:
 # ── 查询：个人资料 ────────────────────────────────────────────────────
 
 @tool(
-    description="查询当前用户的个人资料信息（最近一次简历解析结果），包括姓名、年龄、学历、当前职位、技能等。",
+    description="查询当前用户的个人资料信息（姓名、年龄、学历、当前职位、技能等）。",
     parameters={"type": "object", "properties": {}, "required": []},
 )
 async def query_profile() -> str:
@@ -168,6 +168,32 @@ async def query_profile() -> str:
     if not user_id or memory_db._pool is None:
         return json.dumps({"error": "无法获取用户信息或数据库未初始化"}, ensure_ascii=False)
 
+    async with memory_db._pool.acquire() as conn:
+        async with conn.cursor(aiomysql.DictCursor) as cur:
+            # Query canonical 1-per-user profile table first
+            await cur.execute(
+                """SELECT name, age, city, education, current_title, target_role,
+                          years_of_experience, resume_raw, supplement
+                   FROM candidates WHERE user_id = %s""",
+                (user_id,),
+            )
+            cand = await cur.fetchone()
+
+    if cand and cand.get("name"):
+        resume_raw = cand.pop("resume_raw", None)
+        if isinstance(resume_raw, str):
+            try:
+                resume_raw = json.loads(resume_raw)
+            except (json.JSONDecodeError, TypeError):
+                resume_raw = None
+        profile = {k: v for k, v in cand.items() if v is not None}
+        if isinstance(resume_raw, dict):
+            for field in ("skills", "experiences", "certifications"):
+                if resume_raw.get(field):
+                    profile[field] = resume_raw[field]
+        return json.dumps({"profile": profile}, ensure_ascii=False)
+
+    # Fall back to most recent resume upload
     async with memory_db._pool.acquire() as conn:
         async with conn.cursor(aiomysql.DictCursor) as cur:
             await cur.execute(

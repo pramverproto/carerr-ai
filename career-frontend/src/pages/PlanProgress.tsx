@@ -122,7 +122,7 @@ const PlanProgress: React.FC = () => {
     }
   }, [selectedCareer, loadReady]);
 
-  // 进入页面不再自动 loadCurrent；用户点击「查看任务计划」按钮才加载
+  useEffect(() => { loadCurrent(); }, [loadCurrent]);
 
   // ─── 生成大纲 ─────────────────────────────────────────────────────
   const handleGenerate = async () => {
@@ -310,23 +310,7 @@ const PlanProgress: React.FC = () => {
   };
 
   // ─── 渲染各阶段 ─────────────────────────────────────────────────────
-  if (phase === 'idle') {
-    return (
-      <div className="max-w-2xl mx-auto mt-12 text-center">
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
-          任务计划
-        </h2>
-        <p className="text-gray-500 mb-6">
-          点击下方按钮查看你的学习任务进度，或基于已选职业路线生成新计划
-        </p>
-        <Button type="primary" size="large" onClick={loadCurrent}>
-          查看任务计划
-        </Button>
-      </div>
-    );
-  }
-
-  if (phase === 'loading') {
+  if (phase === 'idle' || phase === 'loading') {
     return <div className="flex items-center justify-center h-96"><Spin size="large" /></div>;
   }
 

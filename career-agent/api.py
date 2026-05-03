@@ -1158,7 +1158,8 @@ async def resume_extract(file: UploadFile = File(...), user: dict = Depends(get_
     logger.info(f"[ResumeExtract] upload_id={upload_id}  耗时 {elapsed_ms}ms")
 
     # 更新候选人画像（姓名、学历、当前职位等）
-    cand = extracted.get("candidate", {}) if isinstance(extracted, dict) else {}
+    # extracted JSON 的字段是顶层平铺（name/age/...），不嵌套在 "candidate" 键下
+    cand = extracted if isinstance(extracted, dict) else {}
     await _upsert_candidate(
         user["user_id"],
         name=cand.get("name"),
