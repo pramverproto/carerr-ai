@@ -911,6 +911,12 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
         return await _json_chat(req.message, req.session_id, user["user_id"])
 
 
+@app.delete("/chat/history/me", tags=["对话"], summary="清空当前用户的全部聊天记录")
+async def clear_my_chat_history(user: dict = Depends(get_current_user)):
+    deleted = await memory_db.delete_user_messages(user["user_id"])
+    return {"deleted": deleted}
+
+
 @app.get("/chat/history", tags=["对话"], summary="获取指定 session 的对话历史")
 async def chat_history(session_id: str, user: dict = Depends(get_current_user)):
     """加载聊天历史，只返回 user / assistant 的纯文本消息。"""
@@ -933,6 +939,8 @@ async def chat_history(session_id: str, user: dict = Depends(get_current_user)):
 # ------------------------------------------------------------------ #
 
 async def _json_chat(message: str, session_id: str | None, user_id: int) -> dict:
+    if session_id:
+        await memory_db.register_chat_session(session_id, user_id)
     tok = current_user_id.set(user_id)
     try:
         t0 = time.perf_counter()
@@ -985,6 +993,8 @@ async def _stream_chat(message: str, session_id: str | None, user_id: int):
         done   — 结束（含 elapsed_ms）
         error  — 出错
     """
+    if session_id:
+        await memory_db.register_chat_session(session_id, user_id)
     tok = current_user_id.set(user_id)
     try:
         agent = _make_agent(session_id)

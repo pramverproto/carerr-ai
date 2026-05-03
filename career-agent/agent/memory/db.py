@@ -41,6 +41,15 @@ CREATE TABLE IF NOT EXISTS traces (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 """
 
+_CREATE_CHAT_SESSIONS_TABLE_SQL = """
+CREATE TABLE IF NOT EXISTS chat_sessions (
+    session_id VARCHAR(64)  PRIMARY KEY,
+    user_id    BIGINT       NOT NULL,
+    created_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_cs_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+"""
+
 _CREATE_PLAN_SCHEDULES_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS plan_schedules (
     id            BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -178,6 +187,7 @@ async def init_pool(host: str, port: int, user: str, password: str, db: str,
         async with conn.cursor() as cur:
             await cur.execute(_CREATE_MESSAGES_TABLE_SQL)
             await cur.execute(_CREATE_TRACES_TABLE_SQL)
+            await cur.execute(_CREATE_CHAT_SESSIONS_TABLE_SQL)
             await cur.execute(_CREATE_PLAN_SCHEDULES_TABLE_SQL)
             await cur.execute(_CREATE_PLAN_WEEKS_TABLE_SQL)
             await cur.execute(_CREATE_PLAN_DAILY_TASKS_TABLE_SQL)
@@ -276,6 +286,35 @@ async def load_messages(session_id: str) -> list[dict]:
 
     logger.debug(f"[Memory] 加载历史  session={session_id}  共 {len(messages)} 条消息")
     return messages
+
+
+async def register_chat_session(session_id: str, user_id: int) -> None:
+    """记录 session_id → user_id 映射（已存在时忽略）。"""
+    if _pool is None:
+        return
+    async with _pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                "INSERT IGNORE INTO chat_sessions (session_id, user_id) VALUES (%s, %s)",
+                (session_id, user_id),
+            )
+
+
+async def delete_user_messages(user_id: int) -> int:
+    """删除某用户的全部聊天记录，返回删除条数。"""
+    if _pool is None:
+        return 0
+    async with _pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            affected = await cur.execute(
+                """DELETE m FROM messages m
+                   JOIN chat_sessions cs ON cs.session_id = m.session_id
+                   WHERE cs.user_id = %s""",
+                (user_id,),
+            )
+            await cur.execute("DELETE FROM chat_sessions WHERE user_id = %s", (user_id,))
+    logger.info(f"[Memory] 删除用户 {user_id} 的聊天记录  共 {affected} 条")
+    return affected
 
 
 async def save_span(

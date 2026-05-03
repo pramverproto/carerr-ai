@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { App } from 'antd';
-import { Send, Bot, User, Wrench, RotateCcw, Square } from 'lucide-react';
+import { Send, Bot, User, Wrench, RotateCcw, Square, Trash2 } from 'lucide-react';
 import ChatSkeleton from '@/components/skeletons/ChatSkeleton';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -93,6 +93,17 @@ const Chat: React.FC = () => {
     setSessionId(authUser?.user_id, newId);
     sessionIdRef.current = newId;
     setMessages([]);
+  };
+
+  /** 清空全部聊天记录（调后端删库） */
+  const handleClearHistory = async () => {
+    if (!window.confirm('确认清空全部聊天记录？此操作不可撤销。')) return;
+    await fetch(`${BASE}/chat/history/me`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    handleNewChat();
+    message.success('聊天记录已清空');
   };
 
   const sendMessage = useCallback(async () => {
@@ -234,13 +245,22 @@ const Chat: React.FC = () => {
         <span className="text-xs text-gray-400">
           {messages.length > 0 ? `${messages.length} 条消息` : '新对话'}
         </span>
-        <button
-          onClick={handleNewChat}
-          className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-500 transition-colors"
-        >
-          <RotateCcw size={12} />
-          <span>新对话</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleClearHistory}
+            className="flex items-center gap-1 text-xs text-gray-400 hover:text-red-500 transition-colors"
+          >
+            <Trash2 size={12} />
+            <span>清空记录</span>
+          </button>
+          <button
+            onClick={handleNewChat}
+            className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-500 transition-colors"
+          >
+            <RotateCcw size={12} />
+            <span>新对话</span>
+          </button>
+        </div>
       </div>
 
       {/* 消息区域 */}
