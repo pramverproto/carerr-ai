@@ -150,12 +150,31 @@ async def _load_resume_skills(assessment_id: str) -> list[str]:
         return resume_raw.get("skills", [])
 
 
+def _is_valid_highlight(h: str) -> bool:
+    """Return False for sub-dimension codes like '1.1', '4.2.3', or single uppercase letters like 'S'."""
+    h = h.strip()
+    if not h:
+        return False
+    if re.match(r'^\d+(\.\d+)*$', h):
+        return False
+    if re.match(r'^[A-Z]$', h):
+        return False
+    return True
+
+
+def _skill_tokens(skill: str) -> set[str]:
+    """Split a skill string into lowercase tokens (split on spaces and hyphens)."""
+    return {t for t in re.split(r'[\s\-_]+', skill.lower()) if len(t) > 1}
+
+
 def _extract_candidate_skills(resume_skills: list, candidate: dict) -> set[str]:
-    """从简历技能 + 目标岗位提取技能关键词集合（小写）。"""
+    """从简历技能 + 目标岗位提取技能关键词集合（小写，含分词 token）。"""
     skills: set[str] = set()
     for s in resume_skills:
         if isinstance(s, str) and s.strip():
-            skills.add(s.strip().lower())
+            norm = s.strip().lower()
+            skills.add(norm)
+            skills.update(_skill_tokens(norm))
     target = candidate.get("target_role", "")
     if target:
         for part in target.replace("/", " ").replace("、", " ").split():
@@ -200,10 +219,9 @@ def _build_chinese_profile_text(dims: dict, candidate: dict, resume_skills: list
     for key in ["skills", "knowledge", "abilities"]:
         d = dims.get(key, {})
         for h in (d.get("highlights") or [])[:3]:
-            if isinstance(h, str):
-                all_highlights.append(h)
-            elif isinstance(h, dict):
-                all_highlights.append(h.get("name", str(h)))
+            text = h if isinstance(h, str) else h.get("name", str(h)) if isinstance(h, dict) else None
+            if text and _is_valid_highlight(text):
+                all_highlights.append(text)
     if all_highlights:
         parts.append(f"能力亮点：{', '.join(all_highlights[:6])}")
 
@@ -363,7 +381,12 @@ def _prefilter(jds: list[dict], candidate_skills: set[str]) -> list[dict]:
     candidate_lower = {s.lower() for s in candidate_skills}
     result = []
     for jd in jds:
-        jd_skills = {s.lower() for s in jd["skill_tags"]}
+        # Expand JD skill_tags with per-tag tokens (e.g. "ai-agent" → {"ai","agent"})
+        jd_skills: set[str] = set()
+        for s in jd["skill_tags"]:
+            sl = s.lower()
+            jd_skills.add(sl)
+            jd_skills.update(_skill_tokens(sl))
         overlap = candidate_lower & jd_skills
         jd["_skill_overlap"] = len(overlap)
         jd["_skill_overlap_names"] = list(overlap)
@@ -415,10 +438,9 @@ def _build_llm_candidate_context(dims: dict, candidate: dict, resume_skills: lis
     for key in ["skills", "knowledge", "abilities", "work_styles"]:
         d = dims.get(key, {})
         for h in (d.get("highlights") or [])[:2]:
-            if isinstance(h, str):
-                all_highlights.append(h)
-            elif isinstance(h, dict):
-                all_highlights.append(h.get("name", str(h)))
+            text = h if isinstance(h, str) else h.get("name", str(h)) if isinstance(h, dict) else None
+            if text and _is_valid_highlight(text):
+                all_highlights.append(text)
     if all_highlights:
         parts.append(f"能力亮点：{', '.join(all_highlights[:6])}")
 
@@ -427,10 +449,9 @@ def _build_llm_candidate_context(dims: dict, candidate: dict, resume_skills: lis
     for key in ["skills", "knowledge", "abilities"]:
         d = dims.get(key, {})
         for f in (d.get("focus_areas") or [])[:2]:
-            if isinstance(f, str):
-                all_focus.append(f)
-            elif isinstance(f, dict):
-                all_focus.append(f.get("name", str(f)))
+            text = f if isinstance(f, str) else f.get("name", str(f)) if isinstance(f, dict) else None
+            if text and _is_valid_highlight(text):
+                all_focus.append(text)
     if all_focus:
         parts.append(f"待发展领域：{', '.join(all_focus[:4])}")
 
