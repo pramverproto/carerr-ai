@@ -124,6 +124,29 @@ const PlanProgress: React.FC = () => {
 
   useEffect(() => { loadCurrent(); }, [loadCurrent]);
 
+  // ─── 生成中轮询：切换页面回来后恢复进度 ─────────────────────────────
+  useEffect(() => {
+    if (phase !== 'planning') return;
+    const timer = setInterval(async () => {
+      try {
+        const res = await api.learnCurrent();
+        const data = res.data;
+        if (!data.plan_id) return;
+        if (data.status === 'pending' || data.status === 'error') {
+          setPlanId(data.plan_id);
+          setOutline({ modules: data.modules || [], total_weight: 100, estimated_weeks: data.estimated_weeks || 0 });
+          setPhase('outline_confirm');
+          clearInterval(timer);
+        } else if (data.status === 'ready') {
+          setPlanId(data.plan_id);
+          await loadReady(data.plan_id);
+          clearInterval(timer);
+        }
+      } catch { /* 轮询失败静默忽略 */ }
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [phase, loadReady]);
+
   // ─── 生成大纲 ─────────────────────────────────────────────────────
   const handleGenerate = async () => {
     if (!assessmentId || !selectedCareer) return;
