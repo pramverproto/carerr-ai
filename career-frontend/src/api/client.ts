@@ -40,27 +40,18 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// ── Response 拦截器：401 时提示用户登录已过期 ─────────────────────
-let _expiredNotified = false;
+// ── Response 拦截器：401 时静默登出并跳转登录页 ─────────────────────
+let _redirecting = false;
 apiClient.interceptors.response.use(
   (res) => res,
   (err) => {
-    const hadToken = Boolean(useAuthStore.getState().token);
-    if (err.response?.status === 401 && hadToken && !_expiredNotified) {
-      _expiredNotified = true;
-      // 使用 antd Modal 避免丢失用户正在编辑的数据
-      import('antd').then(({ Modal }) => {
-        Modal.warning({
-          title: '登录已过期',
-          content: '请重新登录以继续使用。',
-          okText: '去登录',
-          onOk() {
-            _expiredNotified = false;
-            useAuthStore.getState().logout();
-            window.location.href = '/login';
-          },
-        });
-      });
+    if (err.response?.status === 401 && !_redirecting) {
+      const hadToken = Boolean(useAuthStore.getState().token);
+      if (hadToken) {
+        _redirecting = true;
+        useAuthStore.getState().logout();
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(err);
   },
