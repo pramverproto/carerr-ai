@@ -45,7 +45,8 @@ let _expiredNotified = false;
 apiClient.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401 && !_expiredNotified) {
+    const hadToken = Boolean(useAuthStore.getState().token);
+    if (err.response?.status === 401 && hadToken && !_expiredNotified) {
       _expiredNotified = true;
       // 使用 antd Modal 避免丢失用户正在编辑的数据
       import('antd').then(({ Modal }) => {
