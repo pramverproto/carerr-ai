@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - main
+      - master
 
 env:
   SWR_ADDR: swr.cn-east-3.myhuaweicloud.com
