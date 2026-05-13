@@ -21,3 +21,18 @@ career-frontend/dist/
 .DS_Store
 .idea/
 *.swp
+
+# 论文相关
+论文写作/
+skills/
+.huawei/
+
+# Office 临时文件
+~$*
+*.docx
+*.doc
+*.zip
+
+# 图片/媒体（非代码）
+*.drawio
+media*/
