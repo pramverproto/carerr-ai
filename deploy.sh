@@ -1,46 +1,55 @@
 #!/bin/bash
-# 快速部署脚本 - 将本地修改同步到服务器并重启服务
-# 用法: ./deploy.sh
-
-SERVER="root@115.120.251.185"
-REMOTE_DIR="~/career-ai"
-PASS="ZYGzyg187"
-SCP="sshpass -p $PASS scp -o StrictHostKeyChecking=no"
-SSH="sshpass -p $PASS ssh -o StrictHostKeyChecking=no $SERVER"
-
 set -e
 
-echo "=== 构建前端 ==="
-cd career-frontend && npm run build && cd ..
+REPO_URL="git@codeup.aliyun.com:6a0554f2fa2a62bc8595f848/career-ai.git"
+APP_DIR="/root/career-ai"
+BRANCH="master"
 
-echo "=== 上传后端修改 ==="
-$SCP career-agent/api.py                          $SERVER:$REMOTE_DIR/career-agent/api.py
-$SCP career-agent/agent/agent_config.py           $SERVER:$REMOTE_DIR/career-agent/agent/agent_config.py
-$SCP career-agent/agent/tools/career.py           $SERVER:$REMOTE_DIR/career-agent/agent/tools/career.py
-$SCP career-agent/agent/tools/career_plan.py      $SERVER:$REMOTE_DIR/career-agent/agent/tools/career_plan.py
-$SCP career-agent/pyproject.toml                  $SERVER:$REMOTE_DIR/career-agent/pyproject.toml
-$SCP career-agent/uv.lock                         $SERVER:$REMOTE_DIR/career-agent/uv.lock
+echo "=============================="
+echo " CareerAI 部署脚本"
+echo "=============================="
 
-echo "=== 上传测试脚本 ==="
-$SSH "mkdir -p $REMOTE_DIR/career-agent/tests"
-$SCP career-agent/tests/test_career_path.py       $SERVER:$REMOTE_DIR/career-agent/tests/test_career_path.py
+# 拉取最新代码
+if [ -d "$APP_DIR/.git" ]; then
+  echo "[1/4] 拉取最新代码..."
+  cd $APP_DIR
+  git pull origin $BRANCH
+else
+  echo "[1/4] 首次克隆代码..."
+  git clone -b $BRANCH $REPO_URL $APP_DIR
+  cd $APP_DIR
+fi
 
-echo "=== 上传前端 dist ==="
-# 先清空远端 dist，避免老文件残留（旧构建 hash 文件会继续被 nginx 引用）
-$SSH "rm -rf $REMOTE_DIR/career-frontend/dist"
-sshpass -p $PASS scp -o StrictHostKeyChecking=no -r career-frontend/dist $SERVER:$REMOTE_DIR/career-frontend/dist
+# 检查 .env 文件
+echo "[2/4] 检查配置文件..."
+if [ ! -f "career-agent/.env" ]; then
+  echo "❌ 缺少 career-agent/.env，请先创建！"
+  exit 1
+fi
+if [ ! -f "career-db-service/.env" ]; then
+  echo "❌ 缺少 career-db-service/.env，请先创建！"
+  exit 1
+fi
 
-echo "=== 重新构建并重启服务 ==="
-# 前端 Dockerfile 用 COPY 把 dist 烘进镜像，必须 --build 才会刷新
-$SSH "cd $REMOTE_DIR && docker compose up -d --build backend frontend"
+# 构建并启动
+echo "[3/4] 构建镜像并启动服务..."
+docker compose down --remove-orphans
+docker compose up -d --build
 
-echo "=== 等待服务启动 ==="
-sleep 10
+# 健康检查
+echo "[4/4] 等待服务启动..."
+for i in $(seq 1 30); do
+  if curl -fsS http://localhost:8000/health >/dev/null 2>&1; then
+    echo ""
+    echo "✅ 部署成功！服务已启动"
+    docker compose ps
+    exit 0
+  fi
+  echo -n "."
+  sleep 2
+done
 
-echo "=== 检查服务状态 ==="
-$SSH "cd $REMOTE_DIR && docker compose ps"
-
-echo "=== 查看后端日志（最近20行）==="
-$SSH "docker logs career-ai-backend-1 2>&1 | tail -20"
-
-echo "=== 部署完成 ==="
+echo ""
+echo "❌ 服务启动失败，查看日志："
+docker compose logs --tail=50 backend
+exit 1
