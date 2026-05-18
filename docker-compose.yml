@@ -2,7 +2,7 @@ services:
 
   # ── 前端（Nginx + React 静态文件）────────────────────────────────
   frontend:
-    image: jonysing/career-ai-frontend:${TAG:-latest}
+    image: ghcr.io/pramverproto/carerr-ai/frontend:${TAG:-latest}
     build:
       context: ./career-frontend
     ports:
@@ -13,7 +13,7 @@ services:
 
   # ── 主后端（career-agent FastAPI）───────────────────────────────
   backend:
-    image: jonysing/career-ai-backend:${TAG:-latest}
+    image: ghcr.io/pramverproto/carerr-ai/backend:${TAG:-latest}
     build:
       context: ./career-agent
     env_file:
