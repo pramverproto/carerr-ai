@@ -113,12 +113,12 @@ jobs:
 
       - name: Pull & restart on server
         uses: appleboy/ssh-action@v1
-        timeout-minutes: 40
+        timeout-minutes: 60
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          command_timeout: 30m
+          command_timeout: 55m
           script: |
             set -e
             cd /root/career-ai
@@ -136,16 +136,12 @@ jobs:
             export TAG='${{ github.sha }}'
             export GHCR_REPO="$REPO"
 
-            # 登录 GHCR（NJU 镜像加速 + 原站备用）
+            # 登录 GHCR
             echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
-            echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.nju.edu.cn -u '${{ github.actor }}' --password-stdin || true
 
-            # 先用 NJU 镜像拉取（国内速度快），失败回退到直连 GHCR
             REPO=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')
             for svc in backend frontend; do
-              IMG="ghcr.io/${REPO}/${svc}:${TAG}"
-              NJU_IMG="ghcr.nju.edu.cn/${REPO}/${svc}:${TAG}"
-              docker pull "$NJU_IMG" && docker tag "$NJU_IMG" "$IMG" || docker pull "$IMG"
+              docker pull "ghcr.io/${REPO}/${svc}:${TAG}"
             done
 
             # 停掉旧 systemd 服务（如有残留），再起 compose
